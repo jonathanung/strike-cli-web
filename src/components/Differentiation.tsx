@@ -1,12 +1,8 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
-import { ArrowUpRight, Check, Minus } from 'lucide-react'
+import { Check, Minus } from 'lucide-react'
 import { Section } from './ui/Section'
-
-const DOCS_AGENTS =
-  'https://github.com/jonathanung/strike/blob/main/docs/usage.md'
-const DOCS_PERMISSIONS =
-  'https://github.com/jonathanung/strike/blob/main/docs/config.md'
 
 type Row = {
   id: string
@@ -137,24 +133,18 @@ export function Differentiation() {
       </p>
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-        <a
-          href={DOCS_AGENTS}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          to="/docs/multi-agent"
           className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-surface/80 px-4 py-2 text-sm font-medium text-text transition-colors hover:border-accent/40 hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         >
           Multi-agent docs
-          <ArrowUpRight className="size-3.5" aria-hidden />
-        </a>
-        <a
-          href={DOCS_PERMISSIONS}
-          target="_blank"
-          rel="noopener noreferrer"
+        </Link>
+        <Link
+          to="/docs/config"
           className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-surface/80 px-4 py-2 text-sm font-medium text-text transition-colors hover:border-accent/40 hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         >
           Permissions docs
-          <ArrowUpRight className="size-3.5" aria-hidden />
-        </a>
+        </Link>
       </div>
     </Section>
   )

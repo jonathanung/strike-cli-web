@@ -44,7 +44,7 @@ export function Hero() {
             ))}
           </ul>
 
-          <div className="mt-10 w-full min-w-0">
+          <div id="install" className="mt-10 w-full min-w-0 scroll-mt-20">
             <InstallCommand />
           </div>
         </div>
