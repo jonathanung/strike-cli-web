@@ -32,13 +32,18 @@ function DocsNav({ activeSlug }: { activeSlug?: string }) {
             <li key={page.slug}>
               <Link
                 to={`/docs/${page.slug}`}
-                className={`block rounded-lg px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+                className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
                   active
                     ? 'bg-accent-soft font-medium text-accent'
                     : 'text-text-muted hover:bg-surface hover:text-text'
                 }`}
               >
-                {page.title}
+                <span>{page.title}</span>
+                {page.experimental ? (
+                  <span className="shrink-0 rounded-full border border-bolt/40 bg-bolt/10 px-1.5 py-0.5 text-[0.65rem] font-medium leading-none text-bolt">
+                    Exp
+                  </span>
+                ) : null}
               </Link>
             </li>
           )
@@ -52,10 +57,12 @@ function DocsShell({
   title,
   children,
   activeSlug,
+  experimental,
 }: {
   title: string
   children: ReactNode
   activeSlug?: string
+  experimental?: boolean
 }) {
   return (
     <Section className="pb-20 pt-10 sm:pb-28 sm:pt-14" narrow={false}>
@@ -75,9 +82,16 @@ function DocsShell({
         </aside>
 
         <article className="min-w-0">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent-soft/60 px-3 py-1 font-mono text-xs font-medium text-accent">
-            <BookOpen className="size-3.5" aria-hidden />
-            Documentation
+          <div className="mb-6 flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent-soft/60 px-3 py-1 font-mono text-xs font-medium text-accent">
+              <BookOpen className="size-3.5" aria-hidden />
+              Documentation
+            </div>
+            {experimental ? (
+              <span className="inline-flex items-center rounded-full border border-bolt/40 bg-bolt/10 px-2.5 py-0.5 text-xs font-medium text-bolt">
+                Experimental
+              </span>
+            ) : null}
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-text sm:text-4xl">{title}</h1>
           <div className="mt-8">{children}</div>
@@ -101,9 +115,18 @@ export function DocsIndexPage() {
           <li key={page.slug}>
             <Link
               to={`/docs/${page.slug}`}
-              className="block h-full min-w-0 rounded-2xl border border-border bg-surface/80 p-5 transition-all hover:border-accent/40 hover:shadow-[0_0_40px_-12px] hover:shadow-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+              className="relative block h-full min-w-0 rounded-2xl border border-border bg-surface/80 p-5 transition-all hover:border-accent/40 hover:shadow-[0_0_40px_-12px] hover:shadow-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             >
-              <span className="text-base font-semibold text-text">{page.title}</span>
+              {page.experimental ? (
+                <span className="absolute right-4 top-4 rounded-full border border-bolt/40 bg-bolt/10 px-2.5 py-0.5 text-xs font-medium text-bolt">
+                  Experimental
+                </span>
+              ) : null}
+              <span
+                className={`text-base font-semibold text-text ${page.experimental ? 'pr-24' : ''}`}
+              >
+                {page.title}
+              </span>
               <span className="mt-2 block text-sm leading-relaxed text-text-muted">
                 {page.summary}
               </span>
@@ -151,14 +174,14 @@ export function DocsSlugPage() {
 }
 
 function DocsArticlePage({ page }: { page: NonNullable<ReturnType<typeof getDocPage>> }) {
-  usePageTitle(page.title)
+  usePageTitle(page.experimental ? `${page.title} (experimental)` : page.title)
 
   const idx = DOC_PAGES.findIndex((p) => p.slug === page.slug)
   const prev = idx > 0 ? DOC_PAGES[idx - 1] : undefined
   const next = idx >= 0 && idx < DOC_PAGES.length - 1 ? DOC_PAGES[idx + 1] : undefined
 
   return (
-    <DocsShell title={page.title} activeSlug={page.slug}>
+    <DocsShell title={page.title} activeSlug={page.slug} experimental={page.experimental}>
       <p className="max-w-2xl text-base leading-relaxed text-text-muted sm:text-lg">
         {page.summary}
       </p>

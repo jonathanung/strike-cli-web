@@ -18,20 +18,34 @@ export function ScrollToHash() {
     const id = decodeURIComponent(hash.replace(/^#/, ''))
     if (!id) return
 
-    const scroll = () => {
+    let cancelled = false
+    let attempts = 0
+    const maxAttempts = 40
+
+    const tryScroll = () => {
+      if (cancelled) return
       const el = document.getElementById(id)
       if (el) {
         el.scrollIntoView({
           behavior: prefersReducedMotion() ? 'auto' : 'smooth',
           block: 'start',
         })
+        return
+      }
+      // Lazy routes / markdown headings may mount after the first paint
+      attempts += 1
+      if (attempts < maxAttempts) {
+        window.setTimeout(tryScroll, 50)
       }
     }
 
-    // Wait a frame so route content is mounted
     requestAnimationFrame(() => {
-      requestAnimationFrame(scroll)
+      requestAnimationFrame(tryScroll)
     })
+
+    return () => {
+      cancelled = true
+    }
   }, [pathname, hash])
 
   return null

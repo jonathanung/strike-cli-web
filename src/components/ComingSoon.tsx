@@ -11,15 +11,15 @@ type Upcoming = {
 
 const upcoming: Upcoming[] = [
   {
-    title: 'Polished remote web',
+    title: 'Hardened remote access',
     description:
-      'strike serve is experimental today. A fuller hosted/remote browser experience is on the roadmap — CLI stays first-class.',
+      'TLS, stronger auth, and safer remote patterns beyond today’s experimental localhost/LAN serve — TUI stays primary.',
     icon: Globe,
   },
   {
     title: 'Server daemon',
     description:
-      'An always-on Strike server daemon for remote sessions and long-running agent work.',
+      'An always-on Strike daemon for long-running agent work. Not a multiplayer web IDE.',
     icon: Server,
   },
 ]
