@@ -26,3 +26,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Claude / agent worktrees (historical checkouts; not project source)
+.claude/worktrees/

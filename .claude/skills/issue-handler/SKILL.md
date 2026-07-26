@@ -1,0 +1,351 @@
+---
+name: issue-handler
+description: Own a GitHub issue end-to-end in strike-cli-web — worktree, implement, validate, PR, spawn review agents that comment on the PR, address feedback in a loop, CI, merge. Use when asked to handle/fix/close an issue, ship a PR from an issue, or babysit issue work through merge to main.
+---
+
+# Issue handler (strike-cli-web)
+
+Own the issue end-to-end with due diligence on research, validation, and shipping. Shipping is ownership: commit → push → PR → **review-agent loop** → CI green → merge → cleanup. All code edits happen inside a **git worktree**, never the primary checkout.
+
+This skill is for the **strike-cli-web** marketing/info site (React + Vite + TypeScript + Tailwind), not the strike-cli Go product. Apply when the user frames work as an issue (or asks you to own issue→main).
+
+## Preconditions
+
+- `gh auth status` ok; git repo; network; issue number/URL known.
+- **Stop-and-ask:** no write access; `gh` missing; issue already has an open PR you did not create (attach or ask — no duplicate). Dirty primary is fine for `git worktree add` from `origin/main` — do not clean/stash primary WIP.
+
+## Workflow
+
+0. **Orient** — `gh issue view N` (+ comments). Read `AGENTS.md` + `README.md` for scope and how the site is built/deployed. (No `docs/ARCHITECTURE.md` is required in this repo.)
+1. **Research** — map issue → surfaces under `src/components/`, `src/components/ui/`, `src/index.css`, `src/lib/`, `public/`, and when relevant `nginx.conf`, `Dockerfile`, `docker-compose.yml`, `.github/workflows/ci-cd.yml`. Read neighboring components and tokens. Optional local `.plan/` notes **if present** (never block if missing). State acceptance criteria bullets. Stop-and-ask if ambiguous.
+2. **Worktree** — create/enter; confirm `pwd` + branch before edits.
+3. **Plan** — smallest correct change; no drive-by refactors.
+4. **Implement** — worktree only; load sibling skills when domain matches (`web-components` for UI; keep install string single-sourced).
+5. **Validate** — load `test-and-validate`; run CI-equivalent gates; use that skill’s report format.
+6. **Ship** — commit, push `origin/<branch>`, PR with `Fixes #N`.
+7. **Review loop** — spawn review agent(s); post findings as PR review comments; address them; re-review until merge-ready (see below).
+8. **Babysit CI** — fix branch-related failures; re-push; re-enter review loop after material code changes.
+9. **Merge** — only when merge gates pass (below).
+10. **Cleanup** — remove worktree after merge; leave cwd outside deleted tree.
+
+## Worktree setup
+
+```sh
+MAIN_ROOT=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
+WT_PARENT="$(dirname "$MAIN_ROOT")/strike-cli-web-worktrees"
+BRANCH="worktree-<slug>"   # e.g. worktree-12-hero-copy; 2–4 kebab words; include issue # if helpful
+mkdir -p "$WT_PARENT"
+git fetch origin main
+# Resume if yours; else create. Never delete others' worktrees.
+if [ -d "$WT_PARENT/$BRANCH" ] && git worktree list | grep -q "$WT_PARENT/$BRANCH"; then
+  # On $BRANCH and yours (clean or only your WIP): cd and continue.
+  # Stop-and-ask: foreign worktree, unexpected dirty state you don't own, or ambiguous collision.
+  cd "$WT_PARENT/$BRANCH"
+else
+  git worktree add -b "$BRANCH" "$WT_PARENT/$BRANCH" origin/main
+  cd "$WT_PARENT/$BRANCH"
+fi
+```
+
+Before every edit session:
+
+```sh
+pwd   # must be $WT_PARENT/$BRANCH
+git rev-parse --abbrev-ref HEAD   # must be $BRANCH
+```
+
+Refuse Write/Edit under primary checkout for issue implementation.
+
+## Local verification
+
+CI-equivalent — **always** before push (not softer than CI build job):
+
+```sh
+npm ci
+npm run build
+npm run test --if-present
+npm run lint --if-present
+```
+
+**Docker / install proxy** when the change touches `Dockerfile`, `docker-compose.yml`, `nginx.conf`, or install URL/proxy behavior:
+
+```sh
+docker compose up --build -d
+# smoke homepage and /install (proxy must return script body, not a redirect page)
+curl -fsS -o /dev/null -w "%{http_code}\n" http://localhost:8080/
+curl -fsSL http://localhost:8080/install | head -n 20
+docker compose down
+```
+
+CI (`.github/workflows/ci-cd.yml` **build** job): Node 22, `npm ci`, `npm run build`, `test`/`lint` if-present. Deploy job is **main push only** — handlers validate build; they do not deploy from the laptop.
+
+Load `test-and-validate` for report format. Never weaken or delete checks solely to go green. If you add a test or lint script, it must pass.
+
+## Commit and push
+
+```sh
+git status && git diff && git log --oneline -10
+git add <intended paths only>
+git commit -m "$(cat <<'EOF'
+type(scope): concise summary
+
+Fixes #<N>
+EOF
+)"
+git push -u origin HEAD
+```
+
+Conventional commits: `feat`/`fix`/`docs`/`refactor`/`test`/`chore`. No secrets. No force-push main. No hook skips. Prefer new commits over amend/force on shared PR branch.
+
+## Open PR
+
+```sh
+gh pr create --base main --head "$BRANCH" --title "type(scope): summary" --body "$(cat <<'EOF'
+## Summary
+- …
+
+## Issue
+Fixes #<N>
+
+## Verification
+- npm ci; npm run build; npm run test --if-present; npm run lint --if-present
+- (if infra) docker compose smoke + /install proxy check
+EOF
+)"
+```
+
+Focused PR; no AI wall of text. If PR exists: `gh pr view`.
+
+## Review-agent loop (required)
+
+After the PR exists, **do not merge until this loop completes**. You (the issue handler) own dispatching reviewers, posting their findings on the PR, fixing code, and repeating.
+
+### When to run
+
+- Once after first push + PR open (may run in parallel with CI).
+- Again after **any** push that changes production, skills, workflow, nginx/Docker, or other merge-bound files — including review/CI fixes.
+- Skip re-review only for pure changelog typos that cannot affect behavior or process — when unsure, re-review.
+- A clean review on an **older** SHA does **not** satisfy merge gates after a new push.
+
+### Resolve PR identity (use these vars in recipes)
+
+```sh
+PR=$(gh pr view --json number -q .number)
+HEAD_SHA=$(gh pr view --json headRefOid -q .headRefOid)
+REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)   # owner/name
+```
+
+### Spawn reviewers
+
+**Preferred:** dispatch a read-only reviewer subagent:
+
+- Task `subagent_type: reviewer` when the host provides it, **or**
+- **In-process fallback:** you (the issue handler) run the same rubric yourself
+
+Do **not** require a missing in-repo agent file. If Task/reviewer is unavailable, still load the diff, still post findings via `gh`. Never skip the loop.
+
+Optionally spawn a second pass focused on a11y, install/CTA correctness, or deploy/nginx if the first pass is large or the change touches those surfaces.
+
+Reviewer prompt **must** include:
+
+- PR number/URL, base branch (`main`), and current `headRefOid`
+- Issue number and acceptance criteria
+- Hard requirement: run `gh pr diff $PR` (or receive the full patch) and read surrounding components/tokens/config before any verdict — **never** approve from title/URL alone
+- Instruction: correctness bugs first (concrete failure scenario), then needless complexity / missed reuse; no impact-free style nits
+- Instruction: return ranked findings with `path:line`, severity `blocking` | `should-fix` | `nit`, failure scenario, and the **head SHA actually reviewed**
+- Instruction: do **not** edit files; findings only; output must be paste-ready verbatim
+- Context: this is a React/Vite marketing site — paths are typically `.tsx`, `.css`, `.yml`, `nginx.conf`, not Go packages
+
+Also pull human/GitHub review state:
+
+```sh
+gh pr view "$PR" --json reviews,comments,reviewDecision,headRefOid
+gh api "repos/$REPO/pulls/$PR/comments"
+gh api "repos/$REPO/issues/$PR/comments"
+```
+
+### Post findings as PR review comments
+
+Post reviewer output on the PR (not only chat). **Post the reviewer’s ranked findings verbatim** — do not omit, soften, or downgrade severity. If you disagree with a blocking/should-fix item, still post it and **stop-and-ask** (or reply on the thread with the dispute); silent drop is forbidden.
+
+**Event policy (handler is usually the PR author):**
+
+- Automated/handler-authored reviews **always** use `"event": "COMMENT"` (never `REQUEST_CHANGES` or `APPROVE` — GitHub rejects self-approve and self-request-changes leaves merge gates stuck).
+- Encode severity in the review body and inline comment text (`**blocking:**`, `**should-fix:**`, `**nit:**`).
+- Reserve GitHub `APPROVE` / `REQUEST_CHANGES` for **distinct human** reviewers only.
+
+**Preferred — single COMMENT review with inline notes** (only for lines in the PR diff hunk on `$HEAD_SHA`):
+
+```sh
+HEAD_SHA=$(gh pr view "$PR" --json headRefOid -q .headRefOid)
+# Build JSON from reviewer findings (verbatim). Example shape:
+gh api "repos/$REPO/pulls/$PR/reviews" --method POST --input - <<EOF
+{
+  "commit_id": "$HEAD_SHA",
+  "event": "COMMENT",
+  "body": "Review pass N on $HEAD_SHA\n\n(verbatim summary of blocking / should-fix / nits)",
+  "comments": [
+    {
+      "path": "src/components/Hero.tsx",
+      "line": 42,
+      "side": "RIGHT",
+      "body": "**blocking:** …\n\nFailure scenario: …"
+    }
+  ]
+}
+EOF
+```
+
+If an inline `line` is not part of the diff hunk, the API 422s — put that finding in the top-level review body instead (do not invent lines).
+
+**Fallback — top-level PR comment** when inline mapping is impractical (preferred for long verbatim bodies; avoids JSON escaping issues):
+
+```sh
+gh pr comment "$PR" --body "$(cat <<EOF
+## Review pass N (head \`$HEAD_SHA\`)
+### Blocking
+- \`src/components/InstallCommand.tsx:12\` — … (failure scenario)
+
+### Should-fix
+- \`src/index.css:4\` — …
+
+### Nits (optional)
+- …
+EOF
+)"
+```
+
+**Clean pass (0 blocking, 0 should-fix) — still required on the PR:**
+
+A chat-only “LGTM” does **not** count. Always record the clean pass against `$HEAD_SHA`:
+
+```sh
+HEAD_SHA=$(gh pr view "$PR" --json headRefOid -q .headRefOid)
+gh pr comment "$PR" --body "$(cat <<EOF
+## Review pass N (head \`$HEAD_SHA\`) — clean
+0 blocking, 0 should-fix. Merge checklist may proceed for this SHA only.
+EOF
+)"
+# Or: gh api reviews with event COMMENT, commit_id=$HEAD_SHA, empty comments array.
+```
+
+When building `gh api` JSON for inline reviews, encode bodies with `jq -n --arg body "$text"` (or similar) so quotes/newlines in verbatim findings do not break the payload. If encoding is painful, use the `gh pr comment` path above.
+
+Rules for posted comments:
+
+- Include severity tag and failure scenario for blocking/should-fix.
+- Anchor path:line to the diff on this PR’s current head SHA.
+- Do not spam duplicates across passes — reply on the existing thread or mark resolved in the next summary with the new SHA.
+
+### Address comments
+
+1. List open review threads / new comments (human + automated).
+2. For each **blocking** and **should-fix**: fix in the worktree; re-run local verification (`npm run build`, plus test/lint if-present, plus Docker when infra).
+3. **Nits:** fix if cheap and clearly better; otherwise reply on the thread why deferred (one line).
+4. Commit and push (new commit; no amend/force on shared PR branch).
+5. Reply on each addressed thread (or in a single PR comment) with what changed (`commit` shortsha + brief note).
+6. Re-run local gates; watch CI; **spawn another review pass on the new `headRefOid`**.
+
+### Loop limits
+
+- Continue until a review pass on the **current** `headRefOid` reports **no blocking and no should-fix**, CI is green on that SHA, and merge gates pass.
+- Cap at **5** review passes. If **any** blocking or should-fix remains after 5, stop-and-ask with a summary (do not merge).
+- Product/design ambiguity in a comment → stop-and-ask; do not guess.
+
+### Merge-ready checklist (all required)
+
+- [ ] Clean review pass (0 blocking, 0 should-fix) recorded against **current** `headRefOid` (posted review/`commit_id` or comment must cite that SHA)
+- [ ] That SHA matches `gh pr view --json headRefOid` at merge time
+- [ ] Reviewer findings from the latest pass were posted **verbatim** on the PR
+- [ ] All actionable human review comments addressed or explicitly deferred with reason
+- [ ] `reviewDecision` is not `CHANGES_REQUESTED` (human reviewers); do not use self-REQUEST_CHANGES
+- [ ] CI checks green on the same head SHA (build job; deploy is not required on PR)
+- [ ] `mergeable=MERGEABLE`, not draft, state `OPEN`
+- [ ] Local CI-equivalent gates passed on the same commit
+
+## CI watch / fix
+
+gh-only (no Python watchers):
+
+```sh
+gh pr checks --watch
+# or poll:
+gh pr view --json state,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,isDraft
+gh pr checks
+gh run list --branch "$BRANCH" --limit 5
+gh run view <run-id> --log-failed
+```
+
+| Class | Action |
+|---|---|
+| Branch-related | fix in worktree → commit → push → re-watch → **re-enter review loop** |
+| Flaky/infra | `gh run rerun <id> --failed` ≤2; then stop-and-ask |
+| Ambiguous | one diagnosis; then stop-and-ask |
+| Actionable review | fix → commit → push → **re-enter review loop** |
+
+## Merge
+
+Merge **only when** the merge-ready checklist above is fully satisfied:
+
+```sh
+gh pr merge --merge
+```
+
+`--merge` matches repo history. Do not pass `--delete-branch` while still checked out on the feature branch in the worktree (main is already checked out in the primary tree) — remote/local branch deletion happens in Cleanup after `git worktree remove`. Blocked on review/permissions → stop-and-ask; never force. **Hard forbids:** force-push; careless `reset --hard`; merge with failing checks; merge without a clean review pass; close/reopen PR unprompted.
+
+Note: merging to `main` will trigger the workflow **deploy** job in GitHub Actions. That is expected for intentional merges; do not merge experimental work to main to “try deploy.”
+
+## Cleanup (after merge)
+
+From `MAIN_ROOT`:
+
+```sh
+cd "$MAIN_ROOT" && git fetch origin main
+git worktree remove "$WT_PARENT/$BRANCH"
+git branch -d "$BRANCH" 2>/dev/null || true
+git worktree prune
+```
+
+Do not leave cwd inside deleted worktree. Only delete branch you created.
+
+## Sibling skills
+
+| When | Load |
+|---|---|
+| Page sections, UI primitives, tokens, motion, demos, install CTA | `web-components` first |
+| Before claiming done / after impl or CI-fix | `test-and-validate` |
+
+No other domain skills are required for this repo.
+
+## Hard rules
+
+1. Own issue end-to-end through merge — including review-agent loop.
+2. Never edit primary checkout for issue implementation.
+3. Never claim done without CI-equivalent local gates (`npm run build` at minimum).
+4. Never push secrets. Never weaken checks solely for green.
+5. Never force-push main; no destructive git on shared history.
+6. Smallest correct change; honor `AGENTS.md` (marketing/info website). Keep `INSTALL_COMMAND` single-sourced from `InstallCommand.tsx`.
+7. Stay in marketing-site scope — do not turn issues into strike-cli Go/TUI implementation work in this repo.
+8. `.plan/` optional research only — never required; never treat unscoped roadmap as the issue.
+9. Stop-and-ask on ambiguity rather than guess.
+10. Never merge with open blocking/should-fix findings from the latest pass on the **current** head SHA.
+11. Always post review findings on the PR via `gh` (COMMENT review or comment) — chat-only review does not count.
+12. Post reviewer findings verbatim; never omit or downgrade severity. Disputes → stop-and-ask.
+13. Handler-authored automated reviews use `event: COMMENT` only — never self-APPROVE or self-REQUEST_CHANGES.
+
+## Stop-and-ask
+
+- `gh` auth/permission failures; unclear/contradictory acceptance criteria
+- Foreign/unexpected dirty worktree; ambiguous path/branch collision; CI red outside branch after 2 reruns
+- Merge conflicts with main you cannot resolve confidently (prefer `git merge origin/main` over rebase)
+- Review requires product/design decision; would commit secrets or change CI/deploy/security unexpectedly
+- Review loop still has blocking or should-fix findings after 5 passes
+- Desire to drop or downgrade a reviewer’s blocking/should-fix finding
+- Issue seems to require implementing the Go CLI rather than the marketing site
+
+## What this skill is not
+
+- Not unscoped roadmap implementer without a GitHub issue
+- Not multi-agent orchestrator (beyond required PR review subagent / in-process review)
+- Not a production deploy operator (merge to main triggers Actions deploy; do not SSH to the droplet from this skill)
+- Not a substitute for sibling domain skills (`web-components`, `test-and-validate`)
