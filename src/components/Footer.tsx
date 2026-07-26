@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom'
 import {
   ExternalLink,
   Github,
-  Heart,
   Lock,
   Scale,
   Shield,
+  Star,
 } from 'lucide-react'
 import {
   GITHUB_CONTRIBUTING_URL,
@@ -47,9 +47,7 @@ function useLatestTag() {
       .then((data) => {
         if (data.tag_name) setTag(data.tag_name)
       })
-      .catch(() => {
-        /* optional badge — silent */
-      })
+      .catch(() => {})
     return () => ctrl.abort()
   }, [])
 
@@ -63,7 +61,6 @@ export function Footer() {
   return (
     <footer className="relative border-t border-border bg-bg-elevated/90">
       <div className="mx-auto flex min-w-0 max-w-6xl flex-col gap-10 px-4 py-10 sm:px-6 lg:px-8">
-        {/* Trust strip — license, privacy, open-source links */}
         <section aria-labelledby="trust-heading" className="min-w-0">
           <h2 id="trust-heading" className="sr-only">
             License, privacy, and open source
@@ -133,23 +130,25 @@ export function Footer() {
             <Link to="/changelog" className={linkClass}>
               Changelog
             </Link>
+            {tag ? (
+              <a
+                href={GITHUB_RELEASES_LATEST_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={externalLinkClass}
+              >
+                <span className="font-mono text-accent">{tag}</span>
+                <ExternalLink className="size-3 opacity-60" aria-hidden />
+              </a>
+            ) : null}
             <a
-              href={tag ? GITHUB_RELEASES_LATEST_URL : GITHUB_STARS_URL}
+              href={GITHUB_STARS_URL}
               target="_blank"
               rel="noopener noreferrer"
               className={externalLinkClass}
             >
-              {tag ? (
-                <>
-                  <span className="font-mono text-accent">{tag}</span>
-                  <span className="text-text-muted">· GitHub</span>
-                </>
-              ) : (
-                <>
-                  <Heart className="size-3.5 text-neon-pink" aria-hidden />
-                  Star on GitHub
-                </>
-              )}
+              <Star className="size-3.5 text-bolt" aria-hidden />
+              Star on GitHub
               <ExternalLink className="size-3 opacity-60" aria-hidden />
             </a>
             <a
@@ -174,7 +173,6 @@ export function Footer() {
           </nav>
         </section>
 
-        {/* Brand + sitewide legal/nav */}
         <div className="flex min-w-0 flex-col items-center justify-between gap-6 border-t border-border/80 pt-8 sm:flex-row sm:items-start">
           <div className="flex min-w-0 flex-col items-center gap-1 sm:items-start">
             <p className="flex items-center gap-2 text-sm font-medium text-text">
