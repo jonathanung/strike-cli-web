@@ -221,22 +221,22 @@ export function HappyPath() {
                   onClick={() => jumpToStep(i)}
                   aria-current={i === activeStep ? 'step' : undefined}
                   aria-label={`Step ${step.n}: ${step.title}`}
-                  className={`group relative flex min-h-11 w-full min-w-0 items-center gap-2 rounded-xl border px-2 py-2.5 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg sm:gap-3 sm:px-3 md:py-3 ${
+                  className={`group relative flex min-h-11 w-full min-w-0 items-center gap-2 rounded-md border px-2 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg sm:gap-3 sm:px-3 md:py-3 ${
                     isActive && !reduceMotion
-                      ? 'border-accent/50 bg-accent-soft/80 shadow-[0_0_28px_-10px] shadow-accent-glow/50'
+                      ? 'border-border bg-surface-focus'
                       : isComplete
-                        ? 'border-border/80 bg-surface/40 hover:border-accent/30'
-                        : 'border-border/60 bg-transparent hover:border-border hover:bg-surface/30'
-                  } ${reduceMotion ? 'border-border bg-surface/50' : ''}`}
+                        ? 'border-border-muted bg-surface hover:border-border'
+                        : 'border-border-muted bg-transparent hover:border-border hover:bg-surface'
+                  } ${reduceMotion ? 'border-border-muted bg-surface' : ''}`}
                 >
                   <span
-                    className={`relative z-[1] flex size-8 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-semibold transition-colors ${
+                    className={`relative z-[1] flex size-8 shrink-0 items-center justify-center rounded-md font-mono text-xs font-semibold transition-colors ${
                       isActive && !reduceMotion
-                        ? 'bg-accent text-bg shadow-[0_0_16px_-4px] shadow-accent-glow/70'
+                        ? 'bg-accent text-bg'
                         : isComplete
-                          ? 'bg-accent/20 text-accent'
-                          : 'bg-surface text-text-muted group-hover:text-text'
-                    } ${reduceMotion ? 'bg-accent/20 text-accent' : ''} ${
+                          ? 'bg-accent-soft text-accent'
+                          : 'bg-bg-elevated text-text-muted group-hover:text-text'
+                    } ${reduceMotion ? 'bg-accent-soft text-accent' : ''} ${
                       isUpcoming ? 'opacity-70' : ''
                     }`}
                   >

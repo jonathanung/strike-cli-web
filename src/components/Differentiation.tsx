@@ -73,7 +73,7 @@ export function Differentiation() {
       </motion.div>
 
       <motion.div
-        className="overflow-hidden rounded-2xl border border-border bg-surface/80"
+        className="overflow-hidden rounded-lg border border-border-muted bg-surface"
         initial={reduceMotion ? false : { opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-30px' }}
@@ -87,7 +87,7 @@ export function Differentiation() {
               Strike compared with typical Claude Code, Codex, and OpenCode workflows
             </caption>
             <thead>
-              <tr className="border-b border-border bg-bg-elevated/80">
+              <tr className="border-b border-border-muted bg-bg-elevated">
                 <th
                   scope="col"
                   className="px-4 py-3.5 font-semibold text-accent sm:px-6 sm:py-4"
@@ -106,7 +106,7 @@ export function Differentiation() {
               {rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="border-b border-border/70 last:border-b-0"
+                  className="border-b border-border-muted last:border-b-0"
                 >
                   <td className="px-4 py-3.5 align-top sm:px-6 sm:py-4">
                     <div className="flex gap-2.5">
@@ -140,19 +140,19 @@ export function Differentiation() {
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <Link
           to="/docs/multi-agent"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-surface/80 px-4 py-2 text-sm font-medium text-text transition-colors hover:border-accent/40 hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border-muted bg-surface px-4 py-2 text-sm font-medium text-text transition-colors hover:border-border hover:bg-surface-focus hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         >
           Multi-agent docs
         </Link>
         <Link
           to="/docs/config"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-surface/80 px-4 py-2 text-sm font-medium text-text transition-colors hover:border-accent/40 hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border-muted bg-surface px-4 py-2 text-sm font-medium text-text transition-colors hover:border-border hover:bg-surface-focus hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         >
           Permissions docs
         </Link>
         <Link
           to="/#faq"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-surface/80 px-4 py-2 text-sm font-medium text-text transition-colors hover:border-accent/40 hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border-muted bg-surface px-4 py-2 text-sm font-medium text-text transition-colors hover:border-border hover:bg-surface-focus hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         >
           FAQ
         </Link>

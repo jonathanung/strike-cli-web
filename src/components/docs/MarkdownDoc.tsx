@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Link } from 'react-router-dom'
 import { isValidElement, type ReactNode } from 'react'
+import { CodeBlock as UiCodeBlock } from '../ui/CodeBlock'
 
 function flattenText(node: ReactNode): string {
   if (node == null || typeof node === 'boolean') return ''
@@ -27,22 +28,10 @@ function isInternalPath(href: string): boolean {
   return href.startsWith('/') && !href.startsWith('//')
 }
 
-function CodeBlock({ children, className }: { children: ReactNode; className?: string }) {
+function DocCodeBlock({ children, className }: { children: ReactNode; className?: string }) {
   const text = flattenText(children).replace(/\n$/, '')
   const lang = className?.replace(/^language-/, '') || 'code'
-  return (
-    <div className="my-4 overflow-hidden rounded-xl border border-border bg-terminal-bg shadow-[0_0_30px_-18px] shadow-accent-glow/20">
-      <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
-        <span className="size-2.5 rounded-full bg-border" aria-hidden />
-        <span className="size-2.5 rounded-full bg-border" aria-hidden />
-        <span className="size-2.5 rounded-full bg-border" aria-hidden />
-        <span className="ml-2 font-mono text-xs text-terminal-comment">{lang}</span>
-      </div>
-      <pre className="overflow-x-auto p-4 font-mono text-sm leading-relaxed text-terminal-fg sm:text-[0.9375rem]">
-        <code>{text}</code>
-      </pre>
-    </div>
-  )
+  return <UiCodeBlock label={lang}>{text}</UiCodeBlock>
 }
 
 const components: Components = {
@@ -118,20 +107,20 @@ const components: Components = {
   },
   strong: ({ children }) => <strong className="font-semibold text-text">{children}</strong>,
   em: ({ children }) => <em className="italic text-text-muted">{children}</em>,
-  hr: () => <hr className="my-10 border-border" />,
+  hr: () => <hr className="my-10 border-border-muted" />,
   blockquote: ({ children }) => (
-    <blockquote className="mt-4 border-l-2 border-accent/50 bg-accent-soft/30 py-2 pl-4 pr-3 text-text-muted">
+    <blockquote className="mt-4 border-l-2 border-accent bg-surface py-2 pl-4 pr-3 text-text-muted">
       {children}
     </blockquote>
   ),
   table: ({ children }) => (
-    <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+    <div className="mt-4 overflow-x-auto rounded-lg border border-border-muted">
       <table className="w-full min-w-[20rem] border-collapse text-left text-sm">{children}</table>
     </div>
   ),
-  thead: ({ children }) => <thead className="bg-bg-elevated/80">{children}</thead>,
+  thead: ({ children }) => <thead className="bg-bg-elevated">{children}</thead>,
   tbody: ({ children }) => <tbody>{children}</tbody>,
-  tr: ({ children }) => <tr className="border-b border-border/70 last:border-b-0">{children}</tr>,
+  tr: ({ children }) => <tr className="border-b border-border-muted last:border-b-0">{children}</tr>,
   th: ({ children }) => (
     <th scope="col" className="px-3 py-2.5 font-semibold text-text sm:px-4">
       {children}
@@ -146,7 +135,7 @@ const components: Components = {
       return <code className={className}>{children}</code>
     }
     return (
-      <code className="rounded-md border border-border/80 bg-terminal-bg px-1.5 py-0.5 font-mono text-[0.875em] text-terminal-fg">
+      <code className="rounded-md border border-border-muted bg-terminal-bg px-1.5 py-0.5 font-mono text-[0.875em] text-terminal-fg">
         {children}
       </code>
     )
@@ -154,10 +143,18 @@ const components: Components = {
   pre: ({ children }) => {
     if (isValidElement<{ className?: string; children?: ReactNode }>(children)) {
       return (
-        <CodeBlock className={children.props.className}>{children.props.children}</CodeBlock>
+        <div className="my-4">
+          <DocCodeBlock className={children.props.className}>
+            {children.props.children}
+          </DocCodeBlock>
+        </div>
       )
     }
-    return <CodeBlock>{children}</CodeBlock>
+    return (
+      <div className="my-4">
+        <DocCodeBlock>{children}</DocCodeBlock>
+      </div>
+    )
   },
 }
 

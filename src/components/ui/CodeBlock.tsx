@@ -5,19 +5,29 @@ type CodeBlockProps = {
   className?: string
   /** Optional title bar label, e.g. terminal */
   label?: string
+  /** Right-side title bar slot (e.g. copy control) */
+  action?: ReactNode
 }
 
-export function CodeBlock({ children, className = '', label }: CodeBlockProps) {
+export function CodeBlock({ children, className = '', label, action }: CodeBlockProps) {
+  const showChrome = Boolean(label || action)
+
   return (
     <div
-      className={`overflow-hidden rounded-xl border border-border bg-terminal-bg shadow-[0_0_30px_-18px] shadow-accent-glow/20 ${className}`}
+      className={`overflow-hidden rounded-lg border border-border-muted bg-terminal-bg ${className}`}
     >
-      {label ? (
-        <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
-          <span className="size-2.5 rounded-full bg-border" aria-hidden />
-          <span className="size-2.5 rounded-full bg-border" aria-hidden />
-          <span className="size-2.5 rounded-full bg-border" aria-hidden />
-          <span className="ml-2 font-mono text-xs text-terminal-comment">{label}</span>
+      {showChrome ? (
+        <div className="flex min-w-0 items-center justify-between gap-3 border-b border-border-muted bg-bg-elevated px-3 py-2 sm:px-4">
+          <div className="flex min-w-0 items-center gap-2">
+            <span
+              className="size-1.5 shrink-0 rounded-full bg-accent"
+              aria-hidden
+            />
+            {label ? (
+              <span className="truncate font-mono text-xs text-terminal-comment">{label}</span>
+            ) : null}
+          </div>
+          {action ? <div className="shrink-0">{action}</div> : null}
         </div>
       ) : null}
       <pre className="overflow-x-auto p-4 font-mono text-sm leading-relaxed text-terminal-fg sm:text-[0.9375rem]">

@@ -87,10 +87,10 @@ function CopyChip({
         type="button"
         onClick={handleCopy}
         aria-label={copied ? `${label} copied` : `Copy ${label}`}
-        className={`group flex w-full min-w-0 items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+        className={`group flex w-full min-w-0 items-center gap-2 rounded-md border px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
           copied
-            ? 'border-neon-pink/60 bg-neon-pink/10'
-            : 'border-border bg-terminal-bg hover:border-accent/40 hover:bg-accent-soft/40'
+            ? 'border-success/50 bg-success/10'
+            : 'border-border-muted bg-terminal-bg hover:border-border hover:bg-surface-focus'
         }`}
       >
         {kind === 'shell' ? (
@@ -112,9 +112,9 @@ function CopyChip({
           {text}
         </code>
         <span
-          className={`inline-flex size-9 min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg transition-colors ${
+          className={`inline-flex size-9 min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md transition-colors ${
             copied
-              ? 'text-neon-pink'
+              ? 'text-success'
               : 'text-text-muted group-hover:text-accent'
           }`}
         >
@@ -131,7 +131,7 @@ function CopyChip({
             {error}
           </p>
         ) : copied ? (
-          <p className="text-xs text-neon-pink">Copied</p>
+          <p className="text-xs text-success">Copied</p>
         ) : null}
       </div>
     </div>
@@ -174,10 +174,10 @@ export function Quickstart() {
                 ? { duration: 0 }
                 : { duration: 0.4, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }
             }
-            className="flex min-w-0 flex-col rounded-2xl border border-border bg-surface/80 p-5 sm:p-6"
+            className="flex min-w-0 flex-col rounded-lg border border-border-muted bg-surface p-5 sm:p-6"
           >
             <div className="mb-3 flex items-center gap-3">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft font-mono text-xs font-semibold text-accent">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent-soft font-mono text-xs font-semibold text-accent">
                 {step.n}
               </span>
               <h3 className="text-base font-semibold text-text">{step.title}</h3>
@@ -194,7 +194,7 @@ export function Quickstart() {
       </ol>
 
       <motion.div
-        className="mt-6 rounded-2xl border border-border/80 bg-bg-elevated/60 p-5 sm:p-6"
+        className="mt-6 rounded-lg border border-border-muted bg-bg-elevated p-5 sm:p-6"
         initial={reduceMotion ? false : { opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-30px' }}
@@ -220,21 +220,21 @@ export function Quickstart() {
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <Link
           to="/docs/keybinds"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-surface/80 px-4 py-2 text-sm font-medium text-text transition-colors hover:border-accent/40 hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border-muted bg-surface px-4 py-2 text-sm font-medium text-text transition-colors hover:border-border hover:bg-surface-focus hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         >
           <Keyboard className="size-4" aria-hidden />
           Keybinds
         </Link>
         <Link
           to="/docs/multi-agent"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-surface/80 px-4 py-2 text-sm font-medium text-text transition-colors hover:border-accent/40 hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border-muted bg-surface px-4 py-2 text-sm font-medium text-text transition-colors hover:border-border hover:bg-surface-focus hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         >
           <Users className="size-4" aria-hidden />
           Multi-agent
         </Link>
         <Link
           to="/docs/quickstart"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-surface/80 px-4 py-2 text-sm font-medium text-text-muted transition-colors hover:border-accent/40 hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border-muted bg-surface px-4 py-2 text-sm font-medium text-text-muted transition-colors hover:border-border hover:bg-surface-focus hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         >
           Full quickstart docs
         </Link>

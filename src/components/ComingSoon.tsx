@@ -2,6 +2,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { Globe, Server } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Section } from './ui/Section'
+import { Card } from './ui/Card'
 
 type Upcoming = {
   title: string
@@ -51,18 +52,18 @@ export function ComingSoon() {
                   : { duration: 0.4, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }
               }
             >
-              <article className="group relative h-full min-w-0 overflow-hidden rounded-2xl border border-border bg-surface/80 p-5 shadow-[0_0_40px_-16px] shadow-accent/20 transition-all duration-200 hover:border-accent/40 hover:shadow-[0_0_40px_-12px] hover:shadow-accent/30 sm:p-6">
-                <span className="absolute right-4 top-4 rounded-full border border-accent/30 bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent">
+              <Card as="article" interactive className="relative h-full min-w-0 overflow-hidden p-5 sm:p-6">
+                <span className="absolute right-4 top-4 rounded-md border border-border-muted bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent">
                   Soon
                 </span>
-                <div className="mb-4 inline-flex size-10 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                <div className="mb-4 inline-flex size-10 items-center justify-center rounded-md bg-accent-soft text-accent">
                   <Icon className="size-5" aria-hidden />
                 </div>
                 <h3 className="pr-14 text-base font-semibold text-text">{item.title}</h3>
                 <p className="mt-2 break-words text-sm leading-relaxed text-text-muted">
                   {item.description}
                 </p>
-              </article>
+              </Card>
             </motion.li>
           )
         })}

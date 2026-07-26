@@ -15,7 +15,7 @@ export function Hero() {
         transition={reduceMotion ? { duration: 0 } : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="flex min-w-0 flex-col items-start text-left">
-          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent-soft/60 px-3 py-1 font-mono text-xs font-medium text-accent shadow-[0_0_24px_-8px] shadow-accent-glow/40">
+          <p className="mb-4 inline-flex items-center gap-2 rounded-md border border-border-muted bg-surface px-3 py-1 font-mono text-xs font-medium text-accent">
             <span className="text-bolt" aria-hidden>
               ⚡
             </span>
@@ -37,7 +37,7 @@ export function Hero() {
             {['Multi-pane workspace', 'In-TUI pickers', 'Native permissions'].map((label) => (
               <li
                 key={label}
-                className="rounded-full border border-border bg-surface/80 px-3 py-1 font-mono text-xs font-medium text-text-muted"
+                className="rounded-md border border-border-muted bg-bg-elevated px-3 py-1 font-mono text-xs font-medium text-text-muted"
               >
                 {label}
               </li>

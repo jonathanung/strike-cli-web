@@ -9,22 +9,24 @@ Marketing and information site for [strike-cli](https://github.com/jonathanung/s
 
 **Stack:** React 19 + Vite 7 + TypeScript 5.9 + Tailwind CSS v4 + framer-motion + lucide-react.
 
-**Composition** lives in `src/App.tsx` (single SPA, no router):
+**Composition** lives in `src/App.tsx` (react-router) + `SiteLayout`:
 
 ```
-BackgroundEffects → Header → main(Hero, HappyPath, Demos, Features, ComingSoon) → Footer
+SiteLayout(BackgroundEffects, Header, Outlet, Footer)
+  HomePage → Hero, HappyPath, Quickstart, Demos, Features, …
+  Docs / Changelog / 404 pages share the same tokens + ui kit
 ```
 
-**Design tokens** live in `src/index.css` under `@theme`. Prefer Tailwind theme classes (`bg-bg`, `text-accent`, `border-border`, `font-mono`, …) over raw hex.
+**Design tokens** live in `src/index.css` under `@theme`, aligned with strike-cli TUI `theme.Default()` dark roles. Prefer Tailwind theme classes (`bg-bg`, `text-accent`, `border-border-muted`, `font-mono`, …) over raw hex. Dark is default (`color-scheme: dark`). Prefer **solid surfaces** over heavy glows/borders.
 
 ## Boundaries
 
 - **This repo only** — marketing/info website. Do not implement the Go CLI, Bubble Tea TUI, or `internal/*` packages here.
 - **CLI/TUI terms in copy only** — product claims (install command, “TUI”, agent features) are marketing text, not implementation targets.
-- **Prefer existing primitives:** `Section`, `CodeBlock`, `INSTALL_COMMAND` from `InstallCommand.tsx`, `copyToClipboard` from `src/lib/copy.ts`.
-- **Theme tokens, not raw hex** — extend `@theme` in `src/index.css` when a new color/font is needed; do not scatter `#a78bfa` in components.
+- **Prefer existing primitives:** `Section`, `Card`, `Button`, `CodeBlock`, `INSTALL_COMMAND` from `InstallCommand.tsx`, `copyToClipboard` from `src/lib/copy.ts`.
+- **Theme tokens, not raw hex** — extend `@theme` in `src/index.css` when a new color/font is needed; do not scatter `#b39dff` in components.
 - **Motion:** honor `useReducedMotion()` from framer-motion; CSS already disables `.animate-orb` / `.animate-curve-dash` under `prefers-reduced-motion`.
-- **No client router** — one-page SPA with section `id`s and header anchor links (`scroll-mt-20` via `Section`).
+- **Router** — `react-router-dom` for `/`, `/docs`, `/docs/:slug`, `/changelog`; homepage section `id`s still use header hash links (`scroll-mt-20` via `Section`).
 - **Static assets** under `public/` (e.g. `public/demos/*.gif`); reference as `/demos/...`.
 - **nginx / Docker / CI** — only edit when the issue is about deploy, `/install` proxy, or infra. Otherwise leave them alone.
 
@@ -32,19 +34,23 @@ BackgroundEffects → Header → main(Hero, HappyPath, Demos, Features, ComingSo
 
 | Piece | Path | Role |
 |---|---|---|
-| App | `src/App.tsx` | Root layout: background, header, main sections, footer |
+| App | `src/App.tsx` | Router + lazy docs/changelog routes |
+| SiteLayout | `src/components/SiteLayout.tsx` | Shared chrome: effects, header, outlet, footer |
 | BackgroundEffects | `src/components/BackgroundEffects.tsx` | Ambient orbs / grid / decorative motion behind content |
 | Header | `src/components/Header.tsx` | Sticky nav, section anchors, branding |
 | Hero | `src/components/Hero.tsx` | Above-the-fold headline, value prop, primary CTA |
-| HeroCarousel | `src/components/HeroCarousel.tsx` | Hero visual carousel / rotating showcase |
+| HeroCarousel | `src/components/HeroCarousel.tsx` | TUI-chrome frame + product still carousel |
 | InstallCommand | `src/components/InstallCommand.tsx` | Copyable install CTA; exports `INSTALL_COMMAND` |
 | HappyPath | `src/components/HappyPath.tsx` | Animated install → launch → upgrade walkthrough; imports `INSTALL_COMMAND` |
-| Demos | `src/components/Demos.tsx` | Demo GIF slots (`data-demo-slot`); wire `public/demos/` images here |
+| Demos | `src/components/Demos.tsx` | Demo media (`data-demo-slot`); wire `public/demos/` here |
 | Features | `src/components/Features.tsx` | Feature grid / product highlights |
 | ComingSoon | `src/components/ComingSoon.tsx` | Roadmap / upcoming items |
-| Footer | `src/components/Footer.tsx` | Footer links and credits |
+| Footer | `src/components/Footer.tsx` | Trust strip, footer links and credits |
 | Section | `src/components/ui/Section.tsx` | Page section shell: padding, max-width, optional `id` + `scroll-mt-20` |
-| CodeBlock | `src/components/ui/CodeBlock.tsx` | Terminal-styled code panel with optional label bar |
+| Card | `src/components/ui/Card.tsx` | Solid surface panel (homepage + docs) |
+| Button | `src/components/ui/Button.tsx` | Primary / secondary / ghost / soft CTAs (`button` or `Link`) |
+| CodeBlock | `src/components/ui/CodeBlock.tsx` | Solid terminal panel; optional label + action slot |
+| MarkdownDoc | `src/components/docs/MarkdownDoc.tsx` | Docs markdown; reuses `ui/CodeBlock` |
 | copyToClipboard | `src/lib/copy.ts` | Clipboard helper; returns `{ ok: true }` or `{ ok: false; error }` |
 | Entry | `src/main.tsx` | React root mount |
 | Tokens / base | `src/index.css` | `@theme` colors/fonts, base styles, utility classes |
@@ -59,13 +65,29 @@ Section({ id?, children, className?, narrow? })
 - `narrow`: `max-w-3xl`
 - When `id` is set: `scroll-mt-20` for sticky-header anchors
 
+### Card API
+
+```ts
+Card({ children, className?, elevated?, interactive?, as? })
+```
+
+Solid `bg-surface` (or elevated) + `border-border-muted`. Prefer over ad-hoc `rounded-2xl` glass cards.
+
+### Button API
+
+```ts
+Button({ variant?: 'primary' | 'secondary' | 'ghost' | 'soft', to?, children, ... })
+```
+
+`to` renders a react-router `Link`; otherwise a `<button>`.
+
 ### CodeBlock API
 
 ```ts
-CodeBlock({ children, className?, label? })
+CodeBlock({ children, className?, label?, action? })
 ```
 
-Terminal chrome (`bg-terminal-bg`, border, optional traffic-light + label bar).
+Solid terminal chrome (`bg-terminal-bg`, muted border, accent status dot + label; optional `action` for copy controls).
 
 ### Install command (single source)
 
@@ -79,26 +101,30 @@ HappyPath and any other surface that shows the install string **must** import `I
 
 ## Design tokens
 
-From `src/index.css` `@theme` (exact values):
+From `src/index.css` `@theme` (aligned with TUI `theme.Default()` dark):
 
 | Token | Value | Typical Tailwind |
 |---|---|---|
-| `--color-bg` | `#0c0b10` | `bg-bg` |
-| `--color-bg-elevated` | `#14121a` | `bg-bg-elevated` |
-| `--color-surface` | `#1a1722` | `bg-surface` |
-| `--color-border` | `#2e2838` | `border-border` |
-| `--color-text` | `#f4f0fa` | `text-text` |
-| `--color-text-muted` | `#9b93a8` | `text-text-muted` |
-| `--color-accent` | `#a78bfa` | `text-accent` / `bg-accent` |
-| `--color-accent-soft` | `#2a2140` | `bg-accent-soft` |
-| `--color-accent-glow` | `#7c5cbf` | glow / shadow accents |
-| `--color-sky` | `#67e8f9` | `text-sky` |
-| `--color-bolt` | `#f0b429` | `text-bolt` |
-| `--color-neon-pink` | `#f472b6` | `text-neon-pink` (e.g. copy success) |
-| `--color-terminal-bg` | `#121018` | `bg-terminal-bg` |
-| `--color-terminal-fg` | `#e4e0ec` | `text-terminal-fg` |
-| `--color-terminal-green` | `#4ade80` | `text-terminal-green` |
-| `--color-terminal-comment` | `#6b6580` | `text-terminal-comment` |
+| `--color-bg` | `#1c1b22` | `bg-bg` |
+| `--color-bg-elevated` | `#21202a` | `bg-bg-elevated` |
+| `--color-surface` | `#252430` | `bg-surface` |
+| `--color-surface-focus` | `#2f2c3c` | `bg-surface-focus` |
+| `--color-border` | `#4a4858` | `border-border` |
+| `--color-border-muted` | `#323040` | `border-border-muted` |
+| `--color-text` | `#eceaf4` | `text-text` |
+| `--color-text-muted` | `#a09eb0` | `text-text-muted` |
+| `--color-accent` | `#b39dff` | `text-accent` / `bg-accent` |
+| `--color-accent-soft` | `#2f2c3c` | `bg-accent-soft` |
+| `--color-accent-glow` | `#6d43d6` | soft ambient only |
+| `--color-sky` | `#5cd0e8` | `text-sky` (AccentAlt) |
+| `--color-bolt` | `#f5c451` | `text-bolt` (Warning) |
+| `--color-success` | `#5edb92` | `text-success` (copy OK) |
+| `--color-danger` | `#ff8087` | `text-danger` |
+| `--color-neon-pink` | `#5edb92` | legacy alias → success |
+| `--color-terminal-bg` | `#18171e` | `bg-terminal-bg` |
+| `--color-terminal-fg` | `#eceaf4` | `text-terminal-fg` |
+| `--color-terminal-green` | `#5edb92` | `text-terminal-green` |
+| `--color-terminal-comment` | `#6a6878` | `text-terminal-comment` |
 | `--font-sans` | Inter + system stack | `font-sans` |
 | `--font-mono` | JetBrains Mono + mono stack | `font-mono` |
 
@@ -110,13 +136,14 @@ From `src/index.css` `@theme` (exact values):
 | `.animate-orb` | Ambient orb drift (`--orb-duration`, default 22s) |
 | `.animate-curve-dash` | SVG stroke dash animation (`--curve-duration`, default 50s) |
 | `.text-gradient-accent` | Text gradient: text → accent → sky |
+| `.surface-solid` / `.surface-elevated` / `.surface-terminal` | Solid cockpit fills |
 
 ### Extending tokens
 
 1. Add or change values only in `src/index.css` `@theme` (or shared utilities there).
 2. Use the new token via Tailwind class names generated from the theme.
-3. Keep contrast readable on dark `bg` / `surface`; accent is purple — sky/bolt/neon-pink are accents, not body text defaults.
-4. Do not introduce a second design system or CSS-in-JS theme.
+3. Keep contrast readable on dark `bg` / `surface`; accent is violet — sky/bolt/success are accents, not body text defaults.
+4. Do not introduce a second design system or CSS-in-JS theme. Prefer solid surfaces over decorative glow borders.
 
 ## Recipes
 

@@ -10,7 +10,7 @@ export function WebServe() {
   return (
     <Section id="web-serve" className="pb-20 sm:pb-28">
       <motion.div
-        className="overflow-hidden rounded-2xl border border-border bg-surface/80"
+        className="overflow-hidden rounded-lg border border-border-muted bg-surface"
         initial={reduceMotion ? false : { opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-30px' }}
@@ -19,10 +19,10 @@ export function WebServe() {
         <div className="grid min-w-0 gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-10 lg:p-10">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-bolt/40 bg-bolt/10 px-2.5 py-0.5 text-xs font-medium text-bolt">
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-bolt/40 bg-bolt/10 px-2.5 py-0.5 text-xs font-medium text-bolt">
                 Experimental
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent-soft px-2.5 py-0.5 font-mono text-xs font-medium text-accent">
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-border-muted bg-accent-soft px-2.5 py-0.5 font-mono text-xs font-medium text-accent">
                 <Globe className="size-3" aria-hidden />
                 strike serve
               </span>
@@ -58,14 +58,14 @@ export function WebServe() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 to="/docs/web"
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-bg transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
               >
                 Web docs
                 <ArrowUpRight className="size-3.5 shrink-0" aria-hidden />
               </Link>
               <Link
                 to="/docs/web#threat-model"
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-border bg-bg/60 px-4 py-2 text-sm font-medium text-text transition-colors hover:border-accent/40 hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border-muted bg-bg-elevated px-4 py-2 text-sm font-medium text-text transition-colors hover:border-border hover:bg-surface-focus hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
               >
                 LAN threat model
               </Link>
