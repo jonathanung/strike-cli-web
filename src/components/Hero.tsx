@@ -19,7 +19,7 @@ export function Hero() {
             <span className="text-bolt" aria-hidden>
               ⚡
             </span>
-            strike-cli
+            strike
           </p>
 
           <h1 className="max-w-xl text-4xl font-bold tracking-tight text-text sm:text-5xl lg:text-6xl">

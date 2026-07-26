@@ -1,6 +1,6 @@
 import { Github } from 'lucide-react'
+import { GITHUB_URL } from '../lib/github'
 
-const GITHUB_URL = 'https://github.com/jonathanung/strike-cli'
 const SITE = 'strike.jonathanung.ca'
 
 export function Footer() {
