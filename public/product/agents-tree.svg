@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" role="img" aria-labelledby="title desc">
+  <title id="title">Strike agents tree and transcript</title>
+  <desc id="desc">Agents pane showing concurrent roots and children beside the session transcript.</desc>
+  <defs>
+    <clipPath id="frame"><rect x="0" y="0" width="960" height="600" rx="14"/></clipPath>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="960" height="600" fill="#0c0b10"/>
+    <rect x="0" y="0" width="960" height="36" fill="#14121a"/>
+    <circle cx="22" cy="18" r="5" fill="#f472b6"/>
+    <circle cx="40" cy="18" r="5" fill="#f0b429"/>
+    <circle cx="58" cy="18" r="5" fill="#4ade80"/>
+    <text x="84" y="22" fill="#a78bfa" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" font-weight="700">⚡ strike</text>
+    <text x="170" y="22" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">3 roots · filter all</text>
+    <text x="760" y="22" fill="#67e8f9" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">agents · visualizer</text>
+    <rect x="12" y="48" width="560" height="480" rx="8" fill="#121018" stroke="#2e2838"/>
+    <rect x="12" y="48" width="560" height="28" rx="8" fill="#1a1722"/>
+    <rect x="12" y="64" width="560" height="12" fill="#1a1722"/>
+    <text x="28" y="68" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">session · root-a / auth-fix</text>
+    <text x="28" y="104" fill="#67e8f9" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">you</text>
+    <text x="68" y="104" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">Ship the auth fix across middleware + tests.</text>
+    <text x="28" y="136" fill="#a78bfa" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">assistant</text>
+    <text x="108" y="136" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">Spawning a explore child for call sites…</text>
+    <rect x="28" y="156" width="500" height="56" rx="6" fill="#1a1722" stroke="#2e2838"/>
+    <text x="40" y="180" fill="#67e8f9" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">task  explore</text>
+    <text x="40" y="200" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">child · find JWT validators</text>
+    <text x="28" y="248" fill="#a78bfa" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">assistant</text>
+    <text x="108" y="248" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">Child returned 4 call sites. Applying patch.</text>
+    <text x="28" y="280" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">ctrl+x j/k navigate children · enter open</text>
+    <rect x="20" y="420" width="544" height="92" rx="8" fill="#1a1722" stroke="#2e2838"/>
+    <text x="36" y="448" fill="#a78bfa" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13">prompt ❯</text>
+    <text x="120" y="448" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13">message root-a…</text>
+    <!-- agents pane -->
+    <rect x="584" y="48" width="364" height="280" rx="8" fill="#121018" stroke="#a78bfa" stroke-opacity="0.5"/>
+    <rect x="584" y="48" width="364" height="28" rx="8" fill="#1a1722"/>
+    <rect x="584" y="64" width="364" height="12" fill="#1a1722"/>
+    <text x="600" y="68" fill="#a78bfa" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">agents</text>
+    <text x="600" y="104" fill="#4ade80" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">● root-a  auth-fix</text>
+    <text x="780" y="104" fill="#f0b429" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">working</text>
+    <text x="620" y="128" fill="#67e8f9" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">└─ explore · call-sites</text>
+    <text x="820" y="128" fill="#4ade80" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">ready</text>
+    <text x="600" y="160" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">○ root-b  docs-pass</text>
+    <text x="780" y="160" fill="#4ade80" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">ready</text>
+    <text x="600" y="192" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">○ root-c  flaky-ci</text>
+    <text x="780" y="192" fill="#f472b6" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">attention</text>
+    <text x="600" y="236" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">n new · enter activate · x interrupt</text>
+    <text x="600" y="256" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">f filter · j/k move</text>
+    <text x="600" y="292" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">worktree · root-b isolated</text>
+    <!-- visualizer -->
+    <rect x="584" y="340" width="364" height="188" rx="8" fill="#121018" stroke="#2e2838"/>
+    <rect x="584" y="340" width="364" height="28" rx="8" fill="#1a1722"/>
+    <rect x="584" y="356" width="364" height="12" fill="#1a1722"/>
+    <text x="600" y="360" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">visualizer · root-a</text>
+    <text x="600" y="396" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">tokens  18.2k in · 4.6k out</text>
+    <text x="600" y="420" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">est. $0.12 · cache hit 41%</text>
+    <text x="600" y="452" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">activity</text>
+    <polyline points="600,500 630,488 660,492 690,470 720,476 750,458 780,462 810,448 840,452 870,440 900,444"
+      fill="none" stroke="#a78bfa" stroke-width="2"/>
+    <rect x="0" y="548" width="960" height="52" fill="#14121a"/>
+    <text x="24" y="578" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">agents focused · n spawn concurrent root</text>
+  </g>
+</svg>

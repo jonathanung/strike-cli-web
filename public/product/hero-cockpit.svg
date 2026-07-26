@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" role="img" aria-labelledby="title desc">
+  <title id="title">Strike multi-pane cockpit</title>
+  <desc id="desc">Dark-theme Strike TUI with transcript on the left and context plus activity panes on the right.</desc>
+  <defs>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#67e8f9" stop-opacity="0.06"/>
+    </linearGradient>
+    <clipPath id="frame"><rect x="0" y="0" width="960" height="600" rx="14"/></clipPath>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="960" height="600" fill="#0c0b10"/>
+    <rect width="960" height="600" fill="url(#glow)"/>
+    <!-- header -->
+    <rect x="0" y="0" width="960" height="36" fill="#14121a"/>
+    <circle cx="22" cy="18" r="5" fill="#f472b6"/>
+    <circle cx="40" cy="18" r="5" fill="#f0b429"/>
+    <circle cx="58" cy="18" r="5" fill="#4ade80"/>
+    <text x="84" y="22" fill="#a78bfa" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" font-weight="700">⚡ strike</text>
+    <text x="170" y="22" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">session · build · mode default</text>
+    <text x="720" y="22" fill="#67e8f9" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">anthropic · claude-sonnet</text>
+    <!-- left transcript -->
+    <rect x="12" y="48" width="580" height="480" rx="8" fill="#121018" stroke="#2e2838"/>
+    <rect x="12" y="48" width="580" height="28" rx="8" fill="#1a1722"/>
+    <rect x="12" y="64" width="580" height="12" fill="#1a1722"/>
+    <text x="28" y="68" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">session · transcript</text>
+    <text x="28" y="100" fill="#67e8f9" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">you</text>
+    <text x="68" y="100" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">Refactor the auth middleware and add tests.</text>
+    <text x="28" y="128" fill="#a78bfa" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">assistant</text>
+    <text x="108" y="128" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">I'll inspect the middleware, then patch</text>
+    <text x="28" y="148" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">and cover the happy path + deny cases.</text>
+    <rect x="28" y="168" width="520" height="72" rx="6" fill="#1a1722" stroke="#2e2838"/>
+    <text x="40" y="190" fill="#67e8f9" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">tool  read</text>
+    <text x="120" y="190" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">internal/auth/middleware.go</text>
+    <text x="40" y="212" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">224 lines · ok</text>
+    <text x="40" y="230" fill="#4ade80" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">✓ loaded</text>
+    <text x="28" y="268" fill="#a78bfa" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">assistant</text>
+    <text x="108" y="268" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">Found the JWT check. Writing a focused fix…</text>
+    <rect x="28" y="286" width="520" height="88" rx="6" fill="#1a1722" stroke="#2e2838"/>
+    <text x="40" y="308" fill="#67e8f9" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">tool  edit</text>
+    <text x="120" y="308" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">internal/auth/middleware.go</text>
+    <text x="40" y="330" fill="#4ade80" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">+  if err := validateClaims(tok); err != nil {</text>
+    <text x="40" y="348" fill="#4ade80" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">+    return unauthorized(w, err)</text>
+    <text x="40" y="366" fill="#f472b6" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">-  // TODO: tighten claim checks</text>
+    <!-- notice + composer -->
+    <text x="28" y="400" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">agent working · 2 tools this turn</text>
+    <rect x="20" y="420" width="564" height="92" rx="8" fill="#1a1722" stroke="#a78bfa" stroke-opacity="0.45"/>
+    <text x="36" y="448" fill="#a78bfa" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13">prompt ❯</text>
+    <text x="120" y="448" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13">also add a table-driven test for expired tokens</text>
+    <rect x="120" y="436" width="8" height="16" fill="#a78bfa">
+      <animate attributeName="opacity" values="1;0;1" dur="1.1s" repeatCount="indefinite"/>
+    </rect>
+    <text x="36" y="490" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10">enter send · shift+enter newline · @ file · / commands</text>
+    <!-- right stack: context + activity -->
+    <rect x="604" y="48" width="344" height="232" rx="8" fill="#121018" stroke="#2e2838"/>
+    <rect x="604" y="48" width="344" height="28" rx="8" fill="#1a1722"/>
+    <rect x="604" y="64" width="344" height="12" fill="#1a1722"/>
+    <text x="620" y="68" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">context</text>
+    <text x="620" y="100" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">provider</text>
+    <text x="720" y="100" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">anthropic</text>
+    <text x="620" y="122" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">model</text>
+    <text x="720" y="122" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">claude-sonnet-4</text>
+    <text x="620" y="144" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">agent</text>
+    <text x="720" y="144" fill="#a78bfa" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">build</text>
+    <text x="620" y="166" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">mode</text>
+    <text x="720" y="166" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">default</text>
+    <text x="620" y="188" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">effort</text>
+    <text x="720" y="188" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">high</text>
+    <text x="620" y="210" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">workdir</text>
+    <text x="720" y="210" fill="#67e8f9" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">~/proj/api</text>
+    <text x="620" y="240" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">context</text>
+    <rect x="720" y="230" width="180" height="10" rx="3" fill="#2e2838"/>
+    <rect x="720" y="230" width="118" height="10" rx="3" fill="#a78bfa"/>
+    <text x="910" y="240" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10">66%</text>
+    <rect x="604" y="292" width="344" height="236" rx="8" fill="#121018" stroke="#2e2838"/>
+    <rect x="604" y="292" width="344" height="28" rx="8" fill="#1a1722"/>
+    <rect x="604" y="308" width="344" height="12" fill="#1a1722"/>
+    <text x="620" y="312" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">activity</text>
+    <text x="620" y="348" fill="#4ade80" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">● read middleware.go</text>
+    <text x="620" y="372" fill="#f0b429" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">● edit middleware.go</text>
+    <text x="620" y="396" fill="#67e8f9" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">… drafting tests</text>
+    <text x="620" y="432" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">tips</text>
+    <text x="620" y="454" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">ctrl+t jump to latest</text>
+    <text x="620" y="474" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">shift+tab cycle mode</text>
+    <text x="620" y="494" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">@path attach files</text>
+    <!-- footer -->
+    <rect x="0" y="548" width="960" height="52" fill="#14121a"/>
+    <text x="24" y="578" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">f1 keys · ctrl+p palette · ctrl+h/l panes · /help</text>
+    <text x="720" y="578" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">in 12.4k · out 3.1k</text>
+  </g>
+</svg>

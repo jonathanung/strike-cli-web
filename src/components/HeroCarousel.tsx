@@ -1,33 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { heroSlides } from '../lib/productMedia'
 
-/**
- * Hero demo GIF carousel.
- * To wire real recordings later:
- *   1. Drop files in public/demos/ (e.g. hero-launch.gif, hero-tools.gif, hero-sessions.gif)
- *   2. Uncomment the `img` field on each slide and replace the placeholder with:
- *      <img src={slide.img} alt={slide.label} className="h-full w-full object-cover" />
- * data-demo-slot attributes mark each frame for easy find-replace.
- */
-const slides = [
-  {
-    slot: 'hero-launch',
-    label: 'Launch & first prompt',
-    // img: '/demos/hero-launch.gif',
-  },
-  {
-    slot: 'hero-tools',
-    label: 'Tools & permissions',
-    // img: '/demos/hero-tools.gif',
-  },
-  {
-    slot: 'hero-sessions',
-    label: 'Sessions & continue',
-    // img: '/demos/hero-sessions.gif',
-  },
-] as const
-
-const ROTATE_MS = 4000
+const ROTATE_MS = 4500
 
 export function HeroCarousel() {
   const reduceMotion = useReducedMotion()
@@ -35,18 +10,19 @@ export function HeroCarousel() {
   const [paused, setPaused] = useState(false)
 
   const goTo = useCallback((i: number) => {
-    setIndex(((i % slides.length) + slides.length) % slides.length)
+    setIndex(((i % heroSlides.length) + heroSlides.length) % heroSlides.length)
   }, [])
 
   useEffect(() => {
     if (reduceMotion || paused) return
     const id = window.setInterval(() => {
-      setIndex((prev) => (prev + 1) % slides.length)
+      setIndex((prev) => (prev + 1) % heroSlides.length)
     }, ROTATE_MS)
     return () => window.clearInterval(id)
   }, [reduceMotion, paused])
 
-  const slide = slides[index]
+  const slide = heroSlides[index]
+  const isPrimary = index === 0
 
   return (
     <div
@@ -55,23 +31,36 @@ export function HeroCarousel() {
       onMouseLeave={() => setPaused(false)}
     >
       <div
-        className="relative aspect-[16/10] w-full min-w-0 overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_0_48px_-12px] shadow-accent-glow/35"
-        data-demo-slot={slide.slot}
+        className="relative aspect-[16/10] w-full min-w-0 overflow-hidden rounded-2xl border border-border bg-terminal-bg shadow-[0_0_48px_-12px] shadow-accent-glow/35"
+        data-demo-slot={slide.id}
       >
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
-            key={slide.slot}
-            className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-surface/80 px-6 text-center"
+            key={slide.id}
+            className="absolute inset-0"
             initial={reduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={reduceMotion ? undefined : { opacity: 0 }}
-            transition={reduceMotion ? { duration: 0 } : { duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            transition={
+              reduceMotion ? { duration: 0 } : { duration: 0.35, ease: [0.22, 1, 0.36, 1] }
+            }
           >
-            {/* Replace this block with <img src={slide.img} ... /> when GIFs are ready */}
-            <span className="font-mono text-xs font-medium uppercase tracking-wider text-accent">
-              {slide.label}
-            </span>
-            <span className="text-sm text-text-muted">Demo coming soon</span>
+            <img
+              src={slide.src}
+              alt={slide.alt}
+              width={960}
+              height={600}
+              className="h-full w-full object-cover object-top"
+              decoding="async"
+              // Primary slide is the LCP candidate — eager + high priority only for index 0 mount path
+              loading={isPrimary ? 'eager' : 'lazy'}
+              fetchPriority={isPrimary ? 'high' : 'auto'}
+              draggable={false}
+            />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-bg/90 via-bg/40 to-transparent px-4 pb-3 pt-10">
+              <p className="font-mono text-xs font-medium text-accent">{slide.label}</p>
+              <p className="mt-0.5 text-sm text-text-muted">{slide.caption}</p>
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -79,13 +68,13 @@ export function HeroCarousel() {
       <div
         className="mt-3 flex items-center justify-center gap-1"
         role="tablist"
-        aria-label="Hero demo slides"
+        aria-label="Hero product stills"
       >
-        {slides.map((s, i) => {
+        {heroSlides.map((s, i) => {
           const active = i === index
           return (
             <button
-              key={s.slot}
+              key={s.id}
               type="button"
               role="tab"
               aria-selected={active}

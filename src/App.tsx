@@ -4,6 +4,7 @@ import { Hero } from './components/Hero'
 import { HappyPath } from './components/HappyPath'
 import { Demos } from './components/Demos'
 import { Features } from './components/Features'
+import { ProductStills } from './components/ProductStills'
 import { ComingSoon } from './components/ComingSoon'
 import { Footer } from './components/Footer'
 
@@ -17,6 +18,7 @@ export default function App() {
         <HappyPath />
         <Demos />
         <Features />
+        <ProductStills />
         <ComingSoon />
       </main>
       <Footer />

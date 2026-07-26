@@ -86,11 +86,14 @@ Configure these under the repo **Settings → Secrets and variables → Actions*
 
 `/install` continues to be served by container nginx after deploy; no extra host proxy rule is required beyond forwarding to the app port.
 
-## Demo GIFs
+## Product visuals
 
-1. Record the three flows described on the site (launch, tools/permissions, sessions).
-2. Put files in `public/demos/` (e.g. `launch.gif`, `tools.gif`, `sessions.gif`).
-3. Wire them in `src/components/Demos.tsx` (replace the dashed placeholders with `<img src="/demos/….gif" />`).
+Hero, demos, and feature deep-links use stills in `public/product/`. See
+[`public/product/ASSETS.md`](public/product/ASSETS.md) for filenames, capture
+process (VHS/asciinema/manual), and how to drop in real TUI screenshots or GIFs
+without changing component structure.
+
+Media catalog (paths, alt text, feature → still anchors): `src/lib/productMedia.ts`.
 
 ## Links
 

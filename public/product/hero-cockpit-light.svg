@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" role="img" aria-labelledby="title desc">
+  <title id="title">Strike multi-pane cockpit (light)</title>
+  <desc id="desc">Light-theme secondary still of the Strike multi-pane cockpit.</desc>
+  <defs>
+    <clipPath id="frame"><rect x="0" y="0" width="960" height="600" rx="14"/></clipPath>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="960" height="600" fill="#f4f0fa"/>
+    <rect x="0" y="0" width="960" height="36" fill="#ebe6f4"/>
+    <circle cx="22" cy="18" r="5" fill="#db2777"/>
+    <circle cx="40" cy="18" r="5" fill="#d97706"/>
+    <circle cx="58" cy="18" r="5" fill="#16a34a"/>
+    <text x="84" y="22" fill="#7c3aed" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" font-weight="700">⚡ strike</text>
+    <text x="170" y="22" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">session · build · mode default</text>
+    <text x="720" y="22" fill="#0891b2" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">anthropic · claude-sonnet</text>
+    <rect x="12" y="48" width="580" height="480" rx="8" fill="#ffffff" stroke="#d4cce0"/>
+    <rect x="12" y="48" width="580" height="28" rx="8" fill="#f3eef8"/>
+    <rect x="12" y="64" width="580" height="12" fill="#f3eef8"/>
+    <text x="28" y="68" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">session · transcript</text>
+    <text x="28" y="100" fill="#0891b2" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">you</text>
+    <text x="68" y="100" fill="#1c1917" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">Refactor the auth middleware and add tests.</text>
+    <text x="28" y="128" fill="#7c3aed" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">assistant</text>
+    <text x="108" y="128" fill="#1c1917" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">I'll inspect the middleware, then patch.</text>
+    <rect x="28" y="150" width="520" height="64" rx="6" fill="#f8f5fc" stroke="#d4cce0"/>
+    <text x="40" y="176" fill="#0891b2" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">tool  read · middleware.go</text>
+    <text x="40" y="198" fill="#16a34a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">✓ loaded</text>
+    <rect x="20" y="420" width="564" height="92" rx="8" fill="#f3eef8" stroke="#7c3aed" stroke-opacity="0.4"/>
+    <text x="36" y="448" fill="#7c3aed" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13">prompt ❯</text>
+    <text x="120" y="448" fill="#1c1917" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13">also add expired-token tests</text>
+    <rect x="604" y="48" width="344" height="232" rx="8" fill="#ffffff" stroke="#d4cce0"/>
+    <rect x="604" y="48" width="344" height="28" rx="8" fill="#f3eef8"/>
+    <rect x="604" y="64" width="344" height="12" fill="#f3eef8"/>
+    <text x="620" y="68" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">context</text>
+    <text x="620" y="110" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">provider  anthropic</text>
+    <text x="620" y="134" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">model     claude-sonnet-4</text>
+    <text x="620" y="158" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">agent     build</text>
+    <text x="620" y="200" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">context</text>
+    <rect x="720" y="190" width="180" height="10" rx="3" fill="#e7e0f2"/>
+    <rect x="720" y="190" width="118" height="10" rx="3" fill="#7c3aed"/>
+    <rect x="604" y="292" width="344" height="236" rx="8" fill="#ffffff" stroke="#d4cce0"/>
+    <rect x="604" y="292" width="344" height="28" rx="8" fill="#f3eef8"/>
+    <rect x="604" y="308" width="344" height="12" fill="#f3eef8"/>
+    <text x="620" y="312" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">activity</text>
+    <text x="620" y="352" fill="#16a34a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">● read middleware.go</text>
+    <text x="620" y="376" fill="#d97706" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">● edit middleware.go</text>
+    <rect x="0" y="548" width="960" height="52" fill="#ebe6f4"/>
+    <text x="24" y="578" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">light appearance · /theme light</text>
+  </g>
+</svg>
