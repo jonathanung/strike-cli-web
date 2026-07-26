@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0c0b10;
+  --color-bg-elevated: #14121a;
+  --color-surface: #1a1722;
+  --color-border: #2e2838;
+  --color-text: #f4f0fa;
+  --color-text-muted: #9b93a8;
+  --color-accent: #a78bfa;
+  --color-accent-soft: #2a2140;
+  --color-accent-glow: #7c5cbf;
+  --color-sky: #67e8f9;
+  --color-bolt: #f0b429;
+  --color-neon-pink: #f472b6;
+  --color-terminal-bg: #121018;
+  --color-terminal-fg: #e4e0ec;
+  --color-terminal-green: #4ade80;
+  --color-terminal-comment: #6b6580;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, SFMono-Regular, Menlo,
+    Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    font-family: var(--font-sans);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-bg);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--color-border) 45%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-border) 45%, transparent) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black 20%, transparent 75%);
+  }
+
+  .animate-orb {
+    animation: orb-drift var(--orb-duration, 22s) ease-in-out infinite alternate;
+  }
+
+  .animate-curve-dash {
+    animation: curve-dash var(--curve-duration, 50s) linear infinite;
+  }
+
+  .text-gradient-accent {
+    background-image: linear-gradient(
+      135deg,
+      var(--color-text) 0%,
+      var(--color-accent) 55%,
+      var(--color-sky) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+@keyframes orb-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(4%, -3%, 0) scale(1.05);
+  }
+  66% {
+    transform: translate3d(-3%, 4%, 0) scale(0.97);
+  }
+  100% {
+    transform: translate3d(2%, 2%, 0) scale(1.03);
+  }
+}
+
+@keyframes curve-dash {
+  to {
+    stroke-dashoffset: -120;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-orb,
+  .animate-curve-dash {
+    animation: none !important;
+  }
+}
