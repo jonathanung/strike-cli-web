@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { heroSlides } from '../lib/productMedia'
 
 const ROTATE_MS = 4500
+const primary = heroSlides[0]
 
 export function HeroCarousel() {
   const reduceMotion = useReducedMotion()
@@ -22,7 +23,7 @@ export function HeroCarousel() {
   }, [reduceMotion, paused])
 
   const slide = heroSlides[index]
-  const isPrimary = index === 0
+  const showingPrimary = index === 0
 
   return (
     <div
@@ -34,35 +35,52 @@ export function HeroCarousel() {
         className="relative aspect-[16/10] w-full min-w-0 overflow-hidden rounded-2xl border border-border bg-terminal-bg shadow-[0_0_48px_-12px] shadow-accent-glow/35"
         data-demo-slot={slide.id}
       >
+        {/* Primary still stays mounted for stable LCP */}
+        <img
+          src={primary.src}
+          alt={showingPrimary ? primary.alt : ''}
+          width={960}
+          height={600}
+          className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-300 ${
+            showingPrimary ? 'opacity-100' : 'opacity-0'
+          }`}
+          decoding="async"
+          loading="eager"
+          fetchPriority="high"
+          draggable={false}
+          aria-hidden={!showingPrimary}
+        />
+
         <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={slide.id}
-            className="absolute inset-0"
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={reduceMotion ? undefined : { opacity: 0 }}
-            transition={
-              reduceMotion ? { duration: 0 } : { duration: 0.35, ease: [0.22, 1, 0.36, 1] }
-            }
-          >
-            <img
-              src={slide.src}
-              alt={slide.alt}
-              width={960}
-              height={600}
-              className="h-full w-full object-cover object-top"
-              decoding="async"
-              // Primary slide is the LCP candidate — eager + high priority only for index 0 mount path
-              loading={isPrimary ? 'eager' : 'lazy'}
-              fetchPriority={isPrimary ? 'high' : 'auto'}
-              draggable={false}
-            />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-bg/90 via-bg/40 to-transparent px-4 pb-3 pt-10">
-              <p className="font-mono text-xs font-medium text-accent">{slide.label}</p>
-              <p className="mt-0.5 text-sm text-text-muted">{slide.caption}</p>
-            </div>
-          </motion.div>
+          {!showingPrimary ? (
+            <motion.div
+              key={slide.id}
+              className="absolute inset-0"
+              initial={reduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={reduceMotion ? undefined : { opacity: 0 }}
+              transition={
+                reduceMotion ? { duration: 0 } : { duration: 0.35, ease: [0.22, 1, 0.36, 1] }
+              }
+            >
+              <img
+                src={slide.src}
+                alt={slide.alt}
+                width={960}
+                height={600}
+                className="h-full w-full object-cover object-top"
+                decoding="async"
+                loading="lazy"
+                draggable={false}
+              />
+            </motion.div>
+          ) : null}
         </AnimatePresence>
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-bg/90 via-bg/40 to-transparent px-4 pb-3 pt-10">
+          <p className="font-mono text-xs font-medium text-accent">{slide.label}</p>
+          <p className="mt-0.5 text-sm text-text-muted">{slide.caption}</p>
+        </div>
       </div>
 
       <div

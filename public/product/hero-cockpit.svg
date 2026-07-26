@@ -47,9 +47,7 @@
     <rect x="20" y="420" width="564" height="92" rx="8" fill="#1a1722" stroke="#a78bfa" stroke-opacity="0.45"/>
     <text x="36" y="448" fill="#a78bfa" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13">prompt ❯</text>
     <text x="120" y="448" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13">also add a table-driven test for expired tokens</text>
-    <rect x="120" y="436" width="8" height="16" fill="#a78bfa">
-      <animate attributeName="opacity" values="1;0;1" dur="1.1s" repeatCount="indefinite"/>
-    </rect>
+    <rect x="548" y="436" width="8" height="16" fill="#a78bfa"/>
     <text x="36" y="490" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10">enter send · shift+enter newline · @ file · / commands</text>
     <!-- right stack: context + activity -->
     <rect x="604" y="48" width="344" height="232" rx="8" fill="#121018" stroke="#2e2838"/>
