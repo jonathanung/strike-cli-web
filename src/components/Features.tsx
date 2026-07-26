@@ -191,7 +191,6 @@ function stillForId(id: string | undefined) {
 
 export function Features() {
   const reduceMotion = useReducedMotion()
-  let cardIndex = 0
 
   return (
     <Section id="features" className="pb-20 sm:pb-28">
@@ -222,10 +221,9 @@ export function Features() {
             </div>
 
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {group.features.map((feature) => {
+              {group.features.map((feature, i) => {
                 const Icon = feature.icon
                 const still = stillForId(feature.stillId)
-                const i = cardIndex++
                 return (
                   <motion.li
                     key={feature.title}
@@ -235,7 +233,7 @@ export function Features() {
                     transition={
                       reduceMotion
                         ? { duration: 0 }
-                        : { duration: 0.4, delay: Math.min(i * 0.03, 0.24), ease: [0.22, 1, 0.36, 1] }
+                        : { duration: 0.4, delay: Math.min(i * 0.05, 0.2), ease: [0.22, 1, 0.36, 1] }
                     }
                   >
                     <article className="group relative flex h-full min-w-0 flex-col rounded-2xl border border-border bg-surface/80 p-5 transition-all duration-200 hover:border-accent/40 hover:shadow-[0_0_40px_-12px] hover:shadow-accent/30 sm:p-6">
@@ -260,6 +258,7 @@ export function Features() {
                         {feature.docsTo ? (
                           <Link
                             to={feature.docsTo}
+                            aria-label={`Docs: ${feature.title}`}
                             className="inline-flex min-h-11 w-fit items-center gap-1.5 rounded-lg text-sm font-medium text-accent transition-colors hover:text-sky focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                           >
                             Docs

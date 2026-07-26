@@ -104,13 +104,3 @@ export const demoMedia = [
   },
 ] as const
 
-/** @deprecated Prefer stillId on feature cards in Features.tsx. Kept for any residual lookups. */
-export const featureStillId: Record<string, string> = {
-  'Solid-surface TUI': 'stills-agents',
-  'Compaction & context doctor': 'stills-telemetry',
-  'In-TUI pickers': 'stills-mentions',
-  'Concurrent roots': 'stills-agents',
-  'Git worktrees per session': 'stills-worktrees',
-  'Agents & skills': 'stills-agents',
-  'Tools & permissions': 'stills-permissions',
-}
