@@ -1,35 +1,47 @@
+import type { ReactNode } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowUpRight, Check, Minus } from 'lucide-react'
 import { Section } from './ui/Section'
 
 const DOCS_AGENTS =
-  'https://github.com/jonathanung/strike-cli/blob/main/docs/agents-skills.md'
-const DOCS_PERMISSIONS =
   'https://github.com/jonathanung/strike-cli/blob/main/docs/usage.md'
+const DOCS_PERMISSIONS =
+  'https://github.com/jonathanung/strike-cli/blob/main/docs/config.md'
 
 type Row = {
-  strike: string
+  id: string
+  strike: ReactNode
   them: string
 }
 
 const rows: Row[] = [
   {
+    id: 'multi-root',
     strike: 'Multi-root agents in one TUI + worktrees',
     them: 'One session / external orchestration',
   },
   {
+    id: 'cockpit',
     strike: 'Right-pane cockpit (agents, activity, files, md, vim, memory/issues)',
     them: 'Chat-first column',
   },
   {
+    id: 'permissions',
     strike: 'Hard permission modes + plan gates',
     them: 'Softer / IDE-tied controls',
   },
   {
-    strike: 'JSONL sessions, fork/resume, headless exec',
+    id: 'sessions',
+    strike: (
+      <>
+        JSONL sessions, fork/resume, headless{' '}
+        <code className="font-mono text-terminal-fg">exec</code>
+      </>
+    ),
     them: 'Varies by product',
   },
   {
+    id: 'local-first',
     strike: 'Local-first, open source, self-host web attach',
     them: 'Cloud / product lock-in risk',
   },
@@ -92,7 +104,7 @@ export function Differentiation() {
             <tbody>
               {rows.map((row) => (
                 <tr
-                  key={row.strike}
+                  key={row.id}
                   className="border-b border-border/70 last:border-b-0"
                 >
                   <td className="px-4 py-3.5 align-top sm:px-6 sm:py-4">
