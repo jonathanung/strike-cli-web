@@ -4,9 +4,9 @@ import { ArrowUpRight, Check, Minus } from 'lucide-react'
 import { Section } from './ui/Section'
 
 const DOCS_AGENTS =
-  'https://github.com/jonathanung/strike-cli/blob/main/docs/usage.md'
+  'https://github.com/jonathanung/strike/blob/main/docs/usage.md'
 const DOCS_PERMISSIONS =
-  'https://github.com/jonathanung/strike-cli/blob/main/docs/config.md'
+  'https://github.com/jonathanung/strike/blob/main/docs/config.md'
 
 type Row = {
   id: string

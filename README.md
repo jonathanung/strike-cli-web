@@ -1,6 +1,6 @@
 # strike-cli-web
 
-Marketing site for [strike-cli](https://github.com/jonathanung/strike-cli) — agentic coding in your terminal.
+Marketing site for [strike](https://github.com/jonathanung/strike) — agentic coding in your terminal.
 
 Live target: [strike.jonathanung.ca](https://strike.jonathanung.ca)
 
@@ -42,7 +42,7 @@ docker run --rm -p 8080:80 strike-cli-web
 
 nginx proxies `GET /install` (exact match) to the raw install script on the CLI repo:
 
-`https://raw.githubusercontent.com/jonathanung/strike-cli/main/scripts/install.sh`
+`https://raw.githubusercontent.com/jonathanung/strike/main/scripts/install.sh`
 
 This is a **proxy**, not a redirect — `curl …/install | bash` receives the script body.
 
@@ -97,5 +97,5 @@ Media catalog (paths, alt text, feature → still anchors): `src/lib/productMedi
 
 ## Links
 
-- CLI: [github.com/jonathanung/strike-cli](https://github.com/jonathanung/strike-cli)
+- CLI: [github.com/jonathanung/strike](https://github.com/jonathanung/strike)
 - Site source: this repository

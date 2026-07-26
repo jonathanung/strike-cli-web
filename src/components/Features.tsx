@@ -70,7 +70,7 @@ export function Features() {
     <Section id="features" className="pb-20 sm:pb-28">
       <div className="mb-10 text-center sm:mb-12">
         <h2 className="text-2xl font-bold tracking-tight text-text sm:text-3xl">Features</h2>
-        <p className="mt-3 text-text-muted">What ships in strike-cli today.</p>
+        <p className="mt-3 text-text-muted">What ships in strike today.</p>
       </div>
 
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -1,6 +1,5 @@
 import { Github } from 'lucide-react'
-
-const GITHUB_URL = 'https://github.com/jonathanung/strike-cli'
+import { GITHUB_URL } from '../lib/github'
 
 export function Header() {
   return (
@@ -22,7 +21,7 @@ export function Header() {
           href={GITHUB_URL}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Strike CLI on GitHub"
+          aria-label="Strike on GitHub"
           className="inline-flex size-10 min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         >
           <Github className="size-5" />
