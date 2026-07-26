@@ -58,7 +58,7 @@ Same pattern as [new-portfolio](https://github.com/jonathanung/new-portfolio): G
 
 - **File:** [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)
 - **Build job:** checkout → Node 22 → `npm ci` → `npm run build` → `test`/`lint` if present
-- **Deploy job:** runs only when `github.event_name == 'push' && github.ref == 'refs/heads/main'` (PRs never deploy). SSHes to the droplet, `git pull origin main`, then `docker-compose up -d --build --remove-orphans` (and prunes dangling images). Does not run `docker-compose down --volumes` on every deploy.
+- **Deploy job:** runs only when `github.event_name == 'push' && github.ref == 'refs/heads/main'` (PRs never deploy). SSHes to the droplet, `git pull origin main`, then `docker compose up -d --build --remove-orphans` (and prunes dangling images). Uses Compose V2 (`docker compose`), not legacy `docker-compose` (V1 breaks on recreate with `KeyError: ContainerConfig`).
 
 ### Required GitHub secrets
 
@@ -81,7 +81,7 @@ Configure these under the repo **Settings → Secrets and variables → Actions*
 
    ```bash
    cd /var/www/strike-cli-web
-   docker-compose up -d --build
+   docker compose up -d --build
    ```
 
 `/install` continues to be served by container nginx after deploy; no extra host proxy rule is required beyond forwarding to the app port.
