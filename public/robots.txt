@@ -1,4 +1,5 @@
+# https://strike.jonathanung.ca
 User-agent: *
 Allow: /
 
-Sitemap: https://strike.jonathanung.ca/
+Sitemap: https://strike.jonathanung.ca/sitemap.xml
