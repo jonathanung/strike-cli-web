@@ -34,7 +34,7 @@ export const DOC_PAGES: DocPage[] = [
   {
     slug: 'web',
     title: 'Web',
-    summary: 'Browser and remote experiences on the roadmap.',
+    summary: 'Experimental strike serve web attach, plus remote experiences on the roadmap.',
   },
 ]
 

@@ -11,9 +11,9 @@ type Upcoming = {
 
 const upcoming: Upcoming[] = [
   {
-    title: 'Web UI',
+    title: 'Polished remote web',
     description:
-      'A browser experience for Strike — same agentic workflows, reachable from anywhere you work.',
+      'strike serve is experimental today. A fuller hosted/remote browser experience is on the roadmap — CLI stays first-class.',
     icon: Globe,
   },
   {
