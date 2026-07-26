@@ -47,6 +47,9 @@ export function Header() {
           className="hidden min-w-0 items-center gap-0.5 md:flex"
           aria-label="Primary"
         >
+          <Link to="/#quickstart" className={hashLinkClass}>
+            Quickstart
+          </Link>
           <Link to="/#features" className={hashLinkClass}>
             Features
           </Link>
@@ -104,6 +107,15 @@ export function Header() {
           className="border-t border-border/80 bg-bg/95 px-4 py-3 md:hidden sm:px-6"
         >
           <ul className="flex flex-col gap-1">
+            <li>
+              <Link
+                to="/#quickstart"
+                onClick={close}
+                className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-text-muted hover:bg-accent-soft hover:text-text"
+              >
+                Quickstart
+              </Link>
+            </li>
             <li>
               <Link
                 to="/#features"

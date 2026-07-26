@@ -71,8 +71,8 @@ export const FAQ_ITEMS: FaqItem[] = [
     answer:
       'The TUI is primary. strike serve hosts an experimental browser cockpit that can drive a live engine session or read-only attach to JSONL logs — useful for attach and LAN experiments, not a replacement for the terminal UI. A fuller remote/hosted browser experience remains on the roadmap.',
     links: [
+      { label: 'Web serve', to: '/#web-serve' },
       { label: 'Web docs', to: '/docs/web' },
-      { label: 'Coming soon', to: '/#coming-soon' },
     ],
   },
   {
