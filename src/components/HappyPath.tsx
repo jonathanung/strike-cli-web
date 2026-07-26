@@ -183,7 +183,7 @@ export function HappyPath() {
   }
 
   return (
-    <Section id="quickstart" className="pb-20 sm:pb-28">
+    <Section id="get-started" className="pb-20 sm:pb-28">
       <div className="mb-10 text-center sm:mb-12">
         <h2 className="text-2xl font-bold tracking-tight text-text sm:text-3xl">
           Get started in seconds
