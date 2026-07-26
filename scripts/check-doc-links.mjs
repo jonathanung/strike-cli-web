@@ -137,7 +137,24 @@ function checkSourceRoutes(docs) {
   return errors
 }
 
+
+function checkSitemap(docs) {
+  const errors = []
+  const sm = readFileSync(join(root, 'public/sitemap.xml'), 'utf8')
+  for (const slug of docs.keys()) {
+    const loc = `https://strike.jonathanung.ca/docs/${slug}`
+    if (!sm.includes(`<loc>${loc}</loc>`)) {
+      errors.push(`public/sitemap.xml missing ${loc}`)
+    }
+  }
+  if (!sm.includes('<loc>https://strike.jonathanung.ca/docs</loc>')) {
+    errors.push('public/sitemap.xml missing /docs index')
+  }
+  return errors
+}
+
 function checkFeatureDeepLinks(docs) {
+
   const errors = []
   const features = readFileSync(join(root, 'src/components/Features.tsx'), 'utf8')
   const links = [
@@ -165,6 +182,7 @@ function main() {
     ...checkSourceRoutes(docs),
     ...checkMarkdownLinks(docs),
     ...checkFeatureDeepLinks(docs),
+    ...checkSitemap(docs),
   ]
 
   if (errors.length) {

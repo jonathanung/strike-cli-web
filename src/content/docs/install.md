@@ -6,15 +6,16 @@
 curl -fsSL https://strike.jonathanung.ca/install | bash
 ```
 
-`https://strike.jonathanung.ca/install` is a **stable brand URL** that should
-**redirect** (301/302) to the raw install script on GitHub, for example:
+`https://strike.jonathanung.ca/install` is a **stable brand URL**. The marketing
+site **proxies** (does not redirect) the install script body so
+`curl … | bash` receives the script directly. Upstream source:
 
 ```
-https://raw.githubusercontent.com/jonathanung/strike-cli/main/scripts/install.sh
+https://raw.githubusercontent.com/jonathanung/strike/main/scripts/install.sh
 ```
 
 Binaries are **not** hosted on the VPS long-term. The script resolves the
-latest [GitHub Release](https://github.com/jonathanung/strike-cli/releases),
+latest [GitHub Release](https://github.com/jonathanung/strike/releases),
 downloads the matching `strike_<tag>_<os>_<arch>.tar.gz`, verifies
 `checksums.txt` (sha256), and installs to `~/.strike/bin/strike` (no root).
 
@@ -66,19 +67,20 @@ Windows self-update is unsupported in v1; re-download from Releases.
 
 ## Domain / DNS (ops)
 
-Configure `strike.jonathanung.ca` with TLS and **redirect-only** rules:
+Configure `strike.jonathanung.ca` with TLS. Container nginx on this site:
 
-| Public URL | Redirects to |
+| Public URL | Behavior |
 |---|---|
-| `https://strike.jonathanung.ca/install` | raw `scripts/install.sh` on default branch |
-| `https://strike.jonathanung.ca/` (optional) | this repo or docs |
+| `https://strike.jonathanung.ca/install` | **Proxy** to raw `scripts/install.sh` on the strike default branch (script body, not an HTML redirect) |
+| `https://strike.jonathanung.ca/` | Marketing site + on-domain `/docs` |
 | `https://strike.jonathanung.ca/latest` (optional) | GitHub Releases latest |
 
 Smoke:
 
 ```sh
-curl -fsSLI https://strike.jonathanung.ca/install
-# expect a 301/302 chain ending at raw.githubusercontent.com/.../install.sh
+curl -fsSL -o /dev/null -w "%{http_code}\n" https://strike.jonathanung.ca/install
+# expect 200 and a shell script body (not a redirect HTML page)
+curl -fsSL https://strike.jonathanung.ca/install | head
 ```
 
 ## Build from source
