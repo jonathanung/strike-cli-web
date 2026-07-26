@@ -1,5 +1,6 @@
 import { Hero } from '../components/Hero'
 import { HappyPath } from '../components/HappyPath'
+import { Quickstart } from '../components/Quickstart'
 import { Demos } from '../components/Demos'
 import { Features } from '../components/Features'
 import { Differentiation } from '../components/Differentiation'
@@ -13,6 +14,7 @@ export function HomePage() {
     <>
       <Hero />
       <HappyPath />
+      <Quickstart />
       <Demos />
       <Features />
       <Differentiation />
