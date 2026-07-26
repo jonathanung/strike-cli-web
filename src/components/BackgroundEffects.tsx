@@ -56,44 +56,44 @@ export function BackgroundEffects() {
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
       aria-hidden
     >
-      {/* Soft top radial spotlight under hero */}
+      {/* Soft top radial — restrained, cockpit not lavender SaaS wash */}
       <div
-        className="absolute inset-x-0 top-0 h-[70vh]"
+        className="absolute inset-x-0 top-0 h-[55vh]"
         style={{
           background:
-            'radial-gradient(ellipse 70% 55% at 50% -10%, color-mix(in srgb, var(--color-accent-glow) 28%, transparent), transparent 70%)',
+            'radial-gradient(ellipse 60% 50% at 50% -10%, color-mix(in srgb, var(--color-accent-glow) 14%, transparent), transparent 70%)',
         }}
       />
 
       {/* Subtle grid overlay */}
-      <div className="bg-grid absolute inset-0 opacity-[0.35]" />
+      <div className="bg-grid absolute inset-0 opacity-[0.22]" />
 
-      {/* Floating gradient orbs */}
+      {/* Floating gradient orbs — lower opacity for solid TUI feel */}
       <div
-        className={`absolute -left-24 top-[-10%] size-[42rem] rounded-full blur-3xl ${orbClass}`}
+        className={`absolute -left-24 top-[-10%] size-[36rem] rounded-full blur-3xl ${orbClass}`}
         style={{
           background:
-            'radial-gradient(circle, color-mix(in srgb, var(--color-accent-glow) 45%, transparent) 0%, transparent 70%)',
-          opacity: 0.55,
+            'radial-gradient(circle, color-mix(in srgb, var(--color-accent-glow) 28%, transparent) 0%, transparent 70%)',
+          opacity: 0.32,
           ['--orb-duration' as string]: '24s',
         }}
       />
       <div
-        className={`absolute -right-32 top-[18%] size-[36rem] rounded-full blur-3xl ${orbClass}`}
+        className={`absolute -right-32 top-[22%] size-[28rem] rounded-full blur-3xl ${orbClass}`}
         style={{
           background:
-            'radial-gradient(circle, color-mix(in srgb, var(--color-neon-pink) 30%, transparent) 0%, transparent 70%)',
-          opacity: 0.4,
+            'radial-gradient(circle, color-mix(in srgb, var(--color-sky) 18%, transparent) 0%, transparent 70%)',
+          opacity: 0.22,
           ['--orb-duration' as string]: '28s',
           animationDelay: reduceMotion ? undefined : '-8s',
         }}
       />
       <div
-        className={`absolute bottom-[-8%] left-[20%] size-[40rem] rounded-full blur-3xl ${orbClass}`}
+        className={`absolute bottom-[-8%] left-[20%] size-[32rem] rounded-full blur-3xl ${orbClass}`}
         style={{
           background:
-            'radial-gradient(circle, color-mix(in srgb, var(--color-accent) 25%, transparent) 0%, color-mix(in srgb, var(--color-sky) 12%, transparent) 40%, transparent 70%)',
-          opacity: 0.35,
+            'radial-gradient(circle, color-mix(in srgb, var(--color-accent) 16%, transparent) 0%, transparent 70%)',
+          opacity: 0.2,
           ['--orb-duration' as string]: '32s',
           animationDelay: reduceMotion ? undefined : '-14s',
         }}

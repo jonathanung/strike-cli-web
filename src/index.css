@@ -1,32 +1,42 @@
 @import "tailwindcss";
 
+/* Tokens inspired by strike-cli internal/tui/theme Default() dark roles */
 @theme {
-  --color-bg: #0c0b10;
-  --color-bg-elevated: #14121a;
-  --color-surface: #1a1722;
-  --color-border: #2e2838;
-  --color-text: #f4f0fa;
-  --color-text-muted: #9b93a8;
-  --color-accent: #a78bfa;
-  --color-accent-soft: #2a2140;
-  --color-accent-glow: #7c5cbf;
-  --color-sky: #67e8f9;
-  --color-bolt: #f0b429;
-  --color-neon-pink: #f472b6;
-  --color-terminal-bg: #121018;
-  --color-terminal-fg: #e4e0ec;
-  --color-terminal-green: #4ade80;
-  --color-terminal-comment: #6b6580;
+  --color-bg: #1c1b22;
+  --color-bg-elevated: #21202a;
+  --color-surface: #252430;
+  --color-surface-focus: #2f2c3c;
+  --color-border: #4a4858;
+  --color-border-muted: #323040;
+  --color-text: #eceaf4;
+  --color-text-muted: #a09eb0;
+  --color-accent: #b39dff;
+  --color-accent-soft: #2f2c3c;
+  --color-accent-glow: #6d43d6;
+  --color-sky: #5cd0e8;
+  --color-bolt: #f5c451;
+  --color-success: #5edb92;
+  --color-danger: #ff8087;
+  /* Alias kept for existing copy-success classes; maps to TUI Success */
+  --color-neon-pink: #5edb92;
+  --color-terminal-bg: #18171e;
+  --color-terminal-fg: #eceaf4;
+  --color-terminal-green: #5edb92;
+  --color-terminal-comment: #6a6878;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, SFMono-Regular, Menlo,
     Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --radius-panel: 0.5rem;
+  --radius-control: 0.375rem;
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
+    color-scheme: dark;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -60,9 +70,9 @@
 @layer utilities {
   .bg-grid {
     background-image:
-      linear-gradient(to right, color-mix(in srgb, var(--color-border) 45%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in srgb, var(--color-border) 45%, transparent) 1px, transparent 1px);
-    background-size: 64px 64px;
+      linear-gradient(to right, color-mix(in srgb, var(--color-border-muted) 55%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-border-muted) 55%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
     mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black 20%, transparent 75%);
   }
 
@@ -84,6 +94,22 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+
+  /* Solid cockpit surfaces — prefer fill over heavy decorative borders */
+  .surface-solid {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border-muted);
+  }
+
+  .surface-elevated {
+    background-color: var(--color-bg-elevated);
+    border: 1px solid var(--color-border-muted);
+  }
+
+  .surface-terminal {
+    background-color: var(--color-terminal-bg);
+    border: 1px solid var(--color-border-muted);
   }
 }
 

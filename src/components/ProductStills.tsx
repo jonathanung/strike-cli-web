@@ -29,7 +29,7 @@ export function ProductStills() {
                 : { duration: 0.4, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }
             }
           >
-            <figure className="overflow-hidden rounded-2xl border border-border bg-surface/80 shadow-[0_0_32px_-16px] shadow-accent-glow/25">
+            <figure className="overflow-hidden rounded-lg border border-border-muted bg-surface">
               <div className="aspect-[16/10] bg-terminal-bg">
                 <img
                   src={still.src}
@@ -42,7 +42,7 @@ export function ProductStills() {
                   draggable={false}
                 />
               </div>
-              <figcaption className="border-t border-border px-4 py-3">
+              <figcaption className="border-t border-border-muted bg-bg-elevated px-4 py-3">
                 <p className="font-mono text-xs font-medium text-accent">{still.label}</p>
                 <p className="mt-1 text-sm leading-relaxed text-text-muted">{still.caption}</p>
               </figcaption>

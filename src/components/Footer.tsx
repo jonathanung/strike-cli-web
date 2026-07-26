@@ -59,7 +59,7 @@ export function Footer() {
   const tag = useLatestTag()
 
   return (
-    <footer className="relative border-t border-border bg-bg-elevated/90">
+    <footer className="relative border-t border-border-muted bg-bg-elevated">
       <div className="mx-auto flex min-w-0 max-w-6xl flex-col gap-10 px-4 py-10 sm:px-6 lg:px-8">
         <section aria-labelledby="trust-heading" className="min-w-0">
           <h2 id="trust-heading" className="sr-only">
@@ -67,8 +67,8 @@ export function Footer() {
           </h2>
 
           <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-            <div className="min-w-0 rounded-2xl border border-border bg-surface/70 p-5 sm:p-6">
-              <div className="mb-3 inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent">
+            <div className="min-w-0 rounded-lg border border-border-muted bg-surface p-5 sm:p-6">
+              <div className="mb-3 inline-flex size-9 items-center justify-center rounded-md bg-accent-soft text-accent">
                 <Scale className="size-4" aria-hidden />
               </div>
               <h3 className="text-sm font-semibold text-text">
@@ -100,8 +100,8 @@ export function Footer() {
               </p>
             </div>
 
-            <div className="min-w-0 rounded-2xl border border-border bg-surface/70 p-5 sm:p-6">
-              <div className="mb-3 inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent">
+            <div className="min-w-0 rounded-lg border border-border-muted bg-surface p-5 sm:p-6">
+              <div className="mb-3 inline-flex size-9 items-center justify-center rounded-md bg-accent-soft text-accent">
                 <Lock className="size-4" aria-hidden />
               </div>
               <h3 className="text-sm font-semibold text-text">Your code stays local</h3>
@@ -116,7 +116,7 @@ export function Footer() {
 
           <nav
             aria-label="Open source"
-            className="mt-5 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 border-t border-border/80 pt-5"
+            className="mt-5 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 border-t border-border-muted pt-5"
           >
             <a
               href={GITHUB_RELEASES_URL}
@@ -173,7 +173,7 @@ export function Footer() {
           </nav>
         </section>
 
-        <div className="flex min-w-0 flex-col items-center justify-between gap-6 border-t border-border/80 pt-8 sm:flex-row sm:items-start">
+        <div className="flex min-w-0 flex-col items-center justify-between gap-6 border-t border-border-muted pt-8 sm:flex-row sm:items-start">
           <div className="flex min-w-0 flex-col items-center gap-1 sm:items-start">
             <p className="flex items-center gap-2 text-sm font-medium text-text">
               <span className="text-bolt" aria-hidden>
@@ -240,7 +240,7 @@ export function Footer() {
               href={GITHUB_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 py-2 text-sm text-text-muted transition-colors hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-elevated"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md px-2 py-2 text-sm text-text-muted transition-colors hover:bg-surface-focus hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-elevated"
             >
               <Github className="size-4" aria-hidden />
               GitHub

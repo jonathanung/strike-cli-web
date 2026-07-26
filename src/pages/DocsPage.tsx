@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, BookOpen, Lock, Scale } from 'lucide-react'
 import { Section } from '../components/ui/Section'
+import { Card } from '../components/ui/Card'
+import { Button } from '../components/ui/Button'
 import { MarkdownDoc } from '../components/docs/MarkdownDoc'
 import { DOC_PAGES, docBodyMarkdown, getDocPage } from '../lib/docs'
 import {
@@ -23,9 +25,9 @@ function DocsNav({ activeSlug }: { activeSlug?: string }) {
         <li>
           <Link
             to="/docs"
-            className={`block rounded-lg px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+            className={`block rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
               !activeSlug
-                ? 'bg-accent-soft font-medium text-accent'
+                ? 'bg-surface-focus font-medium text-accent'
                 : 'text-text-muted hover:bg-surface hover:text-text'
             }`}
           >
@@ -38,15 +40,15 @@ function DocsNav({ activeSlug }: { activeSlug?: string }) {
             <li key={page.slug}>
               <Link
                 to={`/docs/${page.slug}`}
-                className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+                className={`flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
                   active
-                    ? 'bg-accent-soft font-medium text-accent'
+                    ? 'bg-surface-focus font-medium text-accent'
                     : 'text-text-muted hover:bg-surface hover:text-text'
                 }`}
               >
                 <span>{page.title}</span>
                 {page.experimental ? (
-                  <span className="shrink-0 rounded-full border border-bolt/40 bg-bolt/10 px-1.5 py-0.5 text-[0.65rem] font-medium leading-none text-bolt">
+                  <span className="shrink-0 rounded-md border border-bolt/40 bg-bolt/10 px-1.5 py-0.5 text-[0.65rem] font-medium leading-none text-bolt">
                     Exp
                   </span>
                 ) : null}
@@ -89,12 +91,12 @@ function DocsShell({
 
         <article className="min-w-0">
           <div className="mb-6 flex flex-wrap items-center gap-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent-soft/60 px-3 py-1 font-mono text-xs font-medium text-accent">
+            <div className="inline-flex items-center gap-2 rounded-md border border-border-muted bg-surface px-3 py-1 font-mono text-xs font-medium text-accent">
               <BookOpen className="size-3.5" aria-hidden />
               Documentation
             </div>
             {experimental ? (
-              <span className="inline-flex items-center rounded-full border border-bolt/40 bg-bolt/10 px-2.5 py-0.5 text-xs font-medium text-bolt">
+              <span className="inline-flex items-center rounded-md border border-bolt/40 bg-bolt/10 px-2.5 py-0.5 text-xs font-medium text-bolt">
                 Experimental
               </span>
             ) : null}
@@ -120,7 +122,7 @@ export function DocsIndexPage() {
         aria-label="License and privacy"
         className="mt-8 grid min-w-0 gap-3 sm:grid-cols-2"
       >
-        <div className="min-w-0 rounded-2xl border border-border bg-surface/70 p-4 sm:p-5">
+        <Card className="min-w-0 p-4 sm:p-5">
           <p className="flex items-center gap-2 text-sm font-semibold text-text">
             <Scale className="size-4 shrink-0 text-accent" aria-hidden />
             {LICENSE_NAME}{' '}
@@ -137,8 +139,8 @@ export function DocsIndexPage() {
               Full license
             </a>
           </p>
-        </div>
-        <div className="min-w-0 rounded-2xl border border-border bg-surface/70 p-4 sm:p-5">
+        </Card>
+        <Card className="min-w-0 p-4 sm:p-5">
           <p className="flex items-center gap-2 text-sm font-semibold text-text">
             <Lock className="size-4 shrink-0 text-accent" aria-hidden />
             Your code stays local
@@ -148,7 +150,7 @@ export function DocsIndexPage() {
             <code className="font-mono text-terminal-fg">~/.strike</code>. No silent cloud
             sync from Strike itself.
           </p>
-        </div>
+        </Card>
       </aside>
 
       <ul className="mt-10 grid gap-3 sm:grid-cols-2">
@@ -156,10 +158,10 @@ export function DocsIndexPage() {
           <li key={page.slug}>
             <Link
               to={`/docs/${page.slug}`}
-              className="relative block h-full min-w-0 rounded-2xl border border-border bg-surface/80 p-5 transition-all hover:border-accent/40 hover:shadow-[0_0_40px_-12px] hover:shadow-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+              className="relative block h-full min-w-0 rounded-lg border border-border-muted bg-surface p-5 transition-colors hover:border-border hover:bg-surface-focus focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             >
               {page.experimental ? (
-                <span className="absolute right-4 top-4 rounded-full border border-bolt/40 bg-bolt/10 px-2.5 py-0.5 text-xs font-medium text-bolt">
+                <span className="absolute right-4 top-4 rounded-md border border-bolt/40 bg-bolt/10 px-2.5 py-0.5 text-xs font-medium text-bolt">
                   Experimental
                 </span>
               ) : null}
@@ -234,31 +236,29 @@ function DocsArticlePage({ page }: { page: NonNullable<ReturnType<typeof getDocP
         {page.summary}
       </p>
 
-      <div className="mt-8 border-t border-border pt-8">
+      <div className="mt-8 border-t border-border-muted pt-8">
         <MarkdownDoc markdown={docBodyMarkdown(page.markdown)} />
       </div>
 
       <nav
         aria-label="Adjacent docs"
-        className="mt-12 flex min-w-0 flex-col gap-3 border-t border-border pt-8 sm:flex-row sm:justify-between"
+        className="mt-12 flex min-w-0 flex-col gap-3 border-t border-border-muted pt-8 sm:flex-row sm:justify-between"
       >
         {prev ? (
-          <Link
-            to={`/docs/${prev.slug}`}
-            className="inline-flex min-h-11 max-w-full items-center rounded-xl border border-border bg-surface/60 px-4 py-2 text-sm text-text-muted transition-colors hover:border-accent/40 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-          >
+          <Button to={`/docs/${prev.slug}`} variant="secondary" className="max-w-full font-medium">
             <span className="truncate">← {prev.title}</span>
-          </Link>
+          </Button>
         ) : (
           <span />
         )}
         {next ? (
-          <Link
+          <Button
             to={`/docs/${next.slug}`}
-            className="inline-flex min-h-11 max-w-full items-center justify-end rounded-xl border border-border bg-surface/60 px-4 py-2 text-sm text-text-muted transition-colors hover:border-accent/40 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg sm:ml-auto"
+            variant="secondary"
+            className="max-w-full font-medium sm:ml-auto"
           >
             <span className="truncate">{next.title} →</span>
-          </Link>
+          </Button>
         ) : null}
       </nav>
     </DocsShell>

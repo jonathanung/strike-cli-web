@@ -34,7 +34,7 @@ export function Demos() {
               >
                 <div
                   data-demo-slot={demo.slot}
-                  className="relative aspect-video min-w-0 flex-1 overflow-hidden rounded-2xl border border-border bg-terminal-bg shadow-[0_0_40px_-16px] shadow-accent-glow/30"
+                  className="relative aspect-video min-w-0 flex-1 overflow-hidden rounded-lg border border-border-muted bg-terminal-bg"
                 >
                   <img
                     src={demo.src}

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Section } from './ui/Section'
+import { Card } from './ui/Card'
 import { productStills } from '../lib/productMedia'
 
 type Feature = {
@@ -236,13 +237,17 @@ export function Features() {
                         : { duration: 0.4, delay: Math.min(i * 0.05, 0.2), ease: [0.22, 1, 0.36, 1] }
                     }
                   >
-                    <article className="group relative flex h-full min-w-0 flex-col rounded-2xl border border-border bg-surface/80 p-5 transition-all duration-200 hover:border-accent/40 hover:shadow-[0_0_40px_-12px] hover:shadow-accent/30 sm:p-6">
+                    <Card
+                      as="article"
+                      interactive
+                      className="group relative flex h-full min-w-0 flex-col p-5 sm:p-6"
+                    >
                       {feature.experimental ? (
-                        <span className="absolute right-4 top-4 rounded-full border border-bolt/40 bg-bolt/10 px-2.5 py-0.5 text-xs font-medium text-bolt">
+                        <span className="absolute right-4 top-4 rounded-md border border-bolt/40 bg-bolt/10 px-2.5 py-0.5 text-xs font-medium text-bolt">
                           Experimental
                         </span>
                       ) : null}
-                      <div className="mb-4 inline-flex size-10 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                      <div className="mb-4 inline-flex size-10 items-center justify-center rounded-md bg-accent-soft text-accent">
                         <Icon className="size-5" aria-hidden />
                       </div>
                       <h4
@@ -269,9 +274,9 @@ export function Features() {
                         {still ? (
                           <a
                             href={`#${still.id}`}
-                            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-bg/60 px-2 py-2 text-left transition-colors hover:border-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border-muted bg-bg-elevated px-2 py-2 text-left transition-colors hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                           >
-                            <span className="relative size-14 shrink-0 overflow-hidden rounded-lg border border-border bg-terminal-bg">
+                            <span className="relative size-14 shrink-0 overflow-hidden rounded-md border border-border-muted bg-terminal-bg">
                               <img
                                 src={still.src}
                                 alt=""
@@ -295,7 +300,7 @@ export function Features() {
                           </a>
                         ) : null}
                       </div>
-                    </article>
+                    </Card>
                   </motion.li>
                 )
               })}

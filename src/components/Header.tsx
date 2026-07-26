@@ -2,16 +2,17 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { Github, Menu, X } from 'lucide-react'
 import { GITHUB_URL } from '../lib/github'
+import { Button } from './ui/Button'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-lg px-2.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+  `rounded-md px-2.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
     isActive
       ? 'text-accent'
-      : 'text-text-muted hover:bg-accent-soft/60 hover:text-text'
+      : 'text-text-muted hover:bg-surface-focus hover:text-text'
   }`
 
 const hashLinkClass =
-  'rounded-lg px-2.5 py-2 text-sm font-medium text-text-muted transition-colors hover:bg-accent-soft/60 hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
+  'rounded-md px-2.5 py-2 text-sm font-medium text-text-muted transition-colors hover:bg-surface-focus hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
 
 export function Header() {
   const [open, setOpen] = useState(false)
@@ -28,7 +29,7 @@ export function Header() {
   }, [open])
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/80 bg-bg/70 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-border-muted bg-bg/95 backdrop-blur-sm">
       <div className="mx-auto flex h-14 min-w-0 max-w-6xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6 lg:px-8">
         <Link
           to="/"
@@ -67,33 +68,26 @@ export function Header() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Strike on GitHub"
-            className="inline-flex size-10 min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+            className="inline-flex size-10 min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-surface-focus hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
           >
             <Github className="size-5" aria-hidden />
           </a>
-          <Link
-            to="/#install"
-            className="ml-1 inline-flex min-h-11 items-center justify-center rounded-xl bg-accent px-3.5 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-          >
+          <Button to="/#install" className="ml-1 px-3.5">
             Install
-          </Link>
+          </Button>
         </nav>
 
         <div className="flex items-center gap-1 md:hidden">
-          <Link
-            to="/#install"
-            onClick={close}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-accent px-3 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-          >
+          <Button to="/#install" onClick={close} className="px-3">
             Install
-          </Link>
+          </Button>
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-controls="mobile-nav"
             aria-label={open ? 'Close menu' : 'Open menu'}
-            className="inline-flex size-10 min-h-11 min-w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+            className="inline-flex size-10 min-h-11 min-w-11 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-surface-focus hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
           >
             {open ? <X className="size-5" aria-hidden /> : <Menu className="size-5" aria-hidden />}
           </button>
@@ -104,14 +98,14 @@ export function Header() {
         <nav
           id="mobile-nav"
           aria-label="Primary"
-          className="border-t border-border/80 bg-bg/95 px-4 py-3 md:hidden sm:px-6"
+          className="border-t border-border-muted bg-bg px-4 py-3 md:hidden sm:px-6"
         >
           <ul className="flex flex-col gap-1">
             <li>
               <Link
                 to="/#quickstart"
                 onClick={close}
-                className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-text-muted hover:bg-accent-soft hover:text-text"
+                className="flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-text-muted hover:bg-surface-focus hover:text-text"
               >
                 Quickstart
               </Link>
@@ -120,7 +114,7 @@ export function Header() {
               <Link
                 to="/#features"
                 onClick={close}
-                className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-text-muted hover:bg-accent-soft hover:text-text"
+                className="flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-text-muted hover:bg-surface-focus hover:text-text"
               >
                 Features
               </Link>
@@ -129,7 +123,7 @@ export function Header() {
               <Link
                 to="/#faq"
                 onClick={close}
-                className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-text-muted hover:bg-accent-soft hover:text-text"
+                className="flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-text-muted hover:bg-surface-focus hover:text-text"
               >
                 FAQ
               </Link>
@@ -139,8 +133,8 @@ export function Header() {
                 to="/docs"
                 onClick={close}
                 className={({ isActive }) =>
-                  `flex min-h-11 items-center rounded-lg px-3 text-sm font-medium ${
-                    isActive ? 'bg-accent-soft text-accent' : 'text-text-muted hover:bg-accent-soft hover:text-text'
+                  `flex min-h-11 items-center rounded-md px-3 text-sm font-medium ${
+                    isActive ? 'bg-surface-focus text-accent' : 'text-text-muted hover:bg-surface-focus hover:text-text'
                   }`
                 }
               >
@@ -152,8 +146,8 @@ export function Header() {
                 to="/changelog"
                 onClick={close}
                 className={({ isActive }) =>
-                  `flex min-h-11 items-center rounded-lg px-3 text-sm font-medium ${
-                    isActive ? 'bg-accent-soft text-accent' : 'text-text-muted hover:bg-accent-soft hover:text-text'
+                  `flex min-h-11 items-center rounded-md px-3 text-sm font-medium ${
+                    isActive ? 'bg-surface-focus text-accent' : 'text-text-muted hover:bg-surface-focus hover:text-text'
                   }`
                 }
               >
@@ -166,7 +160,7 @@ export function Header() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={close}
-                className="flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium text-text-muted hover:bg-accent-soft hover:text-text"
+                className="flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-medium text-text-muted hover:bg-surface-focus hover:text-text"
               >
                 <Github className="size-4" aria-hidden />
                 GitHub

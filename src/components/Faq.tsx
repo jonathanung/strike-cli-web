@@ -34,8 +34,8 @@ export function Faq() {
         <ul className="flex flex-col gap-3">
           {FAQ_ITEMS.map((item) => (
             <li key={item.id}>
-              <details className="group rounded-2xl border border-border bg-surface/80 open:border-accent/35 open:shadow-[0_0_40px_-16px] open:shadow-accent/25">
-                <summary className="flex cursor-pointer list-none items-start gap-3 rounded-2xl px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg sm:px-5 sm:py-4 [&::-webkit-details-marker]:hidden">
+              <details className="group rounded-lg border border-border-muted bg-surface open:border-border open:bg-surface-focus">
+                <summary className="flex cursor-pointer list-none items-start gap-3 rounded-lg px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg sm:px-5 sm:py-4 [&::-webkit-details-marker]:hidden">
                   <span className="min-w-0 flex-1 text-left text-sm font-semibold text-text sm:text-base">
                     {item.question}
                   </span>
@@ -44,7 +44,7 @@ export function Faq() {
                     aria-hidden
                   />
                 </summary>
-                <div className="border-t border-border/70 px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
+                <div className="border-t border-border-muted px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
                   <p className="text-sm leading-relaxed text-text-muted">{item.answer}</p>
                   {item.links && item.links.length > 0 ? (
                     <p className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
