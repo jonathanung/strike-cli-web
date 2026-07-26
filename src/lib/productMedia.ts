@@ -104,13 +104,13 @@ export const demoMedia = [
   },
 ] as const
 
-/** Feature title → product still anchor id (deep link into #product-stills). */
+/** @deprecated Prefer stillId on feature cards in Features.tsx. Kept for any residual lookups. */
 export const featureStillId: Record<string, string> = {
-  'Agentic coding TUI': 'stills-agents',
-  'Tools & permissions': 'stills-permissions',
-  'Agents & skills': 'stills-agents',
+  'Solid-surface TUI': 'stills-agents',
+  'Compaction & context doctor': 'stills-telemetry',
   'In-TUI pickers': 'stills-mentions',
-  'Session resume': 'stills-worktrees',
-  'Headless one-shot': 'stills-telemetry',
-  'Multi-provider': 'stills-telemetry',
+  'Concurrent roots': 'stills-agents',
+  'Git worktrees per session': 'stills-worktrees',
+  'Agents & skills': 'stills-agents',
+  'Tools & permissions': 'stills-permissions',
 }
