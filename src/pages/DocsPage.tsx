@@ -2,7 +2,8 @@ import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, BookOpen } from 'lucide-react'
 import { Section } from '../components/ui/Section'
-import { DOC_PAGES, getDocPage } from '../lib/docs'
+import { MarkdownDoc } from '../components/docs/MarkdownDoc'
+import { DOC_PAGES, docBodyMarkdown, getDocPage } from '../lib/docs'
 import { usePageTitle } from '../lib/usePageTitle'
 import { NotFoundPage } from './NotFoundPage'
 
@@ -91,8 +92,8 @@ export function DocsIndexPage() {
   return (
     <DocsShell title="Documentation">
       <p className="max-w-2xl text-base leading-relaxed text-text-muted sm:text-lg">
-        Guides for installing and using Strike. These pages are stubs for the site IA —
-        full content lands in follow-up docs work.
+        Guides for installing and using Strike — mirrored from the product docs so you
+        stay on-domain.
       </p>
 
       <ul className="mt-10 grid gap-3 sm:grid-cols-2">
@@ -112,19 +113,26 @@ export function DocsIndexPage() {
       </ul>
 
       <p className="mt-10 text-sm text-text-muted">
-        Need the binary now?{' '}
+        New here? Start with{' '}
         <Link
-          to="/#install"
+          to="/docs/install"
           className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
         >
-          Jump to install
+          Install
         </Link>
         {' · '}
         <Link
-          to="/#quickstart"
+          to="/docs/quickstart"
           className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
         >
           Quickstart
+        </Link>
+        {' · '}
+        <Link
+          to="/docs/multi-agent"
+          className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
+        >
+          Multi-agent
         </Link>
       </p>
     </DocsShell>
@@ -145,35 +153,43 @@ export function DocsSlugPage() {
 function DocsArticlePage({ page }: { page: NonNullable<ReturnType<typeof getDocPage>> }) {
   usePageTitle(page.title)
 
+  const idx = DOC_PAGES.findIndex((p) => p.slug === page.slug)
+  const prev = idx > 0 ? DOC_PAGES[idx - 1] : undefined
+  const next = idx >= 0 && idx < DOC_PAGES.length - 1 ? DOC_PAGES[idx + 1] : undefined
+
   return (
     <DocsShell title={page.title} activeSlug={page.slug}>
       <p className="max-w-2xl text-base leading-relaxed text-text-muted sm:text-lg">
         {page.summary}
       </p>
 
-      <div className="mt-8 rounded-2xl border border-border bg-surface/60 p-6 sm:p-8">
-        <p className="font-mono text-xs font-medium tracking-wide text-accent uppercase">
-          Coming soon
-        </p>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-text-muted">
-          Full documentation for this topic is on the way. Meanwhile, install Strike and
-          explore the TUI, or check the open-source repo.
-        </p>
-        <div className="mt-6 flex min-w-0 flex-wrap gap-3">
-          <Link
-            to="/#install"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-          >
-            Install
-          </Link>
-          <Link
-            to="/docs"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-bg px-4 py-2 text-sm font-medium text-text transition-colors hover:border-accent/40 hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-          >
-            All docs
-          </Link>
-        </div>
+      <div className="mt-8 border-t border-border pt-8">
+        <MarkdownDoc markdown={docBodyMarkdown(page.markdown)} />
       </div>
+
+      <nav
+        aria-label="Adjacent docs"
+        className="mt-12 flex min-w-0 flex-col gap-3 border-t border-border pt-8 sm:flex-row sm:justify-between"
+      >
+        {prev ? (
+          <Link
+            to={`/docs/${prev.slug}`}
+            className="inline-flex min-h-11 max-w-full items-center rounded-xl border border-border bg-surface/60 px-4 py-2 text-sm text-text-muted transition-colors hover:border-accent/40 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          >
+            <span className="truncate">← {prev.title}</span>
+          </Link>
+        ) : (
+          <span />
+        )}
+        {next ? (
+          <Link
+            to={`/docs/${next.slug}`}
+            className="inline-flex min-h-11 max-w-full items-center justify-end rounded-xl border border-border bg-surface/60 px-4 py-2 text-sm text-text-muted transition-colors hover:border-accent/40 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg sm:ml-auto"
+          >
+            <span className="truncate">{next.title} →</span>
+          </Link>
+        ) : null}
+      </nav>
     </DocsShell>
   )
 }

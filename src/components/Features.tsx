@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
   Bot,
@@ -8,6 +9,7 @@ import {
   Shield,
   Sparkles,
   ImageIcon,
+  ArrowRight,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Section } from './ui/Section'
@@ -17,6 +19,8 @@ type Feature = {
   title: string
   description: string
   icon: LucideIcon
+  docsTo: string
+  docsLabel: string
 }
 
 const features: Feature[] = [
@@ -24,36 +28,50 @@ const features: Feature[] = [
     title: 'Agentic coding TUI',
     description: 'Built in Go with Bubble Tea — a responsive terminal UI made for agentic workflows.',
     icon: Terminal,
+    docsTo: '/docs/quickstart',
+    docsLabel: 'Quickstart',
   },
   {
     title: 'Multi-provider',
     description: 'Anthropic, OpenAI, xAI, and Echo (offline) — pick the stack that fits the job.',
     icon: Boxes,
+    docsTo: '/docs/auth',
+    docsLabel: 'Auth & providers',
   },
   {
     title: 'Session resume',
     description: 'Continue with --continue / --session. Transcripts stored as JSONL for durable history.',
     icon: History,
+    docsTo: '/docs/usage',
+    docsLabel: 'Sessions & usage',
   },
   {
     title: 'Headless one-shot',
     description: 'Run strike exec for scripted, non-interactive agent turns in CI or pipelines.',
     icon: Command,
+    docsTo: '/docs/usage',
+    docsLabel: 'Headless exec',
   },
   {
     title: 'In-TUI pickers',
     description: 'Slash commands for /provider, /model, /auth, /theme, and more — no config spelunking.',
     icon: Sparkles,
+    docsTo: '/docs/keybinds',
+    docsLabel: 'Keybinds',
   },
   {
     title: 'Tools & permissions',
     description: 'Fine-grained allow / ask / deny controls so agents act only with your say-so.',
     icon: Shield,
+    docsTo: '/docs/config',
+    docsLabel: 'Permissions',
   },
   {
     title: 'Agents & skills',
     description: 'Customizable personas and workflows — shape how the agent thinks and works.',
     icon: Bot,
+    docsTo: '/docs/multi-agent',
+    docsLabel: 'Multi-agent',
   },
 ]
 
@@ -97,32 +115,41 @@ export function Features() {
                 <p className="mt-2 flex-1 break-words text-sm leading-relaxed text-text-muted">
                   {feature.description}
                 </p>
-                {still ? (
-                  <a
-                    href={`#${still.id}`}
-                    className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-bg/60 px-2 py-2 text-left transition-colors hover:border-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                <div className="mt-4 flex min-w-0 flex-col gap-2">
+                  <Link
+                    to={feature.docsTo}
+                    className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-lg text-sm font-medium text-accent transition-colors hover:text-sky focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                   >
-                    <span className="relative size-14 shrink-0 overflow-hidden rounded-lg border border-border bg-terminal-bg">
-                      <img
-                        src={still.src}
-                        alt=""
-                        width={96}
-                        height={60}
-                        className="h-full w-full object-cover object-top"
-                        loading="lazy"
-                        decoding="async"
-                        draggable={false}
-                      />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="flex items-center gap-1.5 font-mono text-xs font-medium text-accent">
-                        <ImageIcon className="size-3.5 shrink-0" aria-hidden />
-                        View still
+                    {feature.docsLabel}
+                    <ArrowRight className="size-3.5 shrink-0" aria-hidden />
+                  </Link>
+                  {still ? (
+                    <a
+                      href={`#${still.id}`}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-bg/60 px-2 py-2 text-left transition-colors hover:border-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                    >
+                      <span className="relative size-14 shrink-0 overflow-hidden rounded-lg border border-border bg-terminal-bg">
+                        <img
+                          src={still.src}
+                          alt=""
+                          width={96}
+                          height={60}
+                          className="h-full w-full object-cover object-top"
+                          loading="lazy"
+                          decoding="async"
+                          draggable={false}
+                        />
                       </span>
-                      <span className="mt-0.5 block truncate text-xs text-text-muted">{still.label}</span>
-                    </span>
-                  </a>
-                ) : null}
+                      <span className="min-w-0">
+                        <span className="flex items-center gap-1.5 font-mono text-xs font-medium text-accent">
+                          <ImageIcon className="size-3.5 shrink-0" aria-hidden />
+                          View still
+                        </span>
+                        <span className="mt-0.5 block truncate text-xs text-text-muted">{still.label}</span>
+                      </span>
+                    </a>
+                  ) : null}
+                </div>
               </article>
             </motion.li>
           )
