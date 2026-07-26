@@ -1,4 +1,7 @@
-/** Purchase, trust, and comparison FAQ — keep honest as the product changes. */
+/**
+ * Purchase, trust, and comparison FAQ — single source for the homepage accordion.
+ * Update here when product claims change (auth, web UI, multi-agent, pricing).
+ */
 export type FaqItem = {
   id: string
   question: string

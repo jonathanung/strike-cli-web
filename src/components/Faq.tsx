@@ -35,7 +35,7 @@ export function Faq() {
           {FAQ_ITEMS.map((item) => (
             <li key={item.id}>
               <details className="group rounded-2xl border border-border bg-surface/80 open:border-accent/35 open:shadow-[0_0_40px_-16px] open:shadow-accent/25">
-                <summary className="flex cursor-pointer list-none items-start gap-3 px-4 py-4 sm:px-5 sm:py-4 [&::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer list-none items-start gap-3 rounded-2xl px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg sm:px-5 sm:py-4 [&::-webkit-details-marker]:hidden">
                   <span className="min-w-0 flex-1 text-left text-sm font-semibold text-text sm:text-base">
                     {item.question}
                   </span>
@@ -66,12 +66,12 @@ export function Faq() {
         </ul>
 
         <p className="mt-6 text-center text-sm text-text-muted">
-          Prefer docs? Same answers live at{' '}
+          Deeper product detail lives in{' '}
           <Link
-            to="/docs/faq"
+            to="/docs"
             className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
           >
-            /docs/faq
+            Docs
           </Link>
           .
         </p>

@@ -136,7 +136,7 @@ export function DocsIndexPage() {
         </Link>
         {' · '}
         <Link
-          to="/docs/faq"
+          to="/#faq"
           className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
         >
           FAQ
