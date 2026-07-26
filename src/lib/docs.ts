@@ -13,6 +13,7 @@ export type DocPage = {
   title: string
   summary: string
   markdown: string
+  experimental?: boolean
 }
 
 /** On-domain docs hub. Markdown is vendored from jonathanung/strike `docs/*.md`. */
@@ -62,8 +63,10 @@ export const DOC_PAGES: DocPage[] = [
   {
     slug: 'web',
     title: 'Web',
-    summary: 'Experimental strike serve web attach, plus remote experiences on the roadmap.',
+    summary:
+      'Experimental strike serve cockpit — TUI is primary. Localhost default, LAN --expose threat model, no production multiplayer web IDE.',
     markdown: webMd,
+    experimental: true,
   },
   {
     slug: 'auth',

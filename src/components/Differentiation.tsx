@@ -38,7 +38,12 @@ const rows: Row[] = [
   },
   {
     id: 'local-first',
-    strike: 'Local-first, open source, self-host web attach',
+    strike: (
+      <>
+        Local-first, open source — experimental{' '}
+        <code className="font-mono text-terminal-fg">strike serve</code> attach (TUI primary)
+      </>
+    ),
     them: 'Cloud / product lock-in risk',
   },
 ]

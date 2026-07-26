@@ -128,7 +128,7 @@ const groups: FeatureGroup[] = [
   {
     id: 'extensibility',
     title: 'Extensibility',
-    blurb: 'Providers, MCP, auth, and experimental web attach.',
+    blurb: 'Providers, MCP, auth, and experimental strike serve (TUI primary).',
     features: [
       {
         title: 'Custom providers & auth',
@@ -147,7 +147,7 @@ const groups: FeatureGroup[] = [
       {
         title: 'strike serve',
         description:
-          'Experimental local web attach for browser reach into a running Strike session. CLI remains first-class.',
+          'Experimental browser cockpit for a live local session. Defaults to localhost; --expose is LAN-only with no TLS. TUI is primary.',
         icon: Globe,
         docsTo: '/docs/web',
         experimental: true,
