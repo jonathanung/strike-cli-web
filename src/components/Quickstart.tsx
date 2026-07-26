@@ -108,7 +108,7 @@ function CopyChip({
             ›
           </span>
         )}
-        <code className="min-w-0 flex-1 truncate font-mono text-sm text-terminal-fg">
+        <code className="min-w-0 flex-1 whitespace-pre-wrap break-all font-mono text-sm leading-snug text-terminal-fg">
           {text}
         </code>
         <span
