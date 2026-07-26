@@ -36,6 +36,9 @@ export function Footer() {
             <Link to="/#features" className={linkClass}>
               Features
             </Link>
+            <Link to="/#faq" className={linkClass}>
+              FAQ
+            </Link>
             <Link to="/docs" className={linkClass}>
               Docs
             </Link>

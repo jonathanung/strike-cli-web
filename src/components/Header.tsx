@@ -50,6 +50,9 @@ export function Header() {
           <Link to="/#features" className={hashLinkClass}>
             Features
           </Link>
+          <Link to="/#faq" className={hashLinkClass}>
+            FAQ
+          </Link>
           <NavLink to="/docs" className={navLinkClass}>
             Docs
           </NavLink>
@@ -108,6 +111,15 @@ export function Header() {
                 className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-text-muted hover:bg-accent-soft hover:text-text"
               >
                 Features
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/#faq"
+                onClick={close}
+                className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-text-muted hover:bg-accent-soft hover:text-text"
+              >
+                FAQ
               </Link>
             </li>
             <li>

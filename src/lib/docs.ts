@@ -7,6 +7,7 @@ import configMd from '../content/docs/config.md?raw'
 import mcpMd from '../content/docs/mcp.md?raw'
 import webMd from '../content/docs/web.md?raw'
 import authMd from '../content/docs/auth.md?raw'
+import faqMd from '../content/docs/faq.md?raw'
 
 export type DocPage = {
   slug: string
@@ -70,6 +71,13 @@ export const DOC_PAGES: DocPage[] = [
     title: 'Auth',
     summary: 'Providers, credentials, OAuth, and environment variables.',
     markdown: authMd,
+  },
+  {
+    slug: 'faq',
+    title: 'FAQ',
+    summary:
+      'vs Claude Code / Codex / OpenCode, subscriptions, data, multi-agent, web UI, and cost.',
+    markdown: faqMd,
   },
 ]
 
