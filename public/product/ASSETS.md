@@ -14,6 +14,12 @@ Marketing stills for the Strike multi-pane TUI. Checked into `public/product/` a
 | `worktrees.svg` | Concurrent roots with worktree isolation | Feature deep-link, product stills |
 | `telemetry.svg` | Context doctor bars + cost/telemetry | Feature deep-link, product stills |
 
+Social share image (repo root of static files):
+
+| File | Scene | Where used |
+|---|---|---|
+| `../og-image.png` | 1200×630 dark TUI still + brand bar | `og:image` / Twitter card in `index.html` |
+
 These are **high-fidelity dark terminal mockups** aligned to product docs (`docs/usage.md` UI section: left transcript stack, right window registry, permission dialogs, `@` mentions, agents tree, visualizer). They are placeholders structured so real captures can drop in with the same filenames.
 
 ## Capture real TUI screenshots (replace later)
