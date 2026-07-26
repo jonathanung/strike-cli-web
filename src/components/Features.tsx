@@ -52,7 +52,7 @@ const groups: FeatureGroup[] = [
           'Go + Bubble Tea multi-pane cockpit: transcript, composer, and side panes with polished solid surfaces.',
         icon: Terminal,
         stillId: 'stills-agents',
-        docsTo: '/docs/usage',
+        docsTo: '/docs/quickstart',
       },
       {
         title: 'Memory & issues panes',
@@ -75,7 +75,7 @@ const groups: FeatureGroup[] = [
           'Slash commands for /provider, /model, /auth, /theme, and more — no config spelunking.',
         icon: Sparkles,
         stillId: 'stills-mentions',
-        docsTo: '/docs/usage',
+        docsTo: '/docs/keybinds',
       },
     ],
   },
@@ -135,7 +135,7 @@ const groups: FeatureGroup[] = [
         description:
           'Bring your own providers, pick auth in-TUI, and paste SSH-style credentials when you need them.',
         icon: KeyRound,
-        docsTo: '/docs/config',
+        docsTo: '/docs/auth',
       },
       {
         title: 'MCP (stdio)',
