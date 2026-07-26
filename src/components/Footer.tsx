@@ -6,9 +6,9 @@ import {
   Lock,
   Scale,
   Shield,
-  Star,
 } from 'lucide-react'
 import {
+  DISCORD_URL,
   GITHUB_CONTRIBUTING_URL,
   GITHUB_LICENSE_URL,
   GITHUB_NOTICE_URL,
@@ -16,12 +16,13 @@ import {
   GITHUB_RELEASES_LATEST_URL,
   GITHUB_RELEASES_URL,
   GITHUB_SECURITY_URL,
-  GITHUB_STARS_URL,
   GITHUB_URL,
   LICENSE_NAME,
   LICENSE_PLAIN,
   LICENSE_SPDX,
+  X_URL,
 } from '../lib/github'
+import { GithubStarsLink } from './GithubStarsLink'
 
 const SITE = 'strike.jonathanung.ca'
 
@@ -66,7 +67,7 @@ export function Footer() {
             License, privacy, and open source
           </h2>
 
-          <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+          <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="min-w-0 rounded-lg border border-border-muted bg-surface p-5 sm:p-6">
               <div className="mb-3 inline-flex size-9 items-center justify-center rounded-md bg-accent-soft text-accent">
                 <Scale className="size-4" aria-hidden />
@@ -112,6 +113,26 @@ export function Footer() {
                 model provider, only the prompts and context you send go to that provider.
               </p>
             </div>
+
+            <div className="min-w-0 rounded-lg border border-border-muted bg-surface p-5 sm:p-6 sm:col-span-2 lg:col-span-1">
+              <div className="mb-3 inline-flex size-9 items-center justify-center rounded-md bg-accent-soft text-accent">
+                <Github className="size-4" aria-hidden />
+              </div>
+              <h3 className="text-sm font-semibold text-text">Built in public</h3>
+              <p className="mt-2 text-sm leading-relaxed text-text-muted">
+                Development happens in the open on GitHub. Star the repo, read the{' '}
+                <Link
+                  to="/changelog"
+                  className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
+                >
+                  changelog
+                </Link>
+                , and follow releases as they ship.
+              </p>
+              <div className="mt-4">
+                <GithubStarsLink />
+              </div>
+            </div>
           </div>
 
           <nav
@@ -142,16 +163,6 @@ export function Footer() {
               </a>
             ) : null}
             <a
-              href={GITHUB_STARS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={externalLinkClass}
-            >
-              <Star className="size-3.5 text-bolt" aria-hidden />
-              Star on GitHub
-              <ExternalLink className="size-3 opacity-60" aria-hidden />
-            </a>
-            <a
               href={GITHUB_CONTRIBUTING_URL}
               target="_blank"
               rel="noopener noreferrer"
@@ -170,6 +181,28 @@ export function Footer() {
               Security
               <ExternalLink className="size-3 opacity-60" aria-hidden />
             </a>
+            {DISCORD_URL ? (
+              <a
+                href={DISCORD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={externalLinkClass}
+              >
+                Discord
+                <ExternalLink className="size-3 opacity-60" aria-hidden />
+              </a>
+            ) : null}
+            {X_URL ? (
+              <a
+                href={X_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={externalLinkClass}
+              >
+                X
+                <ExternalLink className="size-3 opacity-60" aria-hidden />
+              </a>
+            ) : null}
           </nav>
         </section>
 

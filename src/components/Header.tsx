@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom'
 import { Github, Menu, X } from 'lucide-react'
 import { GITHUB_URL } from '../lib/github'
 import { Button } from './ui/Button'
+import { GithubStarsLink } from './GithubStarsLink'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-md px-2.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
@@ -63,6 +64,7 @@ export function Header() {
           <NavLink to="/changelog" className={navLinkClass}>
             Changelog
           </NavLink>
+          <GithubStarsLink variant="badge" className="ml-1" />
           <a
             href={GITHUB_URL}
             target="_blank"
@@ -153,6 +155,9 @@ export function Header() {
               >
                 Changelog
               </NavLink>
+            </li>
+            <li className="px-3 py-1">
+              <GithubStarsLink variant="badge" onNavigate={close} />
             </li>
             <li>
               <a
