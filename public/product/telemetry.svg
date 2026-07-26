@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" role="img" aria-labelledby="title desc">
+  <title id="title">Strike telemetry and context bars</title>
+  <desc id="desc">Visualizer pane with token totals, cost estimate, context bar, and activity sparkline.</desc>
+  <defs>
+    <clipPath id="frame"><rect x="0" y="0" width="960" height="600" rx="14"/></clipPath>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#67e8f9"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="960" height="600" fill="#0c0b10"/>
+    <rect x="0" y="0" width="960" height="36" fill="#14121a"/>
+    <circle cx="22" cy="18" r="5" fill="#f472b6"/>
+    <circle cx="40" cy="18" r="5" fill="#f0b429"/>
+    <circle cx="58" cy="18" r="5" fill="#4ade80"/>
+    <text x="84" y="22" fill="#a78bfa" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" font-weight="700">⚡ strike</text>
+    <text x="700" y="22" fill="#67e8f9" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">/cost · context</text>
+    <rect x="12" y="48" width="520" height="480" rx="8" fill="#121018" stroke="#2e2838"/>
+    <rect x="12" y="48" width="520" height="28" rx="8" fill="#1a1722"/>
+    <rect x="12" y="64" width="520" height="12" fill="#1a1722"/>
+    <text x="28" y="68" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">context doctor</text>
+    <text x="28" y="110" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13">prompt layers</text>
+    <text x="28" y="148" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">system</text>
+    <rect x="140" y="138" width="340" height="12" rx="3" fill="#2e2838"/>
+    <rect x="140" y="138" width="72" height="12" rx="3" fill="#67e8f9"/>
+    <text x="490" y="148" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">2.1k</text>
+    <text x="28" y="180" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">skills</text>
+    <rect x="140" y="170" width="340" height="12" rx="3" fill="#2e2838"/>
+    <rect x="140" y="170" width="48" height="12" rx="3" fill="#a78bfa"/>
+    <text x="490" y="180" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">0.9k</text>
+    <text x="28" y="212" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">history</text>
+    <rect x="140" y="202" width="340" height="12" rx="3" fill="#2e2838"/>
+    <rect x="140" y="202" width="210" height="12" rx="3" fill="#f0b429"/>
+    <text x="490" y="212" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">11.4k</text>
+    <text x="28" y="244" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">tools</text>
+    <rect x="140" y="234" width="340" height="12" rx="3" fill="#2e2838"/>
+    <rect x="140" y="234" width="96" height="12" rx="3" fill="#4ade80"/>
+    <text x="490" y="244" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">3.2k</text>
+    <text x="28" y="290" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">window  17.6k / 200k</text>
+    <rect x="28" y="310" width="460" height="14" rx="4" fill="#2e2838"/>
+    <rect x="28" y="310" width="92" height="14" rx="4" fill="url(#bar)"/>
+    <text x="28" y="360" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">history messages  28</text>
+    <text x="28" y="384" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">no oversized layer warnings</text>
+    <text x="28" y="420" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">/context · /effective-prompt · /compact</text>
+    <!-- visualizer side -->
+    <rect x="548" y="48" width="400" height="480" rx="8" fill="#121018" stroke="#2e2838"/>
+    <rect x="548" y="48" width="400" height="28" rx="8" fill="#1a1722"/>
+    <rect x="548" y="64" width="400" height="12" fill="#1a1722"/>
+    <text x="564" y="68" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">visualizer · telemetry</text>
+    <text x="564" y="120" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14">session cost</text>
+    <text x="564" y="156" fill="#a78bfa" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="28" font-weight="700">$0.18</text>
+    <text x="564" y="196" fill="#9b93a8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">in 24.1k · out 6.8k · cache 9.2k</text>
+    <text x="564" y="240" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">input</text>
+    <rect x="620" y="230" width="280" height="10" rx="3" fill="#2e2838"/>
+    <rect x="620" y="230" width="200" height="10" rx="3" fill="#67e8f9"/>
+    <text x="564" y="270" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">output</text>
+    <rect x="620" y="260" width="280" height="10" rx="3" fill="#2e2838"/>
+    <rect x="620" y="260" width="96" height="10" rx="3" fill="#a78bfa"/>
+    <text x="564" y="300" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">cache</text>
+    <rect x="620" y="290" width="280" height="10" rx="3" fill="#2e2838"/>
+    <rect x="620" y="290" width="140" height="10" rx="3" fill="#4ade80"/>
+    <text x="564" y="350" fill="#e4e0ec" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">activity sparkline</text>
+    <polyline points="564,430 594,420 624,424 654,400 684,410 714,388 744,396 774,370 804,378 834,360 864,366 894,350"
+      fill="none" stroke="#a78bfa" stroke-width="2.5"/>
+    <text x="564" y="480" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">/cost for live totals · rates from catalog</text>
+    <rect x="0" y="548" width="960" height="52" fill="#14121a"/>
+    <text x="24" y="578" fill="#6b6580" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">telemetry stays in-TUI — no separate dashboard required</text>
+  </g>
+</svg>

@@ -1,37 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { Section } from './ui/Section'
-
-/**
- * Demo GIF slots.
- * To wire real recordings later:
- *   1. Drop files in public/demos/ (e.g. launch.gif, tools.gif, sessions.gif)
- *   2. Replace each placeholder div with:
- *      <img src="/demos/launch.gif" alt="..." className="h-full w-full object-cover" />
- * data-demo-slot attributes mark each frame for easy find-replace.
- */
-const demos = [
-  {
-    slot: 'launch',
-    title: 'Launch & first prompt',
-    caption:
-      'Record: open strike, pick provider/model if needed, send your first coding prompt and watch the agent respond.',
-    // img: '/demos/launch.gif',
-  },
-  {
-    slot: 'tools',
-    title: 'Tools & permissions',
-    caption:
-      'Record: agent requests a tool call; show the permission prompt (allow once / session) and the tool running.',
-    // img: '/demos/tools.gif',
-  },
-  {
-    slot: 'sessions',
-    title: 'Sessions & continue',
-    caption:
-      'Record: quit, then `strike --continue` restoring the transcript and picking up where you left off.',
-    // img: '/demos/sessions.gif',
-  },
-] as const
+import { demoMedia } from '../lib/productMedia'
 
 export function Demos() {
   const reduceMotion = useReducedMotion()
@@ -44,7 +13,7 @@ export function Demos() {
       </div>
 
       <ul className="flex flex-col gap-12 md:gap-16">
-        {demos.map((demo, i) => {
+        {demoMedia.map((demo, i) => {
           const mediaFirst = i % 2 === 0
           return (
             <motion.li
@@ -63,12 +32,20 @@ export function Demos() {
                   !mediaFirst ? 'md:flex-row-reverse' : ''
                 }`}
               >
-                {/* data-demo-slot: replace inner placeholder with <img src="/demos/{slot}.gif" /> */}
                 <div
                   data-demo-slot={demo.slot}
-                  className="relative flex aspect-video min-w-0 flex-1 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-surface/60"
+                  className="relative aspect-video min-w-0 flex-1 overflow-hidden rounded-2xl border border-border bg-terminal-bg shadow-[0_0_40px_-16px] shadow-accent-glow/30"
                 >
-                  <span className="text-sm text-text-muted">Demo coming soon</span>
+                  <img
+                    src={demo.src}
+                    alt={demo.alt}
+                    width={960}
+                    height={600}
+                    className="h-full w-full object-cover object-top"
+                    loading="lazy"
+                    decoding="async"
+                    draggable={false}
+                  />
                 </div>
                 <figcaption className="min-w-0 flex-1">
                   <h3 className="text-lg font-bold tracking-tight text-text sm:text-xl">
