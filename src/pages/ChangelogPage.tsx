@@ -2,8 +2,10 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, History } from 'lucide-react'
 import { Section } from '../components/ui/Section'
 import { GITHUB_RELEASES_LATEST_URL } from '../lib/github'
+import { usePageTitle } from '../lib/usePageTitle'
 
 export function ChangelogPage() {
+  usePageTitle('Changelog')
   return (
     <Section className="pb-20 pt-10 sm:pb-28 sm:pt-14" narrow>
       <div className="mb-8">

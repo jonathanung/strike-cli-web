@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Home, BookOpen, Download } from 'lucide-react'
 import { Section } from '../components/ui/Section'
+import { usePageTitle } from '../lib/usePageTitle'
 
 export function NotFoundPage() {
+  usePageTitle('Page not found')
   return (
     <Section className="flex flex-1 flex-col justify-center pb-20 pt-16 sm:pb-28 sm:pt-24" narrow>
       <p className="font-mono text-sm font-medium text-accent">404</p>

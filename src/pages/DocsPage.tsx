@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, BookOpen } from 'lucide-react'
 import { Section } from '../components/ui/Section'
 import { DOC_PAGES, getDocPage } from '../lib/docs'
+import { usePageTitle } from '../lib/usePageTitle'
 import { NotFoundPage } from './NotFoundPage'
 
 function DocsNav({ activeSlug }: { activeSlug?: string }) {
@@ -86,6 +87,7 @@ function DocsShell({
 }
 
 export function DocsIndexPage() {
+  usePageTitle('Docs')
   return (
     <DocsShell title="Documentation">
       <p className="max-w-2xl text-base leading-relaxed text-text-muted sm:text-lg">
@@ -136,6 +138,12 @@ export function DocsSlugPage() {
   if (!page) {
     return <NotFoundPage />
   }
+
+  return <DocsArticlePage page={page} />
+}
+
+function DocsArticlePage({ page }: { page: NonNullable<ReturnType<typeof getDocPage>> }) {
+  usePageTitle(page.title)
 
   return (
     <DocsShell title={page.title} activeSlug={page.slug}>

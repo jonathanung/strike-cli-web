@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { Github, Menu, X } from 'lucide-react'
 import { GITHUB_URL } from '../lib/github'
@@ -17,6 +17,15 @@ export function Header() {
   const [open, setOpen] = useState(false)
 
   const close = () => setOpen(false)
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/80 bg-bg/70 backdrop-blur-md">
