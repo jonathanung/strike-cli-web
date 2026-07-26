@@ -1,9 +1,15 @@
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, BookOpen } from 'lucide-react'
+import { ArrowLeft, BookOpen, Lock, Scale } from 'lucide-react'
 import { Section } from '../components/ui/Section'
 import { MarkdownDoc } from '../components/docs/MarkdownDoc'
 import { DOC_PAGES, docBodyMarkdown, getDocPage } from '../lib/docs'
+import {
+  GITHUB_LICENSE_URL,
+  LICENSE_NAME,
+  LICENSE_PLAIN,
+  LICENSE_SPDX,
+} from '../lib/github'
 import { usePageTitle } from '../lib/usePageTitle'
 import { NotFoundPage } from './NotFoundPage'
 
@@ -109,6 +115,41 @@ export function DocsIndexPage() {
         Guides for installing and using Strike — mirrored from the product docs so you
         stay on-domain.
       </p>
+
+      <aside
+        aria-label="License and privacy"
+        className="mt-8 grid min-w-0 gap-3 sm:grid-cols-2"
+      >
+        <div className="min-w-0 rounded-2xl border border-border bg-surface/70 p-4 sm:p-5">
+          <p className="flex items-center gap-2 text-sm font-semibold text-text">
+            <Scale className="size-4 shrink-0 text-accent" aria-hidden />
+            {LICENSE_NAME}{' '}
+            <span className="font-mono text-xs font-medium text-accent">({LICENSE_SPDX})</span>
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-text-muted">
+            {LICENSE_PLAIN}{' '}
+            <a
+              href={GITHUB_LICENSE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
+            >
+              Full license
+            </a>
+          </p>
+        </div>
+        <div className="min-w-0 rounded-2xl border border-border bg-surface/70 p-4 sm:p-5">
+          <p className="flex items-center gap-2 text-sm font-semibold text-text">
+            <Lock className="size-4 shrink-0 text-accent" aria-hidden />
+            Your code stays local
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-text-muted">
+            Local-first: sessions and config on your machine under{' '}
+            <code className="font-mono text-terminal-fg">~/.strike</code>. No silent cloud
+            sync from Strike itself.
+          </p>
+        </div>
+      </aside>
 
       <ul className="mt-10 grid gap-3 sm:grid-cols-2">
         {DOC_PAGES.map((page) => (
