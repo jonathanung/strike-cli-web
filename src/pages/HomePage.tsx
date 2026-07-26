@@ -6,6 +6,7 @@ import { Features } from '../components/Features'
 import { Differentiation } from '../components/Differentiation'
 import { ProductStills } from '../components/ProductStills'
 import { WebServe } from '../components/WebServe'
+import { Faq } from '../components/Faq'
 import { ComingSoon } from '../components/ComingSoon'
 import { usePageTitle } from '../lib/usePageTitle'
 
@@ -21,6 +22,7 @@ export function HomePage() {
       <Differentiation />
       <ProductStills />
       <WebServe />
+      <Faq />
       <ComingSoon />
     </>
   )

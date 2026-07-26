@@ -150,6 +150,12 @@ export function Differentiation() {
         >
           Permissions docs
         </Link>
+        <Link
+          to="/#faq"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-surface/80 px-4 py-2 text-sm font-medium text-text transition-colors hover:border-accent/40 hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+        >
+          FAQ
+        </Link>
       </div>
     </Section>
   )

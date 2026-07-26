@@ -198,6 +198,13 @@ export function DocsIndexPage() {
         >
           Multi-agent
         </Link>
+        {' · '}
+        <Link
+          to="/#faq"
+          className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
+        >
+          FAQ
+        </Link>
       </p>
     </DocsShell>
   )

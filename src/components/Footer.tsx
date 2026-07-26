@@ -210,6 +210,9 @@ export function Footer() {
             <Link to="/#features" className={linkClass}>
               Features
             </Link>
+            <Link to="/#faq" className={linkClass}>
+              FAQ
+            </Link>
             <Link to="/#web-serve" className={linkClass}>
               Web serve
             </Link>
