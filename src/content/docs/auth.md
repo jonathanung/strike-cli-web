@@ -42,6 +42,9 @@ when a provider is chosen without a model: `claude-sonnet-5`, `gpt-5.5`,
 `grok-4.5`.
 
 Custom/self-hosted providers (`.strike/providers.jsonc` or `/settings`) use
-env refs (`{env:NAME}`, `$NAME`) and/or a stored API key. Logging out of a
-**custom** provider deletes its definition and credentials; built-in logout
-only clears credentials. Details: [config.md](/docs/config#custom-providers).
+env refs (`{env:NAME}`, `$NAME`) and/or a stored API key. `models` may be a
+legacy id list or nested objects (display name, limits, variants). Builtin
+provider keys in `providers.jsonc` overlay models.dev metadata without
+dropping the catalog. Logging out of a **custom** provider deletes its
+definition and credentials; built-in logout only clears credentials.
+Details: [config.md](/docs/config#custom-providers).

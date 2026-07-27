@@ -232,14 +232,43 @@ files — use env refs and/or `/auth` / the auth store.
 ```jsonc
 // ~/.strike/providers.jsonc or ./.strike/providers.jsonc
 {
-  "kimi": {
+  // Custom / self-hosted endpoint
+  "acme": {
     "npm": "@ai-sdk/openai-compatible", // optional; hints wire dialect only (not loaded)
-    "name": "Kimi",
+    "name": "Acme",
     "options": {
       "baseURL": "https://api.example.com/v1",
-      "apiKey": "{env:KIMI_API_KEY}"
+      "apiKey": "{env:ACME_API_KEY}"
     },
-    "models": ["kimi-latest"]
+    // Legacy flat ids still work:
+    // "models": ["acme-latest"]
+    // Nested rich objects (display name, limits, variants):
+    "models": {
+      "acme-latest": {
+        "name": "Acme Latest",
+        "limit": { "context": 128000, "output": 8192 },
+        "options": { "forcedReasoning": true },
+        "variants": {
+          "high": { "reasoningEffort": "high", "textVerbosity": "low" },
+          "low": { "reasoningEffort": "low" }
+        }
+      }
+    }
+  },
+  // Built-in catalog overlay — does NOT replace models.dev.
+  // Omit models (or leave empty) to keep the full catalog.
+  // Overlay one id to refine name/limits/variants; other catalog ids remain.
+  "openai": {
+    "models": {
+      "gpt-5.5": {
+        "name": "GPT-5.5",
+        "limit": { "context": 272000, "output": 128000 },
+        "variants": {
+          "high": { "reasoningEffort": "high" },
+          "xhigh": { "reasoningEffort": "xhigh" }
+        }
+      }
+    }
   },
   "claude-proxy": {
     "npm": "@ai-sdk/anthropic",
@@ -253,13 +282,40 @@ files — use env refs and/or `/auth` / the auth store.
 
 | Field | Required | Notes |
 |---|---|---|
-| map key | yes | provider id (lowercased slug); not `anthropic`/`openai`/`xai`/`echo` |
-| `options.baseURL` | yes | absolute `http`/`https` URL, or `{env:VAR}` / `$VAR` / `${VAR}` |
+| map key | yes | provider id (lowercased slug). Built-ins (`anthropic`/`openai`/`xai`/`gemini`/`kimi`/`deepseek`/`echo`) are **model overlays only** (not custom endpoints). Other keys are custom providers. |
+| `options.baseURL` | custom yes | absolute `http`/`https` URL, or `{env:VAR}` / `$VAR` / `${VAR}` (not required on builtin overlays) |
 | `options.apiKey` | no | env ref only (`{env:NAME}`, `$NAME`, `${NAME}`) → checked before auth store |
-| `npm` | no | ignored at runtime; `anthropic` in the name → anthropic wire, else openai |
+| `npm` | no | **advisory only** — never installed or executed; `anthropic` in the name → anthropic wire, else openai |
 | `api` | no | strike override: `openai` or `anthropic` (wins over npm hint) |
-| `models` | no | listed in `/model`; first is the default when unset |
+| `models` | no | `[]string` (legacy) **or** object map id → model def; see merge rules below |
+| `models.<id>.name` | no | display label in `/model` (default: id or models.dev name) |
+| `models.<id>.limit.context` / `.output` | no | token ceilings; overlay wins over models.dev when set (>0) |
+| `models.<id>.options` | no | opaque bag (unsupported keys ignored) |
+| `models.<id>.variants` | no | named effort presets; `reasoningEffort`/`effort` map onto `/effort` |
 | `options.headers` | no | extra HTTP headers (values may use env refs) |
+
+#### models.dev / catalog merge
+
+| Situation | Behavior |
+|---|---|
+| Builtin (openai, anthropic, …) with models.dev data | `/model` lists **catalog** models by default |
+| Config omits `models` or `models` is empty | full catalog unchanged |
+| Config nested/flat models on a **builtin** | **merge/overlay** by id: config wins name/limits/variants; catalog-only ids still appear |
+| Config nested/flat models on a **custom** provider | config list is the full `/model` list (no models.dev) |
+| Config sets limits for a catalog id | config wins for those fields; other catalog metadata kept |
+
+You never need to paste an entire upstream catalog into `providers.jsonc` just to set one variant or context limit.
+
+#### Default model precedence
+
+1. `config.model` / `--model` when set  
+2. Custom provider: first configured model id (`models` array order, or sorted nested keys)  
+3. Built-in pin via `DefaultModel(provider)` (e.g. openai → `gpt-5.5`)  
+4. Otherwise unset (freeform `/model <id>`)
+
+#### Variants → effort
+
+Variant bags may include `reasoningEffort` or `effort` (`off`\|`low`\|`medium`\|`high`\|`xhigh`\|`max`). Selecting a variant (from the `/effort` picker when the active model has variants, or `/effort <variant-id>`) sets the session effort dial; adapters map that onto wire fields (`reasoning_effort`, Anthropic `output_config.effort`, …). Other variant keys are ignored for now.
 
 ### Config `providers` array (legacy)
 
@@ -267,11 +323,11 @@ files — use env refs and/or `/auth` / the auth store.
 {
   "providers": [
     {
-      "name": "kimi",
+      "name": "acme",
       "baseURL": "https://api.example.com/v1",
       "api": "openai",
-      "apiKeyEnv": "KIMI_API_KEY",
-      "models": ["kimi-latest"],
+      "apiKeyEnv": "ACME_API_KEY",
+      "models": ["acme-latest"],
       "headers": { "X-Custom": "optional" }
     }
   ]
@@ -280,12 +336,17 @@ files — use env refs and/or `/auth` / the auth store.
 
 | Field | Required | Notes |
 |---|---|---|
-| `name` | yes | lowercase slug (`[a-z][a-z0-9_-]{0,63}`); not builtins |
+| `name` | yes | lowercase slug (`[a-z][a-z0-9_-]{0,63}`); not `anthropic`/`openai`/`xai`/`gemini`/`kimi`/`deepseek`/`echo` |
 | `baseURL` | yes | absolute URL or env ref template |
 | `api` | yes | wire dialect: `openai` or `anthropic` |
 | `apiKeyEnv` | no | env var name (or `{env:NAME}` / `$NAME`) checked before the auth store |
-| `models` | no | listed in `/model`; first is the default when unset |
+| `models` | no | flat `[]string` ids listed in `/model`; first is the default when unset (rich nested models use `providers.jsonc`) |
 | `headers` | no | extra HTTP headers on every request (values may use env refs) |
+
+**Migration:** existing `models: ["a","b"]` keeps working everywhere. Prefer
+`providers.jsonc` nested objects when you need display names, limits, or
+variants. Built-in overlays go under the builtin key in `providers.jsonc`
+(not in the `providers` array — builtin names remain reserved there).
 
 **Env interpolation:** `{env:NAME}`, `$NAME`, and `${NAME}` expand from the
 process environment (vars exported to the strike process, e.g. via bashrc).
@@ -294,7 +355,9 @@ process environment (vars exported to the strike process, e.g. via bashrc).
 names appear in `/provider` like built-ins. **Logout** (`ctrl+x` or
 `/auth logout <name>`) of a custom provider **deletes** its definition from
 config/providers.jsonc and clears credentials; `/settings` `d` does the same.
-Built-in logout only clears credentials.
+Built-in logout only clears credentials. The `/model` picker shows display
+names when set; the context meter prefers config `limit` values over catalog
+defaults when present.
 
 ## Embedded editor (`vimMode`)
 
@@ -373,6 +436,10 @@ The ladder is normalized across vendors and each adapter maps it to its own
 wire fields — Anthropic to adaptive thinking plus `output_config.effort`, the
 OpenAI family to a `reasoning_effort` string. With no level set, strike sends
 no reasoning fields at all and each provider's own default applies.
+
+When the active model defines **variants** in `providers.jsonc`, the `/effort`
+picker can list those named presets (and `/effort <variant-id>` selects one);
+see [Variants → effort](#variants-effort) under Custom providers.
 
 The two ends of the ladder are requests, not guarantees, because the vendor
 ladders differ in length: `off` disables thinking outright on Anthropic but
