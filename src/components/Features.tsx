@@ -135,7 +135,7 @@ const groups: FeatureGroup[] = [
       {
         title: 'Custom providers & auth',
         description:
-          'Bring your own providers, pick auth in-TUI, and paste SSH-style credentials when you need them.',
+          'Bring your own providers, overlay model names/limits/variants in providers.jsonc, pick auth in-TUI, and paste SSH-style credentials when you need them.',
         icon: KeyRound,
         docsTo: '/docs/auth',
       },

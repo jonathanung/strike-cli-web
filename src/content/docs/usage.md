@@ -13,10 +13,13 @@ strike launches without any provider configured. Pick one inside the TUI:
 /provider openai gpt-5.5       # optional explicit model
 /model                         # centered model picker for the current
                                # provider (live models.dev catalog, cached
-                               # 24h; type to filter)
+                               # 24h; type to filter; display names from
+                               # catalog or providers.jsonc overlays)
 /model grok-4.5                # direct switch on the current provider
 /effort                        # centered picker for reasoning effort
+                               # (named model variants when configured)
 /effort xhigh                  # off | low | medium | high | xhigh | max
+                               # or /effort <variant-id>
 /autonomy                      # exit-gate policy picker
 /autonomy supervised           # supervised | agent | checks
 /mode                          # permission posture picker (Shift+Tab cycles)
@@ -154,8 +157,11 @@ a real provider needs credentials — see [auth.md](/docs/auth).
 
 Provider selection happens in-app with `/provider`; `--provider` on the
 command line just pre-selects (and validates credentials eagerly). Custom
-OpenAI-/Anthropic-compatible endpoints: `/settings`, `.strike/providers.jsonc`,
-or config `providers` — see [config.md](/docs/config).
+OpenAI-/Anthropic-compatible endpoints and nested model metadata (display
+names, context/output limits, effort variants): `/settings`,
+`.strike/providers.jsonc`, or config `providers` — see
+[config.md](/docs/config#custom-providers). Builtin keys in `providers.jsonc`
+overlay models.dev without replacing the full catalog.
 
 ## CLI session resume & headless exec
 
