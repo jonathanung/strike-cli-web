@@ -10,31 +10,31 @@ export type ProductStill = {
 export const heroSlides: readonly ProductStill[] = [
   {
     id: 'hero-cockpit',
-    src: '/product/hero-cockpit.svg',
-    alt: 'Strike dark multi-pane cockpit with session transcript on the left and context and activity panes on the right',
+    src: '/product/multi-pane-cockpit.gif',
+    alt: 'Strike multi-pane cockpit with session transcript on the left and live side panes on the right',
     label: 'Multi-pane cockpit',
     caption: 'Transcript, composer, and side panes in one workspace.',
   },
   {
     id: 'hero-agents',
-    src: '/product/agents-tree.svg',
-    alt: 'Strike agents tree showing concurrent roots and a child explore task beside the transcript',
-    label: 'Agents tree',
-    caption: 'Concurrent roots, children, and visualizer telemetry.',
+    src: '/product/multiple-agents.webp',
+    alt: 'Strike agents tree showing concurrent agent roots beside the transcript',
+    label: 'Multiple agents',
+    caption: 'Concurrent roots, children, and status at a glance.',
   },
   {
     id: 'hero-permissions',
-    src: '/product/permission-modal.svg',
-    alt: 'Strike centered permission modal asking to allow a bash tool call',
+    src: '/product/permissions.webp',
+    alt: 'Strike permission prompt asking to allow a tool call in the TUI',
     label: 'Permissions',
     caption: 'Native allow once / session / deny prompts.',
   },
   {
-    id: 'hero-light',
-    src: '/product/hero-cockpit-light.svg',
-    alt: 'Strike multi-pane cockpit in light appearance',
-    label: 'Light theme',
-    caption: 'Secondary light appearance via /theme light.',
+    id: 'hero-visualizer',
+    src: '/product/visualizer.webp',
+    alt: 'Strike visualizer pane with activity and context telemetry',
+    label: 'Visualizer',
+    caption: 'Live activity, context, and session telemetry.',
   },
 ] as const
 
@@ -42,38 +42,52 @@ export const heroSlides: readonly ProductStill[] = [
 export const productStills: readonly ProductStill[] = [
   {
     id: 'stills-agents',
-    src: '/product/agents-tree.svg',
-    alt: 'Strike agents pane with concurrent roots, child tasks, and activity sparkline',
-    label: 'Agents & tree',
-    caption: 'Multi-root sessions, child transcripts, and visualizer status.',
+    src: '/product/multiple-agents.webp',
+    alt: 'Strike agents pane with concurrent roots and child tasks',
+    label: 'Multiple agents',
+    caption: 'Multi-root sessions and child transcripts side by side.',
   },
   {
     id: 'stills-permissions',
-    src: '/product/permission-modal.svg',
-    alt: 'Strike permission dialog for a bash go test command with allow and deny actions',
+    src: '/product/permissions.webp',
+    alt: 'Strike permission dialog for a tool call with allow and deny actions',
     label: 'Tools & permissions',
     caption: 'Fine-grained allow / ask / deny without leaving the TUI.',
   },
   {
     id: 'stills-mentions',
-    src: '/product/file-mention.svg',
+    src: '/product/file-mentions.gif',
     alt: 'Strike composer showing @file fuzzy completion for project paths',
     label: '@file mentions',
     caption: 'Fuzzy @path attach from the composer.',
   },
   {
-    id: 'stills-worktrees',
-    src: '/product/worktrees.svg',
-    alt: 'Strike concurrent roots running in isolated git worktrees under .strike/worktrees',
-    label: 'Worktrees',
-    caption: 'Isolated worktrees so parallel agents do not collide on disk.',
+    id: 'stills-memories',
+    src: '/product/memories.gif',
+    alt: 'Strike memory pane with saved notes beside the transcript',
+    label: 'Memories',
+    caption: 'In-TUI memory so durable context stays next to the session.',
   },
   {
     id: 'stills-telemetry',
-    src: '/product/telemetry.svg',
-    alt: 'Strike context doctor bars and session cost telemetry in the visualizer pane',
-    label: 'Telemetry bars',
-    caption: 'Context layers, token totals, and estimated cost in-pane.',
+    src: '/product/visualizer.webp',
+    alt: 'Strike visualizer with activity and context telemetry',
+    label: 'Visualizer & telemetry',
+    caption: 'Activity stream and context signals in-pane.',
+  },
+  {
+    id: 'stills-md',
+    src: '/product/md-reader.gif',
+    alt: 'Strike markdown reader pane rendering a project document',
+    label: 'Markdown reader',
+    caption: 'Read and review docs without leaving the cockpit.',
+  },
+  {
+    id: 'stills-vim',
+    src: '/product/vim.gif',
+    alt: 'Strike vim-mode editing inside the TUI',
+    label: 'Vim mode',
+    caption: 'Modal editing when you want full keyboard control.',
   },
 ] as const
 
@@ -83,7 +97,7 @@ export const demoMedia = [
     title: 'Launch & first prompt',
     caption:
       'Open Strike, send a coding prompt, and watch the multi-pane cockpit stream the agent turn with tools in the activity pane.',
-    src: '/product/hero-cockpit.svg',
+    src: '/product/multi-pane-cockpit.gif',
     alt: 'Strike cockpit during a first coding prompt with tool activity',
   },
   {
@@ -91,7 +105,7 @@ export const demoMedia = [
     title: 'Tools & permissions',
     caption:
       'When the agent needs bash or edits, a centered permission prompt offers allow once, allow session, or deny.',
-    src: '/product/permission-modal.svg',
+    src: '/product/permissions.webp',
     alt: 'Strike permission modal over the cockpit',
   },
   {
@@ -99,8 +113,7 @@ export const demoMedia = [
     title: 'Agents & continue',
     caption:
       'Run concurrent roots, open child transcripts, and resume with strike --continue when you return.',
-    src: '/product/agents-tree.svg',
+    src: '/product/multiple-agents.webp',
     alt: 'Strike agents tree with concurrent roots and children',
   },
 ] as const
-

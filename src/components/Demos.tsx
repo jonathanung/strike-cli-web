@@ -39,8 +39,8 @@ export function Demos() {
                   <img
                     src={demo.src}
                     alt={demo.alt}
-                    width={960}
-                    height={600}
+                    width={800}
+                    height={458}
                     className="h-full w-full object-cover object-top"
                     loading="lazy"
                     decoding="async"

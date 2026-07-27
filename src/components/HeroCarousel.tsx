@@ -68,8 +68,8 @@ export function HeroCarousel() {
           <img
             src={primary.src}
             alt={showingPrimary ? primary.alt : ''}
-            width={960}
-            height={600}
+            width={800}
+            height={458}
             className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-300 ${
               showingPrimary ? 'opacity-100' : 'opacity-0'
             }`}
@@ -95,8 +95,8 @@ export function HeroCarousel() {
                 <img
                   src={slide.src}
                   alt={slide.alt}
-                  width={960}
-                  height={600}
+                  width={800}
+                  height={458}
                   className="h-full w-full object-cover object-top"
                   decoding="async"
                   loading="lazy"
