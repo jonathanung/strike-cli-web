@@ -60,6 +60,7 @@ const groups: FeatureGroup[] = [
         description:
           'In-TUI memory and issues panes with matching tools so context and tracked work stay beside the transcript.',
         icon: MemoryStick,
+        stillId: 'stills-memories',
         docsTo: '/docs/usage',
       },
       {
@@ -98,7 +99,7 @@ const groups: FeatureGroup[] = [
         description:
           'Each session can run in an isolated git worktree so parallel agents do not collide on disk.',
         icon: GitBranch,
-        stillId: 'stills-worktrees',
+        stillId: 'stills-agents',
         docsTo: '/docs/multi-agent',
       },
       {
