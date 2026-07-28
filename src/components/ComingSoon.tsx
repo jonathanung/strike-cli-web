@@ -1,5 +1,16 @@
 import { motion, useReducedMotion } from 'framer-motion'
-import { Globe, Server } from 'lucide-react'
+import {
+  Blocks,
+  ClipboardList,
+  Gauge,
+  Globe,
+  GraduationCap,
+  ListOrdered,
+  Map,
+  Puzzle,
+  Route,
+  Server,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Section } from './ui/Section'
 import { Card } from './ui/Card'
@@ -10,6 +21,7 @@ type Upcoming = {
   icon: LucideIcon
 }
 
+/** Roadmap items aligned with open Strike epics (CLI repo). */
 const upcoming: Upcoming[] = [
   {
     title: 'Hardened remote access',
@@ -22,6 +34,54 @@ const upcoming: Upcoming[] = [
     description:
       'An always-on Strike daemon for long-running agent work. Not a multiplayer web IDE.',
     icon: Server,
+  },
+  {
+    title: 'First-time user experience',
+    description:
+      'Guided onboard on first launch or via /ftue — get from install to a working agent session without spelunking docs.',
+    icon: GraduationCap,
+  },
+  {
+    title: 'User-defined workflows',
+    description:
+      'Standardized workflow generation with contextual phases, permission gates, and exit criteria you can trust.',
+    icon: Route,
+  },
+  {
+    title: 'In-app planning',
+    description:
+      'A clear user workflow for planning inside Strike — plan first, then execute with phase gates.',
+    icon: Map,
+  },
+  {
+    title: 'Plan mode UX',
+    description:
+      'Sharper plan-mode surfaces: clearer steps, better review, less friction before agents touch the tree.',
+    icon: ClipboardList,
+  },
+  {
+    title: 'User plugins',
+    description:
+      'A standardized plugin scheme so you can extend Strike with your own integrations — not opaque vendor hooks.',
+    icon: Puzzle,
+  },
+  {
+    title: 'Build queue (Slurm)',
+    description:
+      'Per-project build queues that cap concurrent agent build tasks so heavy work stays orderly under load.',
+    icon: ListOrdered,
+  },
+  {
+    title: 'Faster TUI rendering',
+    description:
+      'Simplify and speed up TUI rendering so large transcripts and busy multi-pane layouts stay snappy.',
+    icon: Gauge,
+  },
+  {
+    title: 'End-to-end test workflow',
+    description:
+      'An integration path that exercises how Strike should behave end-to-end — less manual clicking through the app.',
+    icon: Blocks,
   },
 ]
 
@@ -37,7 +97,7 @@ export function ComingSoon() {
         </p>
       </div>
 
-      <ul className="mx-auto grid max-w-3xl gap-4 md:grid-cols-2">
+      <ul className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {upcoming.map((item, i) => {
           const Icon = item.icon
           return (
@@ -49,7 +109,7 @@ export function ComingSoon() {
               transition={
                 reduceMotion
                   ? { duration: 0 }
-                  : { duration: 0.4, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }
+                  : { duration: 0.4, delay: i * 0.03, ease: [0.22, 1, 0.36, 1] }
               }
             >
               <Card as="article" interactive className="relative h-full min-w-0 overflow-hidden p-5 sm:p-6">
