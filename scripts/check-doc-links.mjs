@@ -17,6 +17,24 @@ const SLUG_ALIASES = {
   'agents-skills': 'multi-agent',
 }
 
+/** Required hub routes from product acceptance. */
+const REQUIRED_SLUGS = [
+  'install',
+  'quickstart',
+  'auth',
+  'usage',
+  'keybinds',
+  'editors',
+  'multi-agent',
+  'goal',
+  'loop',
+  'config',
+  'mcp',
+  'theme',
+  'web',
+  'peer-ecosystem',
+]
+
 function slugifyHeading(text) {
   return text
     .toLowerCase()
@@ -169,8 +187,7 @@ function checkFeatureDeepLinks(docs) {
     if (!docs.has(slug)) errors.push(`Features.tsx links to missing ${path}`)
   }
 
-  // Required hub routes from issue acceptance
-  for (const slug of ['install', 'quickstart', 'keybinds', 'multi-agent', 'config', 'mcp', 'web', 'auth']) {
+  for (const slug of REQUIRED_SLUGS) {
     if (!docs.has(slug)) errors.push(`required docs page missing: ${slug}`)
   }
   return errors

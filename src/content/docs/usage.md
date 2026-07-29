@@ -9,26 +9,33 @@ strike launches without any provider configured. Pick one inside the TUI:
                                # selecting an unauthenticated one starts its
                                # login and switches once it succeeds;
                                # ctrl+x logs out (y/n confirm)
-/provider anthropic            # direct switch (or openai, xai, echo)
+/provider anthropic            # direct switch (or openai, xai, google, kimi, deepseek, echo)
 /provider openai gpt-5.5       # optional explicit model
 /model                         # centered model picker for the current
                                # provider (live models.dev catalog, cached
-                               # 24h; type to filter; display names from
-                               # catalog or providers.jsonc overlays)
+                               # 24h; type to filter)
 /model grok-4.5                # direct switch on the current provider
 /effort                        # centered picker for reasoning effort
-                               # (named model variants when configured)
+                               # (active level shows on the top status bar)
 /effort xhigh                  # off | low | medium | high | xhigh | max
-                               # or /effort <variant-id>
 /autonomy                      # exit-gate policy picker
 /autonomy supervised           # supervised | agent | checks
 /mode                          # permission posture picker (Shift+Tab cycles)
 /mode soft-approve             # default | plan | soft-approve | accept-edits | yolo
 /agent                         # centered agent picker
 /agent plan                    # direct switch (build, plan, explore, …)
-/session                       # browse past root sessions (auto-titles) and
-                               # resume one with full model history
-/session <id>                  # resume a specific session by id
+/agents                        # focus the agents right pane
+/activity                      # focus the activity right pane
+/files                         # focus the files right pane
+/visualizer                    # focus the visualizer right pane
+/system                        # focus the system right pane (needs telemetry on)
+/telemetry                     # toggle local system metrics pane (CPU/RAM/disk)
+/telemetry on|off|status       # show/hide or report; on by default (also --telemetry)
+/session                       # browse past root sessions for this workspace
+                               # (auto-titles); ctrl+a shows all workspaces
+/session <id>                  # resume a specific session by id (any workspace)
+/rename                        # rename the current session (editor)
+/rename <title>                # rename the current session immediately
 /fast                          # toggle OpenAI priority tier (~2×, lower
                                # latency). Sticky session preference; no-op
                                # on Anthropic, xAI, ChatGPT subscription, or
@@ -42,7 +49,7 @@ strike launches without any provider configured. Pick one inside the TUI:
 /auth anthropic                # masked API-key input (also: /auth <p> key)
 /auth status                   # anthropic: none · openai: oauth+key · …
 /auth logout <provider>
-/settings                      # manage custom providers and settings
+/settings                      # defaults (theme, editor, mode) + custom providers
 /theme                         # centered color-theme picker (bundled +
                                # ~/.strike/themes + ./.strike/themes)
 /theme <id>                    # apply a theme by id
@@ -54,51 +61,93 @@ strike launches without any provider configured. Pick one inside the TUI:
 /undo                          # undo last turn (picker: chat only vs + files)
 /undo chat                     # drop last turn from history only
 /undo files                    # drop last turn and restore files edited then
-/rewind                        # alias of /undo
+/rewind                        # fork from a previous turn (picker; keeps original)
+/rewind <n>                    # fork keeping completed turns 1..n
 /export [path] [--open]        # write the transcript to markdown (default
                                # .strike/exports/… or $TMPDIR); --open hands
                                # the file to $EDITOR / $VISUAL
-/vim [path[:line]]             # open file in embedded editor (pane/overlay)
-                               # or $EDITOR (see vimMode in config.md)
-/md-read <path>                # open a markdown file in the right markdown pane
+/copy                          # copy last assistant response to clipboard
+                               # (OSC52; also alt+y)
+/vim [path|@path[:line]]       # open file in editor (embedded/modal/takeover)
+                               # or $EDITOR; @path like composer mentions
+                               # (e.g. /vim @internal/foo.go)
+/nano [path|@path[:line]]      # open file in nano (embedded/modal/takeover;
+                               # @path ok; see nanoMode — editors docs)
+/md-read <path|@path>          # open markdown (embedded right pane or modal;
+                               # @path ok; see mdReadMode — editors docs)
 /memory [list|get|set|rm|export|import] …
                                # project-scoped durable key/value memory;
                                # export/import portable JSON (default path
                                # strike-memory.json). import merges by key;
                                # add --replace to wipe first
-/issues [list|add|get|close|export|import] …
+ /issues [list|add|get|close|export|import] …
                                # project-scoped issue tracker; export/import
                                # portable JSON (default strike-issues.json).
                                # import merges by id; --replace wipes first.
                                # Relative export/import paths stay under the
                                # project root (no path escape).
-/context                       # context doctor modal (prompt layer breakdown)
+/loop <interval> <job>         # recurring LLM job (session-only; see loop docs)
+/loop list                     # list active loops
+/loop stop [id]                # stop one loop or all
+/context                       # context doctor (layers + request token slices)
 /effective-prompt              # alias of /context
 /cost                          # session token totals and estimated USD cost
 /keys                          # filterable keybind cheatsheet (also f1)
+/legend                        # UI icons, status glyphs, and chrome meanings
 /help                          # list commands
 /upgrade                       # install latest GitHub Release and restart
 /init                          # create or update project AGENTS.md (confirm
                                # before replacing an existing file)
  /mcp                           # MCP status; retry/disable servers
+/exit                          # quit strike (same as ctrl+c)
+/quit                          # alias of /exit
+# Keybind mirrors (same actions as chords; see keybinds and /keys):
+/focus-left /focus-right       # focus panes (ctrl+h / ctrl+l)
+/window-next /window-prev      # cycle right-pane windows (ctrl+o / ctrl+p)
+/scroll-up /scroll-down        # transcript scroll
+/jump-bottom                   # jump to latest output (ctrl+t)
+/palette                       # command palette (ctrl+k)
+/interrupt                     # interrupt running turn (esc)
+/save-defaults                 # save defaults (ctrl+d)
+/leave-editor                  # leave embedded editor (ctrl+g)
+/edit-prompt                   # external editor for prompt (ctrl+e)
+/agent-next                    # cycle agent persona (tab)
+/mode-next                     # cycle permission mode (shift+tab)
+/tool-prev /tool-next          # select tool cells (alt+[ / alt+])
+/tool-expand /tool-copy        # expand or copy selected cell
+/tool-review /tool-apply       # review/apply selected edit
+/subagent /parent              # enter first child / return to parent
+/subagent-next /subagent-prev  # sibling subagent cycle
+/root-new /root-open           # concurrent roots (agents pane n / enter)
+/root-interrupt /root-hide     # interrupt or hide selected root
+/root-filter                   # cycle agents pane filter (f)
 ```
+
+Presentation for `/vim`, `/nano`, and `/md-read` (`vimMode`, `nanoMode`,
+`mdReadMode`) is covered in [editors](/docs/editors); keys live in config.
 
 ### Session, memory, issues
 
 | Command | Notes |
 |---|---|
-| `/session` | picker of past **root** sessions (auto-titles); resume reloads model history |
-| `/session <id>` | resume that root session by id |
+| `/session` | picker of past **root** sessions for the **current workspace** only (auto-titles; resume reloads model history). `ctrl+a` toggles all workspaces. Legacy sessions without a stored folder path appear only in all-workspaces mode |
+| `/session <id>` | resume that root session by id (works across workspaces; list filter does not apply) |
+| `/rename [title]` | rename the current session (brief auto-titles; agents pane `r` too) |
 | `/fork` | copy the current session JSONL into a new id (idle only) |
-| `/undo` / `/rewind` | undo last turn (idle only); bare opens picker; `chat` keeps disk; `files` restores per-file checkpoints from that turn (never `git reset --hard`) |
+| `/undo` | undo last turn in place (idle only); bare opens picker; `chat` keeps disk; `files` restores per-file checkpoints from that turn (never `git reset --hard`) |
+| `/rewind` | fork a **new** session from a completed turn (idle only); original session stays listable; bare opens turn picker; `/rewind n` keeps turns 1..n. Workspace file revert is not part of rewind (use `/undo files` on the live session) |
 | `/export` | dump the visible transcript to markdown (user/assistant/tool summaries); redacts common API-key shapes; default path under `.strike/exports/` or tmp; `--open` launches `$EDITOR` |
+| `/copy` | copy plain text of the last assistant response (not tool output) to the system clipboard via OSC52; same as `alt+y`; notice on success/failure |
 | `/compact` | ask the engine to compact model history |
-| `/memory` | bare = list browser; `list [tag]`, `get <key>`, `set <key> <value>`, `rm <key>`, `export [path]`, `import <path> [--replace]` (portable JSON; relative paths stay under project root) |
-| `/issues` | bare = list browser; `list [open\|closed]`, `add <title>`, `get <id>`, `close <id>`, `export [path]`, `import <path> [--replace]` (same portable rules as memory) |
-| `/context` | context doctor modal: layer sizes, history msg count, oversized warnings (previews redacted) |
+| `/memory` | bare = list browser (focuses memory pane); `list [tag]`, `get <key>`, `set <key> <value>`, `rm <key>`, `export [path]`, `import <path> [--replace]` (portable JSON; relative paths stay under project root) |
+| `/issues` | bare = list browser (focuses issues pane); `list [open\|closed]`, `add <title>`, `get <id>`, `close <id>`, `export [path]`, `import <path> [--replace]` (same portable rules as memory) |
+| `/agents` `/activity` `/files` `/visualizer` `/system` | jump focus to the named right pane (`/agent` remains persona select; `/system` needs telemetry on) |
+| `/telemetry [on\|off\|status]` | local system metrics pane (CPU/RAM/disk); **on by default** (~1 Hz sampler). Disable with `/telemetry off` |
+| `/loop` | schedule a recurring prompt (`15m`, `2h`, …); session-only; `/loop list`, `/loop stop [id]` — see [loop.md](/docs/loop). Distinct from [`/goal`](/docs/goal) |
+| `/context` | context doctor modal: system-prompt layer sizes, history msg count, **request token attribution** (system / tools / messages / tool_results; local ~4 chars/token estimate, labeled `estimated`), oversized warnings (previews redacted) |
 | `/cost` | session input/output/cache totals from usage events; est. USD when catalog rates known; unknown stays explicit |
 | `/init` | light local scan → write `AGENTS.md`; confirms before overwrite |
-| `/mcp` | MCP status (`up`/`down`/`error`/`disabled`); `/mcp retry [name]`, `/mcp disable <name>` (see [config.md](/docs/mcp)) |
+| `/mcp` | MCP status (`up`/`down`/`error`/`disabled`); `/mcp retry [name]`, `/mcp disable <name>` (see [MCP](/docs/mcp)) |
 
 ### Autonomy & workflows
 
@@ -125,13 +174,23 @@ yolo also paints a danger banner.
 | `accept-edits` | auto-allow edit/write; bash/network still ask |
 | `yolo` | skip permission asks; explicit deny rules still apply |
 
-Persists per session in the JSONL log. Optional default for new sessions:
-`permissionMode` in [config.md](/docs/config).
+Persists per session in the JSONL log. Optional default for **new** sessions:
+`permissionMode` in [config.md](/docs/config), or **ctrl+d** in the `/mode`
+picker (and global ctrl+d) to save the current posture as that default.
+Resume restores the session log, not the config default.
 
 Built-in skills also appear as slash commands: `/commit`, `/push`, `/pr`,
 `/ship`, `/review`, `/learn`, `/deslop`, `/verify` (plus custom skills under
 discovery roots). See [agents-skills.md](/docs/multi-agent) and
-[peer-ecosystem.md](https://github.com/jonathanung/strike/blob/main/docs/peer-ecosystem.md).
+[peer-ecosystem.md](/docs/peer-ecosystem).
+
+### Composer: `!` shell escape
+
+Prefix a line with `!` to run a local bash command in the session work
+directory without starting a model turn (for example `!pwd`, `!git status`).
+Output appears in the transcript as a bash tool cell. Empty `!` is ignored
+with a notice. Destructive commands that target paths outside the workspace
+are blocked by the same sandbox as the bash tool.
 
 ### Composer: `@file` / `@folder` mentions
 
@@ -139,6 +198,10 @@ Type `@` then a path fragment for fuzzy project-file completion (needs
 `host.Files`). Matching uses basename and full relative path. Directories
 appear as `@path/`. An exact typed path is always offered when it exists under
 the project root, even if it was outside the fuzzy top results.
+
+File-taking slash commands accept the same `@path` form: `/vim @internal/foo.go`,
+`/nano @notes.txt`, `/md-read @README.md`. Plain paths still work without `@`.
+Bare or invalid mentions (for example `/vim @` or `/vim @../secret`) error.
 
 **Index:** prefers `git ls-files` (honors `.gitignore`); otherwise walks the
 project root. Default skips include `.plan`, `node_modules`, `.git`, `vendor`,
@@ -157,27 +220,30 @@ a real provider needs credentials — see [auth.md](/docs/auth).
 
 Provider selection happens in-app with `/provider`; `--provider` on the
 command line just pre-selects (and validates credentials eagerly). Custom
-OpenAI-/Anthropic-compatible endpoints and nested model metadata (display
-names, context/output limits, effort variants): `/settings`,
-`.strike/providers.jsonc`, or config `providers` — see
-[config.md](/docs/config#custom-providers). Builtin keys in `providers.jsonc`
-overlay models.dev without replacing the full catalog.
+OpenAI-/Anthropic-compatible endpoints: `/settings`, `.strike/providers.jsonc`,
+or config `providers` — see [config.md](/docs/config).
 
 ## CLI session resume & headless exec
 
 ```sh
 ./strike --continue              # resume most recent root session
 ./strike --session <id>          # resume a specific root session by id
+./strike --telemetry             # ensure local system metrics pane (on by default)
 ./strike exec "fix the flaky test"   # one-shot headless turn → stdout
 ./strike exec -                  # read prompt from stdin
 ```
 
+System telemetry (local host CPU/RAM/disk only — not cloud analytics) is **on
+by default** (~1 Hz sampler). Disable with `/telemetry off`; re-enable with
+`/telemetry on` or launch with `--telemetry`.
+
 `--continue` and `--session` cannot be combined. `strike exec` accepts the
 same `--provider` / `--model` / `--effort` /
-`--dangerously-skip-permissions` flags as the TUI. Permission and question
-prompts cannot be answered interactively in exec; asks are rejected unless
-`--dangerously-skip-permissions` is set (configured/agent denies still
-apply). Full flag list: [install.md](/docs/install) or `strike --help`.
+`--auto` / `--dangerously-skip-permissions` flags as the TUI. Permission and
+question prompts cannot be answered interactively in exec; asks are rejected
+unless `--auto` or `--dangerously-skip-permissions` is set
+(configured/agent denies still apply). Full flag list:
+[install.md](/docs/install) or `strike --help`.
 
 ## UI
 
@@ -195,8 +261,8 @@ slot hosts one active window from the registry:
 | `files` | workspace file tree (`host.Files`) |
 | `memory` | project memory browser |
 | `issues` | project issue browser |
-| `markdown` | markdown reader (`/md-read <path>`) |
-| `editor` | embedded nvim/vim/nano PTY for `/vim` |
+| `markdown` | markdown reader (`/md-read <path|@path>`; or modal via `mdReadMode`) |
+| `editor` | embedded nvim/vim/nano PTY for `/vim` or `/nano` (modal via `vimMode`/`nanoMode`) |
 
 Related right-pane windows stack as **groups** when the pane is tall/wide
 enough: session (`context`+`activity`), agents (`agents`+`visualizer`), and
@@ -217,7 +283,7 @@ cheatsheet (including **Agents** when not focused):
 | `enter` | activate the selected root (or open a child transcript) |
 | `x` | interrupt the selected root or child |
 | `j` / `k` | move |
-| `f` | cycle filters (all / attention / working / ready / roots) |
+| `f` | cycle filters (all / needs you / working / ready / roots) |
 
 Do not confuse these with:
 
@@ -226,17 +292,19 @@ Do not confuse these with:
 - **`ctrl+x` leader chords** — navigate **child/subagent** transcripts nested
   under a parent; they do not create or switch concurrent roots.
 
-Worktree isolation for second+ roots is configured via `worktree` in
-[config.md](/docs/config). Full chord table: [keybinds.md](/docs/keybinds).
+Session worktree isolation defaults to `always` (per-root git worktree);
+configure via `session.worktree` in [config.md](/docs/config). Full chord table:
+[keybinds.md](/docs/keybinds).
 
-Vim-style pane keys (horizontal split): `ctrl+h` / `ctrl+l` focus the left
-or right pane; `ctrl+j` / `ctrl+k` move focus within the active stack group
-then to the next group (including bare LF from terminals that cannot
-disambiguate `ctrl+j`). `ctrl+;` (or `/layout` / `/split`) toggles a vertical
-top/bottom split and swaps those chords (focus becomes `ctrl+j`/`ctrl+k`,
-cycle becomes `ctrl+h`/`ctrl+l`). `ctrl+p` opens the command palette; `f1`
-(or `/keys`) opens a filterable keybind cheatsheet. Enter sends; Shift+Enter
-(or Alt+Enter after enhanced CSI) inserts a newline. `pgup`/`pgdn` (and `ctrl+up`/`ctrl+down`)
+Pane keys (orientation-independent): `ctrl+h` / `ctrl+l` focus the left
+(primary transcript) or right (secondary pane column); `ctrl+o` / `ctrl+p`
+cycle focus within the active stack group then to the next group. `ctrl+;`
+(or `/layout` / `/split`) toggles a vertical top/bottom split without swapping
+those chords. `ctrl+k` opens the command palette (when kill-to-end does not
+delete); `f1` (or `/keys`) opens a filterable keybind cheatsheet. Enter sends;
+`ctrl+j`, Shift+Enter, or Alt+Enter inserts a newline (Shift+Enter CSI
+rewrites to Alt+Enter).
+`pgup`/`pgdn` (and `ctrl+up`/`ctrl+down`)
 scroll the transcript; `ctrl+t` jumps to the latest output. The transcript
 sticks to the bottom while you are already anchored, and keeps your scroll
 offset when you have scrolled up. Pickers, the command palette, and

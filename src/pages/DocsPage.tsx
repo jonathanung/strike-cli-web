@@ -5,7 +5,12 @@ import { Section } from '../components/ui/Section'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { MarkdownDoc } from '../components/docs/MarkdownDoc'
-import { DOC_PAGES, docBodyMarkdown, getDocPage } from '../lib/docs'
+import {
+  DOC_PAGES,
+  docBodyMarkdown,
+  docsByCategory,
+  getDocPage,
+} from '../lib/docs'
 import {
   GITHUB_LICENSE_URL,
   LICENSE_NAME,
@@ -16,6 +21,8 @@ import { usePageTitle } from '../lib/usePageTitle'
 import { NotFoundPage } from './NotFoundPage'
 
 function DocsNav({ activeSlug }: { activeSlug?: string }) {
+  const groups = docsByCategory()
+
   return (
     <nav aria-label="Documentation" className="min-w-0">
       <p className="mb-3 font-mono text-xs font-medium tracking-wide text-text-muted uppercase">
@@ -34,29 +41,39 @@ function DocsNav({ activeSlug }: { activeSlug?: string }) {
             Overview
           </Link>
         </li>
-        {DOC_PAGES.map((page) => {
-          const active = page.slug === activeSlug
-          return (
-            <li key={page.slug}>
-              <Link
-                to={`/docs/${page.slug}`}
-                className={`flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
-                  active
-                    ? 'bg-surface-focus font-medium text-accent'
-                    : 'text-text-muted hover:bg-surface hover:text-text'
-                }`}
-              >
-                <span>{page.title}</span>
-                {page.experimental ? (
-                  <span className="shrink-0 rounded-md border border-bolt/40 bg-bolt/10 px-1.5 py-0.5 text-[0.65rem] font-medium leading-none text-bolt">
-                    Exp
-                  </span>
-                ) : null}
-              </Link>
-            </li>
-          )
-        })}
       </ul>
+
+      {groups.map(({ category, pages }) => (
+        <div key={category.id} className="mt-5">
+          <p className="mb-2 px-3 font-mono text-[0.65rem] font-medium tracking-wide text-text-muted uppercase">
+            {category.label}
+          </p>
+          <ul className="flex flex-col gap-1">
+            {pages.map((page) => {
+              const active = page.slug === activeSlug
+              return (
+                <li key={page.slug}>
+                  <Link
+                    to={`/docs/${page.slug}`}
+                    className={`flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+                      active
+                        ? 'bg-surface-focus font-medium text-accent'
+                        : 'text-text-muted hover:bg-surface hover:text-text'
+                    }`}
+                  >
+                    <span>{page.title}</span>
+                    {page.experimental ? (
+                      <span className="shrink-0 rounded-md border border-bolt/40 bg-bolt/10 px-1.5 py-0.5 text-[0.65rem] font-medium leading-none text-bolt">
+                        Exp
+                      </span>
+                    ) : null}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      ))}
     </nav>
   )
 }
@@ -109,8 +126,37 @@ function DocsShell({
   )
 }
 
+function DocCard({
+  page,
+}: {
+  page: (typeof DOC_PAGES)[number]
+}) {
+  return (
+    <Link
+      to={`/docs/${page.slug}`}
+      className="relative block h-full min-w-0 rounded-lg border border-border-muted bg-surface p-5 transition-colors hover:border-border hover:bg-surface-focus focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+    >
+      {page.experimental ? (
+        <span className="absolute right-4 top-4 rounded-md border border-bolt/40 bg-bolt/10 px-2.5 py-0.5 text-xs font-medium text-bolt">
+          Experimental
+        </span>
+      ) : null}
+      <span
+        className={`text-base font-semibold text-text ${page.experimental ? 'pr-24' : ''}`}
+      >
+        {page.title}
+      </span>
+      <span className="mt-2 block text-sm leading-relaxed text-text-muted">
+        {page.summary}
+      </span>
+    </Link>
+  )
+}
+
 export function DocsIndexPage() {
   usePageTitle('Docs')
+  const groups = docsByCategory()
+
   return (
     <DocsShell title="Documentation">
       <p className="max-w-2xl text-base leading-relaxed text-text-muted sm:text-lg">
@@ -153,30 +199,25 @@ export function DocsIndexPage() {
         </Card>
       </aside>
 
-      <ul className="mt-10 grid gap-3 sm:grid-cols-2">
-        {DOC_PAGES.map((page) => (
-          <li key={page.slug}>
-            <Link
-              to={`/docs/${page.slug}`}
-              className="relative block h-full min-w-0 rounded-lg border border-border-muted bg-surface p-5 transition-colors hover:border-border hover:bg-surface-focus focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+      <div className="mt-10 flex flex-col gap-10">
+        {groups.map(({ category, pages }) => (
+          <section key={category.id} aria-labelledby={`docs-cat-${category.id}`}>
+            <h2
+              id={`docs-cat-${category.id}`}
+              className="font-mono text-sm font-semibold tracking-wide text-accent uppercase"
             >
-              {page.experimental ? (
-                <span className="absolute right-4 top-4 rounded-md border border-bolt/40 bg-bolt/10 px-2.5 py-0.5 text-xs font-medium text-bolt">
-                  Experimental
-                </span>
-              ) : null}
-              <span
-                className={`text-base font-semibold text-text ${page.experimental ? 'pr-24' : ''}`}
-              >
-                {page.title}
-              </span>
-              <span className="mt-2 block text-sm leading-relaxed text-text-muted">
-                {page.summary}
-              </span>
-            </Link>
-          </li>
+              {category.label}
+            </h2>
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+              {pages.map((page) => (
+                <li key={page.slug}>
+                  <DocCard page={page} />
+                </li>
+              ))}
+            </ul>
+          </section>
         ))}
-      </ul>
+      </div>
 
       <p className="mt-10 text-sm text-text-muted">
         New here? Start with{' '}

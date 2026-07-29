@@ -7,16 +7,20 @@ import {
   Download,
   GitBranch,
   Globe,
+  Goal,
   History,
   ImageIcon,
   KeyRound,
   MemoryStick,
+  Pencil,
   Plug,
+  Repeat,
   Shield,
   Sparkles,
   Terminal,
   Command,
   ArrowUpRight,
+  Undo2,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Section } from './ui/Section'
@@ -66,10 +70,18 @@ const groups: FeatureGroup[] = [
       {
         title: 'Compaction & context doctor',
         description:
-          'Session compaction, cost/context doctor bars, and a thinking toggle so you can see and steer model spend.',
+          'Session compaction, cost/context doctor bars, token attribution, and a thinking toggle so you can see and steer model spend.',
         icon: Activity,
         stillId: 'stills-telemetry',
         docsTo: '/docs/usage',
+      },
+      {
+        title: 'Embedded editors',
+        description:
+          '/vim, /nano, and /md-read with pane, overlay, or takeover presentation — nvim/vim/nano PTY inside the cockpit.',
+        icon: Pencil,
+        stillId: 'stills-vim',
+        docsTo: '/docs/editors',
       },
       {
         title: 'In-TUI pickers',
@@ -84,7 +96,7 @@ const groups: FeatureGroup[] = [
   {
     id: 'agents',
     title: 'Agents',
-    blurb: 'Concurrent agent roots, isolation, and customizable personas.',
+    blurb: 'Concurrent agent roots, isolation, goals, loops, and customizable personas.',
     features: [
       {
         title: 'Concurrent roots',
@@ -100,27 +112,41 @@ const groups: FeatureGroup[] = [
           'Each session can run in an isolated git worktree so parallel agents do not collide on disk.',
         icon: GitBranch,
         stillId: 'stills-agents',
-        docsTo: '/docs/multi-agent',
+        docsTo: '/docs/config#session-worktrees',
       },
       {
-        title: 'Agents & skills',
+        title: 'Agents, skills & workflows',
         description:
-          'Customizable personas and workflows — shape how each agent thinks and works.',
+          'Markdown personas and skills, plan-implement workflows, and lean-code efficiency guidance — shape how each agent works.',
         icon: Boxes,
         stillId: 'stills-agents',
         docsTo: '/docs/multi-agent',
+      },
+      {
+        title: 'Goal harness',
+        description:
+          '/goal runs observe → plan → act → evaluate until falsifiable criteria pass or a budget/guard fires.',
+        icon: Goal,
+        docsTo: '/docs/goal',
+      },
+      {
+        title: 'Recurring loops',
+        description:
+          '/loop schedules session-scoped prompts on an interval — periodic checks without a full goal runtime.',
+        icon: Repeat,
+        docsTo: '/docs/loop',
       },
     ],
   },
   {
     id: 'safety',
     title: 'Safety',
-    blurb: 'Hard permission gates so tools only run with your say-so.',
+    blurb: 'Permission dial and hard gates so tools only run with your say-so.',
     features: [
       {
-        title: 'Tools & permissions',
+        title: 'Permission mode dial',
         description:
-          'Fine-grained allow once / session / deny prompts for bash, edits, and other tools — native in the TUI.',
+          'Shift+Tab or /mode: default, plan, soft-approve, accept-edits, or yolo — plus fine-grained allow once / session / deny prompts.',
         icon: Shield,
         stillId: 'stills-permissions',
         docsTo: '/docs/config',
@@ -133,16 +159,16 @@ const groups: FeatureGroup[] = [
     blurb: 'Providers, MCP, auth, and experimental strike serve (TUI primary).',
     features: [
       {
-        title: 'Custom providers & auth',
+        title: 'Providers & auth',
         description:
-          'Bring your own providers, overlay model names/limits/variants in providers.jsonc, pick auth in-TUI, and paste SSH-style credentials when you need them.',
+          'Anthropic, OpenAI, xAI, Google, Kimi, DeepSeek — plus custom OpenAI-/Anthropic-compatible endpoints in providers.jsonc. OAuth and API keys in-TUI.',
         icon: KeyRound,
         docsTo: '/docs/auth',
       },
       {
-        title: 'MCP (stdio)',
+        title: 'MCP (stdio + HTTP)',
         description:
-          'Connect Model Context Protocol servers over stdio and expose their tools inside Strike.',
+          'Connect Model Context Protocol servers over stdio or streamable HTTP and expose their tools inside Strike.',
         icon: Plug,
         docsTo: '/docs/mcp',
       },
@@ -159,8 +185,15 @@ const groups: FeatureGroup[] = [
   {
     id: 'continuity',
     title: 'Continuity',
-    blurb: 'Install, upgrade, resume, and script without losing the thread.',
+    blurb: 'Install, upgrade, fork, undo, resume, and script without losing the thread.',
     features: [
+      {
+        title: 'Fork, undo & rewind',
+        description:
+          '/fork duplicates a session; /undo drops the last turn (chat or files); /rewind forks from an earlier turn.',
+        icon: Undo2,
+        docsTo: '/docs/usage',
+      },
       {
         title: 'Session resume',
         description:

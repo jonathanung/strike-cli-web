@@ -1,6 +1,4 @@
-# Multi-agent
-
-Run and coordinate agents and skills in one workspace.
+# Agents & skills
 
 Agents and skills are markdown (frontmatter + body). Strike discovers them
 from several trees; **later roots override earlier ones by name**.
@@ -24,6 +22,23 @@ from several trees; **later roots override earlier ones by name**.
 - Markdown only — no OpenCode plugin JS/TS execution.
 - OpenCode-style `model: provider/id` splits into provider + model when `provider` is unset.
 - Nested Claude/OpenCode `permission:` maps map to strike permission rules (best-effort).
+
+## Project process skills (`.claude/skills`)
+
+Repo-local Claude skills used by agents developing strike (not the same as
+user-invoked built-ins like `/commit`). Load via the host `skill` tool:
+
+| Skill | Role |
+|---|---|
+| `test-and-validate` | Tiered verification (mirrors CI; see root `AGENTS.md`) |
+| `write-go-tests` | Author `*_test.go` |
+| `smoke` | Offline product happy-path |
+| `release` | Annotated tag + GitHub release |
+| `issue-handler` / `issue-orchestrator` / `issue-create-and-handle` | Issue → merge farm |
+| `tui-components` | `internal/tui/ui` + theme catalog |
+
+Built-in **user** skills shipped in the binary are listed under Skills below
+(`internal/config/skills/*.md`).
 
 ## Agents
 
@@ -49,11 +64,16 @@ files under any later discovery root):
 directly; the active agent shows in the status bar. The `task` tool’s optional
 `agent` field must match one of these names (or a user-defined agent) —
 unknown names fail with `unknown agent "…" (available: …)`.
+Optional `model` pins the child’s model (bare id on the current provider, or
+`provider/model`) against the same catalog as `/model`; omit to inherit.
+Optional `effort` pins the child’s reasoning dial (`off`\|`low`\|`medium`\|
+`high`\|`xhigh`\|`max`); omit to inherit the parent (agent effort pins still
+apply). When set, task effort wins over agent profile effort.
 
 Each model request composes the system prompt in layers (like opencode):
 
 1. **Shared baseline** — identity, ADHD-shaped response contract, doing-tasks
-2. **Tools** — effective registry guidance (name + short purpose, recommended use). Reflects agent/permission/depth/MCP; hard-denied tools omitted. Own `/context` provenance layer (`tools` / `registry:effective`).
+2. **Tools** — effective registry guidance (name + short purpose, recommended use). Reflects agent/permission/depth/MCP; hard-denied tools omitted. Own `/context` provenance layer (`tools` / `registry:effective`). On every stream (including turn 1) the same effective set is bound as provider tool schemas so the model has tools without discovery lag. With config `deferTools: on`, non-core/MCP schemas stay out of `tools[]` until `toolsearch` discovers them (core coding tools remain always-on; see [config.md](/docs/config)).
 3. **Provider overlay** — anthropic / openai (incl. chatgpt) / xai / default, chosen from the active provider and model id
 4. **Agent persona** — empty for built-in build/plan (provider overlay used); custom `agents/*.md` body replaces the provider overlay; config `systemPrompt` replaces it for build only
 5. **Plan overlay** — always added while the plan agent is active
@@ -106,7 +126,7 @@ Or a single-line JSON array (same shape as config `permissions`), appended after
 permissions: [{"permission":"bash","pattern":"git *","action":"allow"}]
 ```
 
-Evaluation order: defaults → config → optional --dangerously-skip-permissions allow-all → active agent profile → session always grants (last-match-wins). Switching agents replaces the profile and clears session always-grants. Agent denies still apply under --dangerously-skip-permissions.
+Evaluation order: defaults → config → optional --auto / --dangerously-skip-permissions allow-all → active agent profile → session always grants (last-match-wins). Switching agents replaces the profile and clears session always-grants. Agent denies still apply under --auto / --dangerously-skip-permissions.
 
 Layered JSON config: [config.md](/docs/config).
 
@@ -130,7 +150,7 @@ sidecar `.meta.json`).
 | `/deslop` | remove AI style slop from the branch diff |
 | `/verify` | run project gates; fix branch-related failures |
 
-Peer import inventory and hooks mapping: [peer-ecosystem.md](https://github.com/jonathanung/strike/blob/main/docs/peer-ecosystem.md).
+Peer import inventory and hooks mapping: [peer-ecosystem.md](/docs/peer-ecosystem).
 
 ```markdown
 ---
@@ -166,7 +186,10 @@ Built-in `review-fix`:
 2. **fix** — `build` agent, check gate (`make test`)
 
 Tools `enter_plan_mode` / `exit_plan_mode` start and advance the default plan
-workflow. The active phase shows as a badge in the TUI header. Example custom
+workflow. After plan completes, `exit_plan_mode` switches to **build** (simple)
+or **orchestrator** (complex): pass `agent`, or omit and supply `steps` /
+`areas` / `multi_agent` (heuristic: steps ≥ 4, areas ≥ 3, or multi_agent →
+orchestrator). The active phase shows as a badge in the TUI header. Example custom
 file:
 
 ```json

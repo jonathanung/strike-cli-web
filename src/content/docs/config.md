@@ -10,16 +10,26 @@ JSON:
   "effort": "high",
   "defaultAgent": "build",
   "leanCode": "lite",
+  "deferTools": "off",
   "theme": "strike",
   "vimMode": "pane",
+  "nanoMode": "pane",
+  "mdReadMode": "embedded",
   "notify": "unfocused-only",
   "permissionMode": "default",
   "permissionAutoApproveSeconds": 0,
   "permissionAutoApproveExclude": ["bash"],
   "compactionStrategy": "trim",
   "compactionModel": "",
+  "compactionThreshold": 0.70,
+  "compactionBuffer": 4096,
+  "keepUserTurns": 2,
+  "pruneProtectTokens": 40000,
+  "pruneMinimumTokens": 20000,
+  "pruneKeepUserTurns": 2,
+  "pruneProtectTools": [],
   "session": {
-    "worktree": "off",
+    "worktree": "always",
     "worktreeCleanup": "keep"
   },
   "permissions": [
@@ -44,6 +54,20 @@ build/general/debugger; softer scaling-aware lean for plan/orchestrator;
 none for explore/reviewer/tester/validator/commit). Inspired by
 [ponytail](https://github.com/DietrichGebert/ponytail) (clean-room wording).
 Details: [agents-skills.md](/docs/multi-agent#lean-code-ponytail-lite).
+
+**Deferred tool schemas:** `deferTools` is `on` | `off` (default off). When
+`on`, non-core tools are omitted from the provider `tools[]` array until
+`toolsearch` discovers them (or the model calls them by name). Core coding
+tools stay always available: `read`/`glob`/`grep`/`edit`/`write`/
+`apply_patch`/`bash`, the `task*` family, `toolsearch`, `question`, and plan
+workflow tools. Deferred surface includes optional built-ins (`webfetch`,
+todo/memory/issue, `sleep`, `skill`, `notebook_edit`, …) and all `mcp_*`
+tools. Discovery lives on the process registry: matches from `toolsearch`
+load full schemas on the **next** model request (including the next
+iteration of the same turn’s tool loop). Tools already present as assistant
+tool calls in history are re-promoted on each stream (so `--continue` keeps
+schemas for tools used earlier). Set `"deferTools": "on"` in global or
+project config to enable.
 
 **Permission soft-approve / auto-approve:** session mode `soft-approve`
 (`permissionMode`, `/mode`, Shift+Tab) arms a **visible** 15s countdown on
@@ -80,9 +104,9 @@ can bind each session's tool CWD to its own `git worktree` under
 
 | `session.worktree` | Behavior |
 |---|---|
-| `off` (default) | launch cwd; single-session default |
+| `always` (default) | every new root session gets a worktree (git repos only) |
 | `auto` | worktree when a second root session starts in-process |
-| `always` | every new root session gets a worktree (git repos only) |
+| `off` | launch cwd; no isolation |
 
 | `session.worktreeCleanup` | Behavior |
 |---|---|
@@ -94,6 +118,10 @@ for one session). Non-git directories and `git worktree add` failures return a
 clear error and do not leave a half-bound session. Project-scoped state
 (history, memory, issues) stays keyed to the main repo, not the worktree path.
 Tools (`bash`, `read`, `write`, …) resolve paths inside the session worktree.
+Each `bash` invocation is a fresh process whose cwd is that session workdir
+(workspace root, or the bound git worktree root). A `cd` inside one command
+does not affect later bash calls or other tools; chain with `&&` or
+`(cd subdir && …)` when a single command needs a subdirectory.
 
 **ctrl+d saves defaults**: on the main screen it persists the current
 provider/model/agent/effort/theme to `~/.strike/config`; in the provider
@@ -101,120 +129,71 @@ picker it saves the highlighted provider; in the model picker it saves
 provider + model; in the effort picker it saves the highlighted level; in
 the theme picker it saves the highlighted theme id.
 
+**/settings Defaults**: interactive editor for theme, vimMode, nanoMode,
+mdReadMode, permissionMode, and effort (plus a read-only view of
+provider/model/agent). Changes write `~/.strike/config` and apply theme/editor
+presentation to the current session immediately.
+
 ## Theme
 
-`theme` is a color-theme id: bundled JSON themes plus files under
-`~/.strike/themes` and `./.strike/themes`. Empty means the stock `strike`
-palette. In the TUI, bare `/theme` opens a picker; `/theme <id>` applies one;
-`/theme dark|light|auto` only adjusts session appearance (forced background
-detect), not the color-theme id.
+`theme` is a color-theme id (bundled + `~/.strike/themes` + `./.strike/themes`).
+In the TUI: bare `/theme` opens a picker; `/theme <id>` applies one. Full chrome
+modes, surfaces, and web cockpit parity: [Theme](/docs/theme).
 
 ## Keybinds
 
 Remap app-level chords without recompiling. Ids match the in-app cheatsheet
-(`/keys` / `f1`). Values are a key string or an array of alternate sequences:
+(`/keys` / `f1`). Prefer a dedicated file (JSONC comments allowed); the
+`keybinds` object in config still works:
+
+```jsonc
+// ~/.strike/keybinds.jsonc or ./.strike/keybinds.jsonc
+// Flat map (preferred). Wrapped {"keybinds": {...}} is also accepted.
+{
+  "nav.jump-bottom": "ctrl+b",
+  "global.palette": "ctrl+k",
+  "composer.newline": ["ctrl+j", "alt+enter"],
+  "nav.window-next": "ctrl+o",
+  "nav.window-prev": "ctrl+p",
+  "nav.tool-expand": "alt+enter"
+}
+```
+
+Legacy shape in `~/.strike/config` or `./.strike/config`:
 
 ```json
 {
   "keybinds": {
     "nav.jump-bottom": "ctrl+b",
-    "global.palette": ["ctrl+p", "ctrl+k"],
-    "composer.newline": "alt+enter"
+    "global.palette": "ctrl+k"
   }
 }
 ```
 
-Layers merge last-wins per id (project overrides global). Unknown binding ids
-and invalid/empty chords fail config load with a clear error. Critical
-`global.quit` and `global.interrupt` cannot be cleared.
+Layers merge last-wins per id:
+
+`defaults → ~/.strike/config → ~/.strike/keybinds.jsonc → ./.strike/config → ./.strike/keybinds.jsonc`
+
+(`.json` is accepted as well as `.jsonc`. In the same root, the dedicated file
+overrides the config object.) Unknown binding ids and invalid/empty chords
+fail config load with a clear error. Critical `global.quit` and
+`global.interrupt` cannot be cleared.
 
 Shared chords across different actions are allowed (context-specific routing
-in the TUI decides the winner). `/keys` shows the effective map; `/keys reset`
-restores built-in defaults for the current session only — delete the
-`keybinds` object from config to persist defaults.
+in the TUI decides the winner — e.g. default `alt+enter` is newline while
+typing and tool expand only when the composer is empty). `/keys` shows the
+effective map; `/keys reset` restores built-in defaults for the current
+session only — remove remaps from `keybinds.jsonc` / the config `keybinds`
+object to persist defaults.
 
 List/permission modal conventions (`lists.*`, `perm.*`) and agents-pane local
 controls (`agents.*`) are not remappable.
 
-## MCP servers (stdio + HTTP)
+## MCP servers
 
-Connect external [Model Context Protocol](https://modelcontextprotocol.io)
-servers so their tools appear in the model registry as `mcp_<server>_<tool>`.
-Supported transports: **stdio** (local subprocess) and **streamable HTTP**
-(remote endpoint; JSON or SSE responses).
-
-### Stdio (local)
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "github": {
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-github"],
-        "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "…" }
-      }
-    }
-  }
-}
-```
-
-### Streamable HTTP (remote)
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "remote": {
-        "type": "http",
-        "url": "https://mcp.example.com/mcp",
-        "headers": { "Authorization": "Bearer …" }
-      }
-    }
-  }
-}
-```
-
-| Field | Required | Notes |
-|---|---|---|
-| `servers.<name>` | yes | short letter-led slug (`[A-Za-z][A-Za-z0-9_-]*`) |
-| `type` | no | `stdio` (default) or `http` (`sse` is accepted as an alias for `http`) |
-| `command` | stdio | executable on `PATH` or absolute path |
-| `args` | no | argv after the command |
-| `env` | no | stdio env overlay; **never logged** |
-| `url` | http | MCP endpoint URL (if set without `type`, transport is `http`) |
-| `headers` | no | HTTP request headers (e.g. `Authorization`); **never logged or shown in `/mcp`** |
-
-Layers: when a layer sets `mcp.servers` (including `{}`), it **replaces** the
-previous layer's server map. Omitted `mcp` leaves the lower layer unchanged.
-
-Lifecycle: servers start with the session (after the tool worktree is bound),
-list tools once, and shut down on exit. A crashed or unreachable server does
-not take down strike — its tools error cleanly; `/mcp` shows `up` / `down` /
-`error` / `disabled`.
-
-Control from the TUI:
-
-- `/mcp` — status (transport, endpoint label, tools, errors)
-- `/mcp retry [name]` — reconnect one server, or every non-up server
-- `/mcp disable <name>` — stop a server and unregister its tools
-
-Permissions: every MCP tool call asks with permission name `mcp` and pattern
-`<server>/<tool>` (default action **ask**). Allow a server or tool in config:
-
-```json
-{
-  "permissions": [
-    { "permission": "mcp", "pattern": "github/*", "action": "allow" },
-    { "permission": "mcp", "pattern": "github/delete_*", "action": "deny" }
-  ]
-}
-```
-
-Treat project-local MCP config like shell hooks: stdio runs local commands;
-HTTP may send secrets via `headers`. Prefer global `~/.strike/config` for shared
-servers; review `command`/`args`/`env`/`url`/`headers` before trusting a
-project's `.strike/config`.
+Connect Model Context Protocol servers over **stdio** or **streamable HTTP**.
+Prefer `mcp.jsonc`; legacy `mcp` in config still works. Full setup, fields,
+permissions, and TUI controls: [MCP](/docs/mcp).
 
 ## Custom providers
 
@@ -226,6 +205,40 @@ config. Layers merge last-wins by name:
 
 (`.json` is accepted as well as `.jsonc`.) Credentials never live in these
 files — use env refs and/or `/auth` / the auth store.
+
+### Disable default (builtin) providers
+
+Hide stock catalog providers (`anthropic`, `openai`, `xai`, `google`, `kimi`,
+`deepseek`, `echo`) so only custom endpoints appear in `/provider`, `/auth`,
+and model pickers. The shipped alias `gemini` is accepted on
+`disable-default-gemini` and routes to `google`. Same keys work in
+**`providers.jsonc`** or config JSON; later layers win (project overrides
+global; providers.jsonc overrides the config file in the same root).
+
+```jsonc
+// ~/.strike/providers.jsonc — custom-only setup, keep openai available
+{
+  "disable-default-providers": true,
+  "disable-default-openai": false, // per-provider override re-enables
+  "disable-default-anthropic": true, // redundant when all are disabled
+  "acme": {
+    "options": {
+      "baseURL": "https://api.example.com/v1",
+      "apiKey": "{env:ACME_API_KEY}"
+    },
+    "models": ["acme-latest"]
+  }
+}
+```
+
+| Key | Effect |
+|---|---|
+| `disable-default-providers` | `true` hides **all** builtins unless a per-provider flag says otherwise |
+| `disable-default-<name>` | `true` disables that builtin; `false` **re-enables** it when the bulk flag is on |
+
+Customs are never affected. Selecting a disabled builtin (`--provider`,
+`/provider`, config default) fails with a clear error. Overlays/endpoints for
+a disabled builtin are ignored for selection until it is re-enabled.
 
 ### `providers.jsonc` (OpenCode-style)
 
@@ -255,9 +268,18 @@ files — use env refs and/or `/auth` / the auth store.
       }
     }
   },
-  // Built-in catalog overlay — does NOT replace models.dev.
-  // Omit models (or leave empty) to keep the full catalog.
+  // Built-in overlay — does NOT become a separate custom provider.
+  // options.baseURL / options.apiKey customize the stock endpoint (proxy).
+  // Omit models (or leave empty) to keep the full models.dev catalog.
   // Overlay one id to refine name/limits/variants; other catalog ids remain.
+  "anthropic": {
+    "name": "Corp Anthropic",
+    "options": {
+      // OpenCode/AI SDK shape: include /v1 (strike also accepts origin-only).
+      "baseURL": "https://proxy.example/anthropic/v1",
+      "apiKey": "{env:CORP_ANTHROPIC_KEY}"
+    }
+  },
   "openai": {
     "models": {
       "gpt-5.5": {
@@ -282,29 +304,59 @@ files — use env refs and/or `/auth` / the auth store.
 
 | Field | Required | Notes |
 |---|---|---|
-| map key | yes | provider id (lowercased slug). Built-ins (`anthropic`/`openai`/`xai`/`gemini`/`kimi`/`deepseek`/`echo`) are **model overlays only** (not custom endpoints). Other keys are custom providers. |
-| `options.baseURL` | custom yes | absolute `http`/`https` URL, or `{env:VAR}` / `$VAR` / `${VAR}` (not required on builtin overlays) |
-| `options.apiKey` | no | env ref only (`{env:NAME}`, `$NAME`, `${NAME}`) → checked before auth store |
-| `npm` | no | **advisory only** — never installed or executed; `anthropic` in the name → anthropic wire, else openai |
-| `api` | no | strike override: `openai` or `anthropic` (wins over npm hint) |
+| map key | yes | provider id (lowercased slug). Built-ins (`anthropic`/`openai`/`xai`/`google`/`kimi`/`deepseek`/`echo`) stay builtins: options → **endpoint overlay**, models → **catalog overlay**. The shipped alias `gemini` is accepted and canonicalized to `google`. Other keys are custom providers. |
+| `options.baseURL` | custom yes | absolute `http`/`https` URL, or `{env:VAR}` / `$VAR` / `${VAR}`. On builtins, optional — overrides the stock endpoint. **OpenCode shape:** include `/v1` (Anthropic → `…/v1` + `/messages`; OpenAI → `…/v1` + `/chat/completions` or `/responses`). Origin-only Anthropic bases still work. |
+| `options.apiKey` | no | env ref only (`{env:NAME}`, `$NAME`, `${NAME}`) → checked before auth store. On builtins, pins the env var used for that provider. Missing env fails at select time with a clear error. |
+| `npm` | no | **advisory only** — never installed; `anthropic` → Messages; `@ai-sdk/openai` → **Responses** (`/responses`); `@ai-sdk/openai-compatible` (default) → chat completions |
+| `api` | no | strike override: `openai` (chat), `responses`, or `anthropic` (wins over npm hint) |
 | `models` | no | `[]string` (legacy) **or** object map id → model def; see merge rules below |
-| `models.<id>.name` | no | display label in `/model` (default: id or models.dev name) |
+| `models.<id>` map key | yes (when nested) | **wire model id** sent on the API `model` field and used by `/model` selection |
+| `models.<id>.name` | no | **display label only** in `/model` (never sent on the wire; default: id or models.dev name) |
 | `models.<id>.limit.context` / `.output` | no | token ceilings; overlay wins over models.dev when set (>0) |
-| `models.<id>.options` | no | opaque bag (unsupported keys ignored) |
+| `models.<id>.options` | no | opaque bag (unsupported keys ignored; must not change the wire id) |
 | `models.<id>.variants` | no | named effort presets; `reasoningEffort`/`effort` map onto `/effort` |
 | `options.headers` | no | extra HTTP headers (values may use env refs) |
+
+#### Wire id vs display name
+
+Nested `models` object **keys** are the ids strike selects and sends on the wire
+(`{"model":"<key>"}`). The optional `name` field is a UI label only. Example:
+`"gpt-5.5": { "name": "GPT-5.5" }` lists as “GPT-5.5” but requests `gpt-5.5`.
+Variants and options never rewrite the wire id.
+
+#### Builtin endpoint overlay (anthropic / openai / …)
+
+Defining `"anthropic": { "options": { "baseURL", "apiKey" } }` (with or without
+`models`) keeps the builtin provider registered, routes HTTP to the custom
+endpoint, resolves the pinned apiKey env, and still lists models.dev when
+`models` is omitted. Same for other credential builtins (openai chat-completions
+path when baseURL/apiKey is set — not the ChatGPT OAuth backend).
+
+#### baseURL path join (OpenCode parity)
+
+| Wire | `options.baseURL` example | Request path |
+|---|---|---|
+| anthropic | `https://proxy.example/v1` (OpenCode) | `…/v1/messages` |
+| anthropic | `https://proxy.example` (origin-only) | `…/v1/messages` |
+| openai (chat) | `https://proxy.example/v1` | `…/v1/chat/completions` |
+| responses (`@ai-sdk/openai`) | `https://proxy.example/v1` | `…/v1/responses` |
+
+Do **not** put `/messages` or `/chat/completions` in `baseURL` unless the whole
+URL is already the final endpoint (strike leaves a trailing `/messages` or
+`/responses` alone).
 
 #### models.dev / catalog merge
 
 | Situation | Behavior |
 |---|---|
 | Builtin (openai, anthropic, …) with models.dev data | `/model` lists **catalog** models by default |
+| Builtin with only `options` (no `models`) | endpoint overlay applied; **full catalog** unchanged |
 | Config omits `models` or `models` is empty | full catalog unchanged |
 | Config nested/flat models on a **builtin** | **merge/overlay** by id: config wins name/limits/variants; catalog-only ids still appear |
-| Config nested/flat models on a **custom** provider | config list is the full `/model` list (no models.dev) |
+| Config nested/flat models on a **custom** provider | config list is the full `/model` list (no models.dev); map keys are wire ids |
 | Config sets limits for a catalog id | config wins for those fields; other catalog metadata kept |
 
-You never need to paste an entire upstream catalog into `providers.jsonc` just to set one variant or context limit.
+You never need to paste an entire upstream catalog into `providers.jsonc` just to set one variant, context limit, or proxy baseURL.
 
 #### Default model precedence
 
@@ -336,9 +388,9 @@ Variant bags may include `reasoningEffort` or `effort` (`off`\|`low`\|`medium`\|
 
 | Field | Required | Notes |
 |---|---|---|
-| `name` | yes | lowercase slug (`[a-z][a-z0-9_-]{0,63}`); not `anthropic`/`openai`/`xai`/`gemini`/`kimi`/`deepseek`/`echo` |
+| `name` | yes | lowercase slug (`[a-z][a-z0-9_-]{0,63}`); not `anthropic`/`openai`/`xai`/`google`/`gemini`/`kimi`/`deepseek`/`echo` (`gemini` is reserved as an alias of `google`) |
 | `baseURL` | yes | absolute URL or env ref template |
-| `api` | yes | wire dialect: `openai` or `anthropic` |
+| `api` | yes | wire dialect: `openai` (chat), `responses`, or `anthropic` |
 | `apiKeyEnv` | no | env var name (or `{env:NAME}` / `$NAME`) checked before the auth store |
 | `models` | no | flat `[]string` ids listed in `/model`; first is the default when unset (rich nested models use `providers.jsonc`) |
 | `headers` | no | extra HTTP headers on every request (values may use env refs) |
@@ -355,24 +407,13 @@ process environment (vars exported to the strike process, e.g. via bashrc).
 names appear in `/provider` like built-ins. **Logout** (`ctrl+x` or
 `/auth logout <name>`) of a custom provider **deletes** its definition from
 config/providers.jsonc and clears credentials; `/settings` `d` does the same.
-Built-in logout only clears credentials. The `/model` picker shows display
-names when set; the context meter prefers config `limit` values over catalog
-defaults when present.
+Built-in logout only clears credentials.
 
-## Embedded editor (`vimMode`)
+## Surface presentation (editors)
 
-`/vim [path[:line]]` opens a file in an editor. `vimMode` selects how:
-
-| Value | Behavior |
-|---|---|
-| `pane` (default) | embed nvim/vim/nano in the right-pane `editor` window (PTY) |
-| `overlay` | embed in a centered modal overlay |
-| `takeover` | full-screen handoff via `tea.ExecProcess` |
-
-Unknown values are ignored at load time. Resolution order: `$VISUAL`, then
-`$EDITOR`, then the first of `nvim`/`vim`/`vi`/`nano` on `PATH`. GUI `$EDITOR`
-values always take over the terminal regardless of `vimMode`. Leave the
-embedded editor with `ctrl+g`.
+`vimMode`, `nanoMode`, and `mdReadMode` control how `/vim`, `/nano`, and
+`/md-read` present (embedded pane, modal overlay, or takeover). Full reference:
+[Editors](/docs/editors).
 
 ## Hooks
 
@@ -414,17 +455,33 @@ project **concatenate**). Each entry is either a **declarative rule**
 | `timeoutMs` | shell bound; default 30000, max 120000 |
 
 Invalid rows are dropped at load. Peer event-name mapping (CC/OpenCode/Crush):
-[peer-ecosystem.md](https://github.com/jonathanung/strike/blob/main/docs/peer-ecosystem.md#hooks-alignment).
+[peer-ecosystem.md](/docs/peer-ecosystem#hooks-alignment).
 
 ## History compaction
 
 `/compact` and automatic threshold/overflow compaction shrink model-facing
-history while keeping a recent tail.
+history while keeping a recent tail. Continuous tool-result prune
+(`internal/engine/prune.go`) blanks older tool bodies under that ceiling;
+threshold compaction is the coarser whole-history rewrite.
 
 | Field | Values | Default |
 |---|---|---|
 | `compactionStrategy` | `trim` (drop older turns) or `summarize` (model-authored summary of dropped turns) | `trim` |
 | `compactionModel` | optional model id for the summarize call (same provider as the session) | session model |
+| `compactionThreshold` | occupancy fraction of the known context window that triggers auto-compact before a Stream; `>=1` disables threshold compaction; omit/`0` uses the engine default | `0.70` |
+| `compactionBuffer` | extra token headroom reserved with `MaxTokens` so threshold compaction fires before hard exhaustion; omit/`0` uses the engine default | `4096` |
+| `keepUserTurns` | trailing real user turns preserved when compacting (compact markers do not count); omit/`0` uses the engine default | `2` |
+| `pruneProtectTokens` | recent tool-output tokens kept intact while walking history backward during continuous prune; omit/`0` uses the engine default; negatives clamp to `0` | `40000` |
+| `pruneMinimumTokens` | minimum estimated tokens that must be freed before prune mutates history (avoids thrash); omit/`0` uses the engine default; negatives clamp to `0` | `20000` |
+| `pruneKeepUserTurns` | real user turns whose tool results stay complete during prune (compact markers do not count); omit/`0` uses the engine default; negatives clamp to `0` | `2` |
+| `pruneProtectTools` | extra tool names whose results are never blanked (merged with built-in `skill`); names lowercased/deduped; omit/empty adds none | `[]` (+ built-in `skill`) |
+
+Recommended ranges: threshold `0.60`–`0.85` (lower = earlier pressure response;
+too low thrash-compacts short sessions), buffer `1024`–`8192`, keep turns
+`1`–`4`. For prune, lower `pruneProtectTokens` / `pruneMinimumTokens` on
+MCP-heavy sessions (tighter reclaim); raise minimum on short interactive
+sessions to avoid thrash. Overflow recovery still compacts on context-length
+provider errors regardless of threshold.
 
 On summarize failure the engine falls back to trim and emits a notice. The
 summary path never re-runs tools.
@@ -432,14 +489,14 @@ summary path never re-runs tools.
 ## Reasoning effort
 
 `/effort` sets how much internal reasoning the model spends before answering.
-The ladder is normalized across vendors and each adapter maps it to its own
-wire fields — Anthropic to adaptive thinking plus `output_config.effort`, the
-OpenAI family to a `reasoning_effort` string. With no level set, strike sends
-no reasoning fields at all and each provider's own default applies.
-
-When the active model defines **variants** in `providers.jsonc`, the `/effort`
-picker can list those named presets (and `/effort <variant-id>` selects one);
-see [Variants → effort](#variants-effort) under Custom providers.
+The active level shows on the top status bar once set. Persist a default with
+`ctrl+d` in the effort picker, `/settings` → Defaults → Effort, config
+`"effort"`, or `--effort`. The ladder is normalized across vendors and each
+adapter maps it to its own wire fields — Anthropic to adaptive thinking plus
+`output_config.effort`, the OpenAI family to a `reasoning_effort` string. With
+no level set, strike sends no reasoning fields at all and each provider's own
+default applies. The `task` tool accepts optional `effort` so a parent can pin
+a child dial independently of the UI default.
 
 The two ends of the ladder are requests, not guarantees, because the vendor
 ladders differ in length: `off` disables thinking outright on Anthropic but
@@ -457,4 +514,4 @@ floors at `minimal` on the OpenAI family (which has no zero setting), and
 
 Agents, skills, and workflows (including `.claude` / `.opencode` discovery
 roots and merge order): [agents-skills.md](/docs/multi-agent). Peer import
-inventory: [peer-ecosystem.md](https://github.com/jonathanung/strike/blob/main/docs/peer-ecosystem.md).
+inventory: [peer-ecosystem.md](/docs/peer-ecosystem).
