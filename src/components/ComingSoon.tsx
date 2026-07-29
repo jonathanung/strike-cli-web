@@ -1,14 +1,10 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import {
   Blocks,
-  ClipboardList,
-  Gauge,
   Globe,
   GraduationCap,
   ListOrdered,
-  Map,
   Puzzle,
-  Route,
   Server,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -21,7 +17,7 @@ type Upcoming = {
   icon: LucideIcon
 }
 
-/** Roadmap items aligned with open Strike epics (CLI repo). */
+/** Roadmap items — only truly unshipped work (CLI open epics). */
 const upcoming: Upcoming[] = [
   {
     title: 'Hardened remote access',
@@ -36,28 +32,10 @@ const upcoming: Upcoming[] = [
     icon: Server,
   },
   {
-    title: 'First-time user experience',
+    title: 'Deeper guided FTUE',
     description:
-      'Guided onboard on first launch or via /ftue — get from install to a working agent session without spelunking docs.',
+      'Richer first-run and /ftue onboarding beyond today’s welcome dashboard — faster path from install to a working session.',
     icon: GraduationCap,
-  },
-  {
-    title: 'User-defined workflows',
-    description:
-      'Standardized workflow generation with contextual phases, permission gates, and exit criteria you can trust.',
-    icon: Route,
-  },
-  {
-    title: 'In-app planning',
-    description:
-      'A clear user workflow for planning inside Strike — plan first, then execute with phase gates.',
-    icon: Map,
-  },
-  {
-    title: 'Plan mode UX',
-    description:
-      'Sharper plan-mode surfaces: clearer steps, better review, less friction before agents touch the tree.',
-    icon: ClipboardList,
   },
   {
     title: 'User plugins',
@@ -70,12 +48,6 @@ const upcoming: Upcoming[] = [
     description:
       'Per-project build queues that cap concurrent agent build tasks so heavy work stays orderly under load.',
     icon: ListOrdered,
-  },
-  {
-    title: 'Faster TUI rendering',
-    description:
-      'Simplify and speed up TUI rendering so large transcripts and busy multi-pane layouts stay snappy.',
-    icon: Gauge,
   },
   {
     title: 'End-to-end test workflow',

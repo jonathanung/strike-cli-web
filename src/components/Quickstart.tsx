@@ -28,7 +28,8 @@ const steps: Step[] = [
   {
     n: '02',
     title: 'Provider & auth',
-    detail: 'Pick a provider, then sign in — both are in-TUI slash commands.',
+    detail:
+      'Pick a provider (Anthropic, OpenAI, xAI, Google, Kimi, DeepSeek, or custom), then sign in — both are in-TUI slash commands.',
     copy: '/provider → /auth',
     kind: 'tui',
     hint: 'Or: strike auth login anthropic',

@@ -38,6 +38,7 @@ export const FAQ_ITEMS: FaqItem[] = [
       'OpenCode is a peer open-source coding agent. Strike deliberately loads compatible agents and skills from OpenCode (and Claude) discovery roots so your existing markdown personas can come along — but Strike does not execute OpenCode plugin JS/TS. The product bet is the multi-agent cockpit: concurrent agents, worktrees, permissions, and a live side panel, not a one-to-one clone of any peer TUI.',
     links: [
       { label: 'Why Strike', to: '/#why-strike' },
+      { label: 'Peer ecosystem', to: '/docs/peer-ecosystem' },
       { label: 'Multi-agent docs', to: '/docs/multi-agent' },
     ],
   },
@@ -45,7 +46,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: 'subscription',
     question: 'Do I need a subscription?',
     answer:
-      'No Strike subscription. The CLI is open source. You bring provider credentials — API keys and/or OAuth for Anthropic, OpenAI, xAI, and custom providers. If you sign in to OpenAI with ChatGPT OAuth, usage can bill to a ChatGPT Plus/Pro subscription instead of the platform API; that is optional and provider-side, not a Strike plan.',
+      'No Strike subscription. The CLI is open source. You bring provider credentials — API keys and/or OAuth for Anthropic, OpenAI, xAI, Google, Kimi, DeepSeek, and custom providers via providers.jsonc. If you sign in to OpenAI with ChatGPT OAuth, usage can bill to a ChatGPT Plus/Pro subscription instead of the platform API; that is optional and provider-side, not a Strike plan.',
     links: [{ label: 'Auth & providers', to: '/docs/auth' }],
   },
   {
@@ -62,8 +63,11 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: 'multi-agent',
     question: 'How does multi-agent work?',
     answer:
-      'Agents and skills are markdown (frontmatter + body) discovered from built-in, user, project, and peer roots (.strike, .claude, .opencode). Tab and /agent switch personas; the task tool can delegate to named agents; workflows chain phases with exit gates. Permissions layer defaults → config → agent profile so specialists stay read-only or scoped when you want them to.',
-    links: [{ label: 'Multi-agent docs', to: '/docs/multi-agent' }],
+      'Agents and skills are markdown (frontmatter + body) discovered from built-in, user, project, and peer roots (.strike, .claude, .opencode). Tab and /agent switch personas; the task tool can delegate to named agents; workflows chain phases with exit gates. Use /goal for criteria-driven loops and /loop for interval jobs. Permissions layer defaults → config → agent profile so specialists stay read-only or scoped when you want them to.',
+    links: [
+      { label: 'Multi-agent docs', to: '/docs/multi-agent' },
+      { label: 'Goal harness', to: '/docs/goal' },
+    ],
   },
   {
     id: 'web-ui',

@@ -85,9 +85,9 @@ export const productStills: readonly ProductStill[] = [
   {
     id: 'stills-vim',
     src: '/product/vim.gif',
-    alt: 'Strike vim-mode editing inside the TUI',
-    label: 'Vim mode',
-    caption: 'Modal editing when you want full keyboard control.',
+    alt: 'Strike embedded nvim/vim/nano PTY editor inside the TUI',
+    label: 'Embedded editors',
+    caption: 'nvim/vim/nano PTY — pane, overlay, or takeover presentation.',
   },
 ] as const
 

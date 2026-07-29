@@ -65,6 +65,57 @@ package manager.
 
 Windows self-update is unsupported in v1; re-download from Releases.
 
+## Nix
+
+The repository flake builds `strike` from source, so NixOS does not depend on
+the FHS layout used by release binaries. Install it into your user profile:
+
+```sh
+nix profile install github:jonathanung/strike
+```
+
+Run it without installing:
+
+```sh
+nix run github:jonathanung/strike
+```
+
+For a declarative flake or Home Manager configuration, add the input and use
+its default package:
+
+```nix
+{
+  inputs.strike = {
+    url = "github:jonathanung/strike";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
+}
+```
+
+Pass `strike` to Home Manager through `extraSpecialArgs`:
+
+```nix
+homeConfigurations.your-user = home-manager.lib.homeManagerConfiguration {
+  inherit pkgs;
+  extraSpecialArgs = { inherit strike; };
+  modules = [ ./home.nix ];
+};
+```
+
+Then install it in a Home Manager module:
+
+```nix
+{ pkgs, strike, ... }:
+{
+  home.packages = [
+    strike.packages.${pkgs.stdenv.hostPlatform.system}.default
+  ];
+}
+```
+
+When the package is installed through Nix, upgrade it by updating the lockfile
+that pins the `strike` input rather than using `strike --upgrade`.
+
 ## Domain / DNS (ops)
 
 Configure `strike.jonathanung.ca` with TLS. Container nginx on this site:
@@ -118,7 +169,7 @@ strike launches without any provider configured. Pick one inside the TUI
 export ANTHROPIC_API_KEY=sk-ant-…   # or: strike auth login anthropic
 ./strike                            # tries the config default silently;
                                     # otherwise select with /provider
-./strike --provider <provider>       # anthropic, openai, xai, or echo;
+./strike --provider <provider>       # anthropic, openai, xai, google, kimi, deepseek, or echo;
                                     # fails loudly if no credentials
 ./strike --model <model>             # pre-select a model
 ./strike --effort <level>            # off, low, medium, high, xhigh, or max
@@ -127,15 +178,15 @@ export ANTHROPIC_API_KEY=sk-ant-…   # or: strike auth login anthropic
 ```
 
 `--provider <provider>`, `--model <model>`, and `--effort <level>` may be
-combined. To bypass permission checks for one invocation, use
-`--dangerously-skip-permissions`.
+combined. To bypass permission checks for one invocation, use `--auto` or
+`--dangerously-skip-permissions` (equivalent aliases).
 **Warning:** this allows all tool calls without asks or denies. It applies
 only to that process invocation, does not persist config or permission rules,
 and is visibly marked as dangerous mode in the TUI. Run `strike --help` for
 the authoritative CLI usage and option list.
 
 Defaults when a provider is chosen without a model: `claude-sonnet-5`,
-`gpt-5.5`, `grok-4.5`.
+`gpt-5.5`, `grok-4.5`, `gemini-2.5-pro`, `moonshot-v1`, and `deepseek-chat`.
 
 If you use the `strike` shell alias (points at this repo's built binary),
 re-run `make build` after pulling changes to refresh it.
