@@ -1,9 +1,12 @@
 import installMd from '../content/docs/install.md?raw'
 import quickstartMd from '../content/docs/quickstart.md?raw'
 import authMd from '../content/docs/auth.md?raw'
+import ftueMd from '../content/docs/ftue.md?raw'
 import usageMd from '../content/docs/usage.md?raw'
 import keybindsMd from '../content/docs/keybinds.md?raw'
 import editorsMd from '../content/docs/editors.md?raw'
+import sandboxMd from '../content/docs/sandbox.md?raw'
+import schedulerMd from '../content/docs/scheduler.md?raw'
 import multiAgentMd from '../content/docs/multi-agent.md?raw'
 import goalMd from '../content/docs/goal.md?raw'
 import loopMd from '../content/docs/loop.md?raw'
@@ -63,6 +66,13 @@ export const DOC_PAGES: DocPage[] = [
     category: 'start',
   },
   {
+    slug: 'ftue',
+    title: 'First-time setup',
+    summary: '/ftue wizard — provider, model, tour, scheduler presets, and onboarding state.',
+    markdown: ftueMd,
+    category: 'start',
+  },
+  {
     slug: 'usage',
     title: 'Usage',
     summary: 'Launch the TUI, sessions, slash commands, and day-to-day workflows.',
@@ -81,6 +91,20 @@ export const DOC_PAGES: DocPage[] = [
     title: 'Editors',
     summary: 'Embedded vim/nano and markdown reader — pane, overlay, or takeover.',
     markdown: editorsMd,
+    category: 'use',
+  },
+  {
+    slug: 'sandbox',
+    title: 'Sandbox',
+    summary: 'OS isolation dial for bash — bwrap/seatbelt, permission profiles, honesty notes.',
+    markdown: sandboxMd,
+    category: 'use',
+  },
+  {
+    slug: 'scheduler',
+    title: 'Scheduler',
+    summary: 'In-process named pools, build-system presets, and queue UI when blocked.',
+    markdown: schedulerMd,
     category: 'use',
   },
   {

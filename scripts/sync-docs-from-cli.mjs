@@ -26,6 +26,9 @@ const SLUG = {
   goal: 'goal',
   loop: 'loop',
   theme: 'theme',
+  sandbox: 'sandbox',
+  scheduler: 'scheduler',
+  ftue: 'ftue',
   'peer-ecosystem': 'peer-ecosystem',
   'agents-skills': 'multi-agent',
 }
@@ -162,6 +165,41 @@ curl -fsSL https://strike.jonathanung.ca/install | head
 
 function slimConfig(full) {
   let md = full
+  // First-time onboarding → FTUE hub page
+  md = md.replace(
+    /## First-time onboarding state\n\n[\s\S]*?(?=\n```json\n\{\n  "provider")/,
+    `## First-time onboarding
+
+Global acknowledgement lives at \`~/.strike/onboarding.json\`. Clean interactive
+TUI installs auto-open \`/ftue\` once until finish or dismiss; established
+installs migrate without a surprise modal. Full wizard steps, tour, and
+scheduler presets: [First-time setup](/docs/ftue).
+
+`,
+  )
+  // Two-dial + OS sandbox prose only (stop before Permission mode dial)
+  md = md.replace(
+    /\*\*Two-dial model \(Codex mental model\):\*\*\n\n[\s\S]*?(?=\n\*\*Permission mode dial:\*\*)/,
+    `**Two-dial model:** \`sandbox\` (what OS isolation makes *possible* for bash)
+and \`permissionMode\` (when the agent is *asked*) are independent. Default
+\`sandbox\` is \`workspace-write\` (\`off\` | \`read-only\` | \`workspace-write\`);
+override with \`--sandbox\`. \`yolo\` + \`sandbox: off\` requires \`--i-know\`.
+OS backends, permission→profile compile, bash text guard honesty, and TOCTOU
+path hardening: [Sandbox](/docs/sandbox).
+
+`,
+  )
+  // Scheduler full section → short pointer
+  md = md.replace(
+    /## Scheduler \(in-process resource limits\)\n\n[\s\S]*?(?=\n## )/,
+    `## Scheduler
+
+\`scheduler\` bounds concurrent agent work **inside one Strike OS process**
+(named pools, presets, command classification, queue events). Separate
+\`strike\` processes do not share capacity. Full reference: [Scheduler](/docs/scheduler).
+
+`,
+  )
   // Replace Theme section with one-liner
   md = md.replace(
     /## Theme\n\n[\s\S]*?(?=\n## )/,
@@ -277,6 +315,12 @@ strike
 strike --provider anthropic --model <id>
 \`\`\`
 
+On a **clean install**, the interactive TUI auto-opens the [\`/ftue\`](/docs/ftue)
+setup wizard once (provider → model → optional project init → feature tour →
+optional scheduler presets → first prompt). Finish or dismiss so it does not
+repeat; re-run anytime with \`/ftue\`. Established installs (existing sessions or
+credentials) skip the surprise modal.
+
 In the TUI:
 
 | Action | How |
@@ -310,7 +354,7 @@ Sessions are JSONL event logs under \`~/.strike\`. Fork / undo / rewind:
 Tab cycles agents (\`build\`, \`plan\`, \`explore\`, …). Use \`/agent\` to pick one.
 Skills and custom personas load from \`~/.strike\` and the project. Deep dive:
 [Multi-agent](/docs/multi-agent). Goal harness: [Goal](/docs/goal). Recurring jobs:
-[Loop](/docs/loop).
+[Loop](/docs/loop). In-process build/test/model caps: [Scheduler](/docs/scheduler).
 
 ## 6. Optional: web cockpit
 
@@ -323,6 +367,9 @@ Experimental browser UI; the TUI remains primary. See [Web](/docs/web).
 
 ## Next steps
 
+- [First-time setup](/docs/ftue) — \`/ftue\` wizard and onboarding state
+- [Sandbox](/docs/sandbox) — OS isolation dial for bash
+- [Scheduler](/docs/scheduler) — named pools, presets, queue UI
 - [Config](/docs/config) — permissions, models, MCP, providers
 - [Editors](/docs/editors) — \`/vim\`, \`/nano\`, \`/md-read\` presentation
 - [MCP](/docs/mcp) — stdio + streamable HTTP tools
@@ -339,22 +386,81 @@ mkdirSync(outDir, { recursive: true })
 
 const configFull = readCli('config.md')
 
+function polishLoop(md) {
+  let out = rewriteLinks(md)
+  // Distinguish session /loop from in-process scheduler pools.
+  out = out.replace(
+    /Session-scoped scheduler that submits a prompt to the model on a fixed\ninterval\. Distinct from \[`\/goal`\]\(\/docs\/goal\) \(criteria harness with budgets and\nguards\): `\/loop` is a simple cron-style LLM job, not a goal runtime\./,
+    `Session-scoped timer that submits a prompt to the model on a fixed interval.
+Distinct from [\`/goal\`](/docs/goal) (criteria harness with budgets and guards)
+and from the in-process [Scheduler](/docs/scheduler) (named pools that cap
+concurrent bash/model work): \`/loop\` is a simple cron-style LLM job, not a
+resource limiter or goal runtime.`,
+  )
+  return out
+}
+
+function polishUsage(md) {
+  let out = rewriteLinks(md)
+  // Point OS sandbox dial at the hub page (CLI links config.md only).
+  out = out.replace(
+    /### OS sandbox dial\n\n`sandbox` in \[config\.md\]\(\/docs\/config\) \(or `--sandbox`\) sets OS process isolation\nfor bash: `off` \| `read-only` \| `workspace-write` \(default\)\. This is \*\*what is\npossible\*\*; `permissionMode` is \*\*when you get asked\*\*\. `\/sandbox` prints the\neffective policy and backend; `\/sandbox explain` shows the generated profile\n\(including write-deny globs and network posture compiled from permissions\)\.\n`yolo` with `sandbox: off` requires `--i-know`\./,
+    `### OS sandbox dial
+
+\`sandbox\` in [Config](/docs/config) (or \`--sandbox\`) sets OS process isolation
+for bash: \`off\` | \`read-only\` | \`workspace-write\` (default). This is **what is
+possible**; \`permissionMode\` is **when you get asked**. \`/sandbox\` prints the
+effective policy and backend; \`/sandbox explain\` shows the generated profile.
+\`yolo\` with \`sandbox: off\` requires \`--i-know\`. Full reference: [Sandbox](/docs/sandbox).`,
+  )
+  // /ftue table row → hub link
+  out = out.replace(
+    /\| `\/ftue` \| setup wizard composing provider connect, model pick, optional `\/init`, a skippable feature tour \(panes, agents, permissions, autonomy, keys, commands\), optional scheduler build-system presets \(checkbox catalog with rule\/limit preview; apply writes global `scheduler\.presets` atomically and preserves custom limits\/rules\), and first-prompt guidance; opening does not change settings; tour copy uses live keybinds and omits unavailable surfaces; Finish focuses the composer; esc dismisses\. Finish\/dismiss acknowledge global onboarding so auto-open does not repeat; manual `\/ftue` stays available\. Child pickers\/tour\/presets return to the same wizard step \|/,
+    '| `/ftue` | setup wizard (provider → model → optional `/init` → tour → scheduler presets → first prompt). Finish/dismiss acknowledges onboarding; manual re-run always available. Full guide: [First-time setup](/docs/ftue) |',
+  )
+  // Dashboard onboarding blurb
+  out = out.replace(
+    /On a clean install the interactive TUI\nauto-opens `\/ftue` once until you finish or dismiss it \(state in\n`~\/\.strike\/onboarding\.json`\)\. Re-run the full guided setup anytime with\n`\/ftue` \(provider → model → optional project init → feature tour → optional scheduler presets → first prompt\)\./,
+    `On a clean install the interactive TUI auto-opens \`/ftue\` once until you
+finish or dismiss it (state in \`~/.strike/onboarding.json\`). Re-run anytime
+with \`/ftue\`. Details: [First-time setup](/docs/ftue).`,
+  )
+  // /loop row: distinguish in-process scheduler (CLI points at loop.md + /goal only)
+  out = out.replace(
+    /\| `\/loop` \| schedule a recurring prompt \(`15m`, `2h`, …\); session-only; `\/loop list`, `\/loop stop \[id\]` — see \[[^\]]+\]\(\/docs\/loop\)\. Distinct from \[`\/goal`\]\(\/docs\/goal\) \|/,
+    '| `/loop` | schedule a recurring prompt (`15m`, `2h`, …); session-only; `/loop list`, `/loop stop [id]` — see [Loop](/docs/loop). Distinct from [`/goal`](/docs/goal) and from the in-process [Scheduler](/docs/scheduler) resource pools |',
+  )
+  // MCP deep-link: slimmed config no longer has the CLI heading anchor
+  out = out.replaceAll(
+    '/docs/config#mcp-servers-stdio--http',
+    '/docs/mcp',
+  )
+  out = out.replaceAll(
+    '/docs/config#mcp-servers',
+    '/docs/mcp',
+  )
+  return out
+}
+
 const pages = {
   install: siteInstall(readCli('install.md')),
   quickstart: quickstart(),
   auth: rewriteLinks(readCli('auth.md')),
-  usage: rewriteLinks(readCli('usage.md')),
+  usage: polishUsage(readCli('usage.md')),
   keybinds: rewriteLinks(readCli('keybinds.md')),
   editors: editorsFromConfig(configFull),
   'multi-agent': rewriteLinks(readCli('agents-skills.md')),
   goal: rewriteLinks(readCli('goal.md')),
-  loop: rewriteLinks(readCli('loop.md')),
+  loop: polishLoop(readCli('loop.md')),
   config: slimConfig(configFull),
   mcp: mcpFromConfig(configFull),
   theme: rewriteLinks(readCli('theme.md')),
   web: rewriteLinks(readCli('web.md')),
   'peer-ecosystem': rewriteLinks(readCli('peer-ecosystem.md')),
 }
+
+// Web-only hub pages (sandbox / scheduler / ftue) are authored under
+// src/content/docs/ and are NOT overwritten here.
 
 for (const [slug, md] of Object.entries(pages)) {
   writeFileSync(join(outDir, `${slug}.md`), md.endsWith('\n') ? md : md + '\n')
@@ -370,13 +476,16 @@ Markdown under this directory is vendored for the on-domain \`/docs\` hub.
 | \`install\` | start | \`docs/install.md\` (site proxy wording for brand URL) |
 | \`quickstart\` | start | Site-authored from product README + install/usage |
 | \`auth\` | start | \`docs/auth.md\` |
-| \`usage\` | use | \`docs/usage.md\` |
+| \`ftue\` | start | **Web-only** — first-run \`/ftue\` wizard (from CLI config/usage) |
+| \`usage\` | use | \`docs/usage.md\` (hub links to sandbox/ftue/scheduler) |
 | \`keybinds\` | use | \`docs/keybinds.md\` |
 | \`editors\` | use | Surface presentation section of \`docs/config.md\` |
+| \`sandbox\` | use | **Web-only** — OS sandbox dial + honesty notes |
+| \`scheduler\` | use | **Web-only** — in-process pools, presets, queue UI |
 | \`multi-agent\` | agents | \`docs/agents-skills.md\` |
 | \`goal\` | agents | \`docs/goal.md\` |
 | \`loop\` | agents | \`docs/loop.md\` |
-| \`config\` | configure | \`docs/config.md\` (slimmed: editors/MCP/theme → hub pages) |
+| \`config\` | configure | \`docs/config.md\` (slimmed: editors/MCP/theme/sandbox/scheduler/ftue → hub pages) |
 | \`mcp\` | configure | MCP section of \`docs/config.md\` |
 | \`theme\` | configure | \`docs/theme.md\` |
 | \`web\` | advanced | \`docs/web.md\` (experimental) |
@@ -385,6 +494,9 @@ Markdown under this directory is vendored for the on-domain \`/docs\` hub.
 Relative links were rewritten to \`/docs/<slug>\`. Architecture, contributing, nix,
 harnesses, and investigations link to GitHub:
 \`https://github.com/jonathanung/strike/blob/main/docs/…\`
+
+Web-only pages (\`sandbox\`, \`scheduler\`, \`ftue\`) are **not** overwritten by the
+sync script — edit them in this repo.
 
 Re-sync: \`node scripts/sync-docs-from-cli.mjs [path-to-strike-cli]\`
 Keep \`npm test\` (broken-link check) green.

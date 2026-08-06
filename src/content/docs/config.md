@@ -1,7 +1,21 @@
 # Config
 
 `~/.strike/config` (global) merged with `./.strike/config` (project), both
-JSON:
+JSON.
+
+**Symlinks:** `~/.strike` and `<project>/.strike` may be directory symlinks
+(state lives elsewhere). Strike resolves them before opening history/memory/
+issues and before writing config. A file symlink at `~/.strike/config` (for
+example stow/dotfiles) is preserved on save — the referent is updated, not
+replaced by a plain file.
+
+## First-time onboarding
+
+Global acknowledgement lives at `~/.strike/onboarding.json`. Clean interactive
+TUI installs auto-open `/ftue` once until finish or dismiss; established
+installs migrate without a surprise modal. Full wizard steps, tour, and
+scheduler presets: [First-time setup](/docs/ftue).
+
 
 ```json
 {
@@ -17,6 +31,7 @@ JSON:
   "mdReadMode": "embedded",
   "notify": "unfocused-only",
   "permissionMode": "default",
+  "sandbox": "workspace-write",
   "permissionAutoApproveSeconds": 0,
   "permissionAutoApproveExclude": ["bash"],
   "compactionStrategy": "trim",
@@ -29,8 +44,23 @@ JSON:
   "pruneKeepUserTurns": 2,
   "pruneProtectTools": [],
   "session": {
-    "worktree": "always",
+    "worktree": "off",
     "worktreeCleanup": "keep"
+  },
+  "scheduler": {
+    "presets": ["cargo", "npm"],
+    "limits": {
+      "process": 8,
+      "build": 2,
+      "test": 4,
+      "model": 3,
+      "container": 1
+    },
+    "commands": [
+      { "pattern": "go test *", "class": "test" },
+      { "pattern": "go *", "class": "build" },
+      { "pattern": "make *", "class": "build" }
+    ]
   },
   "permissions": [
     { "permission": "bash", "pattern": "go *", "action": "allow" },
@@ -42,11 +72,20 @@ JSON:
 Rules concatenate across layers; the last matching rule wins, so project
 config overrides global, and session "always" grants override both.
 
+**Two-dial model:** `sandbox` (what OS isolation makes *possible* for bash)
+and `permissionMode` (when the agent is *asked*) are independent. Default
+`sandbox` is `workspace-write` (`off` | `read-only` | `workspace-write`);
+override with `--sandbox`. `yolo` + `sandbox: off` requires `--i-know`.
+OS backends, permission→profile compile, bash text guard honesty, and TOCTOU
+path hardening: [Sandbox](/docs/sandbox).
+
+
 **Permission mode dial:** `permissionMode` sets the default tool-permission
 posture for **new** sessions: `default` | `plan` | `soft-approve` |
 `accept-edits` | `yolo` (see [usage.md](/docs/usage)). Session changes via
 Shift+Tab or `/mode` persist in the session JSONL, not back into this file.
-Distinct from `/autonomy` (workflow exit gates).
+Distinct from `/autonomy` (workflow exit gates) and from `sandbox` (OS
+isolation).
 
 **Lean code:** `leanCode` is `off` | `lite` (default) | `full`. Injects
 agent-scoped efficiency guidance into the system prompt (strict ladder for
@@ -96,6 +135,13 @@ paths, prompts, or secrets.
 
 Unknown values are ignored at load time.
 
+## Scheduler
+
+`scheduler` bounds concurrent agent work **inside one Strike OS process**
+(named pools, presets, command classification, queue events). Separate
+`strike` processes do not share capacity. Full reference: [Scheduler](/docs/scheduler).
+
+
 ## Session worktrees
 
 When concurrent root sessions would otherwise share one working tree, strike
@@ -104,9 +150,9 @@ can bind each session's tool CWD to its own `git worktree` under
 
 | `session.worktree` | Behavior |
 |---|---|
-| `always` (default) | every new root session gets a worktree (git repos only) |
+| `off` (default) | launch cwd; no isolation |
 | `auto` | worktree when a second root session starts in-process |
-| `off` | launch cwd; no isolation |
+| `always` | every new root session gets a worktree (git repos only) |
 
 | `session.worktreeCleanup` | Behavior |
 |---|---|
@@ -114,8 +160,10 @@ can bind each session's tool CWD to its own `git worktree` under
 | `delete` | `git worktree remove` + delete the branch on close |
 
 CLI: `strike --worktree` forces a worktree for that invocation (same as always
-for one session). Non-git directories and `git worktree add` failures return a
-clear error and do not leave a half-bound session. Project-scoped state
+for one session). Non-git directories soft-fail: the app launches on the launch
+cwd and shows a dismissible modal (TUI) or stderr line (exec) explaining that
+no git repository was detected. Other `git worktree add` failures still return
+a clear error and do not leave a half-bound session. Project-scoped state
 (history, memory, issues) stays keyed to the main repo, not the worktree path.
 Tools (`bash`, `read`, `write`, …) resolve paths inside the session worktree.
 Each `bash` invocation is a fresh process whose cwd is that session workdir
@@ -140,6 +188,7 @@ presentation to the current session immediately.
 In the TUI: bare `/theme` opens a picker; `/theme <id>` applies one. Full chrome
 modes, surfaces, and web cockpit parity: [Theme](/docs/theme).
 
+
 ## Keybinds
 
 Remap app-level chords without recompiling. Ids match the in-app cheatsheet
@@ -155,6 +204,8 @@ Remap app-level chords without recompiling. Ids match the in-app cheatsheet
   "composer.newline": ["ctrl+j", "alt+enter"],
   "nav.window-next": "ctrl+o",
   "nav.window-prev": "ctrl+p",
+  "nav.group-next": "ctrl+shift+o",
+  "nav.group-prev": "ctrl+shift+p",
   "nav.tool-expand": "alt+enter"
 }
 ```
@@ -194,6 +245,7 @@ controls (`agents.*`) are not remappable.
 Connect Model Context Protocol servers over **stdio** or **streamable HTTP**.
 Prefer `mcp.jsonc`; legacy `mcp` in config still works. Full setup, fields,
 permissions, and TUI controls: [MCP](/docs/mcp).
+
 
 ## Custom providers
 
@@ -414,6 +466,7 @@ Built-in logout only clears credentials.
 `vimMode`, `nanoMode`, and `mdReadMode` control how `/vim`, `/nano`, and
 `/md-read` present (embedded pane, modal overlay, or takeover). Full reference:
 [Editors](/docs/editors).
+
 
 ## Hooks
 

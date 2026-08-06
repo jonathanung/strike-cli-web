@@ -132,7 +132,7 @@ const groups: FeatureGroup[] = [
       {
         title: 'Recurring loops',
         description:
-          '/loop schedules session-scoped prompts on an interval — periodic checks without a full goal runtime.',
+          '/loop schedules session-scoped prompts on an interval — periodic checks without a full goal runtime (distinct from the resource scheduler).',
         icon: Repeat,
         docsTo: '/docs/loop',
       },
@@ -141,7 +141,7 @@ const groups: FeatureGroup[] = [
   {
     id: 'safety',
     title: 'Safety',
-    blurb: 'Permission dial and hard gates so tools only run with your say-so.',
+    blurb: 'Permission dial, OS sandbox, and hard gates so tools only run with your say-so.',
     features: [
       {
         title: 'Permission mode dial',
@@ -150,6 +150,20 @@ const groups: FeatureGroup[] = [
         icon: Shield,
         stillId: 'stills-permissions',
         docsTo: '/docs/config',
+      },
+      {
+        title: 'OS sandbox dial',
+        description:
+          'Linux bwrap / macOS seatbelt for bash (workspace-write by default). Independent of permission mode; yolo + sandbox off needs --i-know.',
+        icon: Shield,
+        docsTo: '/docs/sandbox',
+      },
+      {
+        title: 'In-process scheduler',
+        description:
+          'Named pools (process, build, test, model, …) and build-system presets cap concurrent agent work; queue chips when blocked.',
+        icon: Activity,
+        docsTo: '/docs/scheduler',
       },
     ],
   },

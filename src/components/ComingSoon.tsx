@@ -2,8 +2,6 @@ import { motion, useReducedMotion } from 'framer-motion'
 import {
   Blocks,
   Globe,
-  GraduationCap,
-  ListOrdered,
   Puzzle,
   Server,
 } from 'lucide-react'
@@ -32,22 +30,10 @@ const upcoming: Upcoming[] = [
     icon: Server,
   },
   {
-    title: 'Deeper guided FTUE',
-    description:
-      'Richer first-run and /ftue onboarding beyond today’s welcome dashboard — faster path from install to a working session.',
-    icon: GraduationCap,
-  },
-  {
     title: 'User plugins',
     description:
       'A standardized plugin scheme so you can extend Strike with your own integrations — not opaque vendor hooks.',
     icon: Puzzle,
-  },
-  {
-    title: 'Build queue (Slurm)',
-    description:
-      'Per-project build queues that cap concurrent agent build tasks so heavy work stays orderly under load.',
-    icon: ListOrdered,
   },
   {
     title: 'End-to-end test workflow',

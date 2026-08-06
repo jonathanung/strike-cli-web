@@ -1,8 +1,10 @@
 # Recurring jobs (`/loop`)
 
-Session-scoped scheduler that submits a prompt to the model on a fixed
-interval. Distinct from [`/goal`](/docs/goal) (criteria harness with budgets and
-guards): `/loop` is a simple cron-style LLM job, not a goal runtime.
+Session-scoped timer that submits a prompt to the model on a fixed interval.
+Distinct from [`/goal`](/docs/goal) (criteria harness with budgets and guards)
+and from the in-process [Scheduler](/docs/scheduler) (named pools that cap
+concurrent bash/model work): `/loop` is a simple cron-style LLM job, not a
+resource limiter or goal runtime.
 
 ## Commands
 

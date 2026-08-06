@@ -3,7 +3,9 @@
 In-app cheatsheet: `f1` or `/keys` (filterable). The list leads with a
 **Current focus** section for the focused pane (composer/transcript on the
 left; the active right-pane window such as `agents`, `files`, or `editor`),
-then the remaining binds. Each command action also shows its slash mirror
+then the remaining binds. The bottom footer is also **context-sensitive**:
+composer focus shows send / newline / external editor; right-pane focus shows
+select / open / next pane. Each command action also shows its slash mirror
 (when one exists). Remap chords in `keybinds.jsonc` (or the config `keybinds`
 object) — see [config.md](/docs/config). `/keys reset` restores session defaults.
 
@@ -24,7 +26,7 @@ Registry: `keybindSlashPrimary` / `keybindNoSlashReason` in
 | `ctrl+k` | command palette (when kill-to-end does not delete) | `/palette` |
 | `f1` | keybind cheatsheet | `/keys` |
 | `tab` | cycle agent personas (composer empty of `/` completion; not concurrent roots) | `/agent-next` |
-| `shift+tab` | cycle permission mode (default → plan → soft-approve → accept-edits → yolo) | `/mode-next` |
+| `shift+tab` | cycle permission mode (default → plan → soft-approve → accept-edits → yolo); works mid-turn | `/mode-next` |
 | `ctrl+d` | save defaults (see [config.md](/docs/config)) | `/save-defaults` |
 | `ctrl+e` | open prompt in external editor (`$VISUAL`/`$EDITOR`, else nvim/vim/vi/nano) | `/edit-prompt` |
 
@@ -36,8 +38,9 @@ Registry: `keybindSlashPrimary` / `keybindNoSlashReason` in
 | `ctrl+up` / `ctrl+down` | scroll transcript | `/scroll-up`, `/scroll-down` |
 | `ctrl+t` | jump to latest output | `/jump-bottom` |
 | `alt+y` | copy last assistant response (OSC52) | `/copy` |
-| `ctrl+h` / `ctrl+l` | focus left (primary transcript) / right (secondary pane column) — **orientation-independent** | `/focus-left`, `/focus-right` |
+| `ctrl+h` / `ctrl+l` | focus left (primary transcript) / right (secondary pane column) — **orientation-independent**; on the lean home screen, `ctrl+l` also opens the multi-pane workspace (launch left, panels right) | `/focus-left`, `/focus-right` |
 | `ctrl+o` / `ctrl+p` | cycle right-pane focus next / previous within the active stack group, then to the next group | `/window-next`, `/window-prev` |
+| `ctrl+shift+o` / `ctrl+shift+p` | cycle right-pane **stack groups** next / previous (lands on the group's first pane) | `/group-next`, `/group-prev` |
 | `ctrl+;` | toggle split orientation | `/layout`, `/split` |
 
 Focus and cycle chords do **not** swap when the split is stacked top/bottom:
@@ -47,14 +50,16 @@ Right-pane **stack groups** (related panes shown together when space allows):
 
 | Group | Panes (split) |
 |---|---|
-| Session | `context` + `activity` |
+| Session | `context` + `activity` (+ `telemetry` when enabled) |
 | Agents | `agents` + `visualizer` |
 | Project | `memory` + `issues` |
 | Singles | `files`, `markdown`, `editor` (full height each) |
 
 Focus cycle order is deterministic: top→bottom (or left→right in a bottom-bar
 split) inside the group, then the next group. Narrow/compact terminals collapse
-to a single pane and cycle the same order one at a time. See [usage.md](/docs/usage).
+to a single pane and cycle the same order one at a time. Group cycle
+(`ctrl+shift+o`/`ctrl+shift+p`) skips remaining members of the current group
+and jumps to the first pane of the next/previous group. See [usage.md](/docs/usage).
 
 ## Permission prompts
 
@@ -78,7 +83,7 @@ to a single pane and cycle the same order one at a time. See [usage.md](/docs/us
 | `y` | copy cell (tool/explore, else latest assistant/user) | `/tool-copy` |
 | `alt+y` | copy last assistant response only (skips tool cells) | `/copy` |
 | `v` | review edit in editor | `/tool-review` |
-| `a` | apply shown edit/patch into the active worktree (confirm) | `/tool-apply` |
+| `alt+a` | apply shown edit/patch into the active worktree (confirm; not bare `a`, which types in the composer) | `/tool-apply` |
 
 ## Composer editing
 
