@@ -72,9 +72,9 @@ strike launches without any provider configured. Pick one inside the TUI:
                                # or $EDITOR; @path like composer mentions
                                # (e.g. /vim @internal/foo.go)
 /nano [path|@path[:line]]      # open file in nano (embedded/modal/takeover;
-                               # @path ok; see nanoMode — editors docs)
+                               # @path ok; see nanoMode in config.md)
 /md-read <path|@path>          # open markdown (embedded right pane or modal;
-                               # @path ok; see mdReadMode — editors docs)
+                               # @path ok; see mdReadMode in config.md)
 /memory [list|get|set|rm|export|import] …
                                # project-scoped durable key/value memory;
                                # export/import portable JSON (default path
@@ -86,7 +86,7 @@ strike launches without any provider configured. Pick one inside the TUI:
                                # import merges by id; --replace wipes first.
                                # Relative export/import paths stay under the
                                # project root (no path escape).
-/loop <interval> <job>         # recurring LLM job (session-only; see loop docs)
+/loop <interval> <job>         # recurring LLM job (session-only; see loop.md)
 /loop list                     # list active loops
 /loop stop [id]                # stop one loop or all
 /context                       # context doctor (layers + request token slices)
@@ -98,12 +98,16 @@ strike launches without any provider configured. Pick one inside the TUI:
 /upgrade                       # install latest GitHub Release and restart
 /init                          # create or update project AGENTS.md (confirm
                                # before replacing an existing file)
- /mcp                           # MCP status; retry/disable servers
+ /ftue                          # setup wizard: provider, model, optional
+                               # /init, feature tour, scheduler presets,
+                               # first prompt (manual)
+/mcp                           # MCP status; retry/disable servers
 /exit                          # quit strike (same as ctrl+c)
 /quit                          # alias of /exit
-# Keybind mirrors (same actions as chords; see keybinds and /keys):
+# Keybind mirrors (same actions as chords; see keybinds.md and /keys):
 /focus-left /focus-right       # focus panes (ctrl+h / ctrl+l)
 /window-next /window-prev      # cycle right-pane windows (ctrl+o / ctrl+p)
+/group-next /group-prev        # cycle right-pane stack groups (ctrl+shift+o / ctrl+shift+p)
 /scroll-up /scroll-down        # transcript scroll
 /jump-bottom                   # jump to latest output (ctrl+t)
 /palette                       # command palette (ctrl+k)
@@ -123,9 +127,6 @@ strike launches without any provider configured. Pick one inside the TUI:
 /root-filter                   # cycle agents pane filter (f)
 ```
 
-Presentation for `/vim`, `/nano`, and `/md-read` (`vimMode`, `nanoMode`,
-`mdReadMode`) is covered in [editors](/docs/editors); keys live in config.
-
 ### Session, memory, issues
 
 | Command | Notes |
@@ -143,11 +144,40 @@ Presentation for `/vim`, `/nano`, and `/md-read` (`vimMode`, `nanoMode`,
 | `/issues` | bare = list browser (focuses issues pane); `list [open\|closed]`, `add <title>`, `get <id>`, `close <id>`, `export [path]`, `import <path> [--replace]` (same portable rules as memory) |
 | `/agents` `/activity` `/files` `/visualizer` `/system` | jump focus to the named right pane (`/agent` remains persona select; `/system` needs telemetry on) |
 | `/telemetry [on\|off\|status]` | local system metrics pane (CPU/RAM/disk); **on by default** (~1 Hz sampler). Disable with `/telemetry off` |
-| `/loop` | schedule a recurring prompt (`15m`, `2h`, …); session-only; `/loop list`, `/loop stop [id]` — see [loop.md](/docs/loop). Distinct from [`/goal`](/docs/goal) |
+| `/loop` | schedule a recurring prompt (`15m`, `2h`, …); session-only; `/loop list`, `/loop stop [id]` — see [Loop](/docs/loop). Distinct from [`/goal`](/docs/goal) and from the in-process [Scheduler](/docs/scheduler) resource pools |
 | `/context` | context doctor modal: system-prompt layer sizes, history msg count, **request token attribution** (system / tools / messages / tool_results; local ~4 chars/token estimate, labeled `estimated`), oversized warnings (previews redacted) |
 | `/cost` | session input/output/cache totals from usage events; est. USD when catalog rates known; unknown stays explicit |
 | `/init` | light local scan → write `AGENTS.md`; confirms before overwrite |
-| `/mcp` | MCP status (`up`/`down`/`error`/`disabled`); `/mcp retry [name]`, `/mcp disable <name>` (see [MCP](/docs/mcp)) |
+| `/ftue` | setup wizard (provider → model → optional `/init` → tour → scheduler presets → first prompt). Finish/dismiss acknowledges onboarding; manual re-run always available. Full guide: [First-time setup](/docs/ftue) |
+| `/mcp` | MCP status (`up`/`down`/`error`/`disabled`); `/mcp retry [name]`, `/mcp disable <name>` (see [config.md](/docs/mcp)) |
+
+### Agent teams
+
+**Team = same session tree by default.** When a lead session spawns `task`
+children, those agents (lead + children) form an implicit team — no separate
+team-create step. Concurrent roots are independent teams.
+
+| Capability | How |
+|---|---|
+| Spawn teammates | `task` with optional `name` (stable alias) and `agent` persona |
+| List roster | `agent_roster` |
+| Peer message | `agent_message` (`to` = `session_id` or `name`) |
+| Fan-out | `agent_broadcast` (all other teammates; use sparingly) |
+| Parent steer only | `task_message` (owned child; not peer chat) |
+| Finish signal | `[child.completed]` on the lead |
+
+Messages land at tool-round / idle boundaries (safe injection). Defaults allow
+in-team messaging; out-of-team targets fail closed; permission deny rules still
+apply. Parent-only flows that never call `agent_*` tools are unchanged.
+
+**Example — parallel explore + implement with one peer handoff:**
+
+1. Lead: `task(name=explorer, agent=explore, …)` and
+   `task(name=implementer, agent=general, …)` in the same turn.
+2. Explorer: `agent_message(to="implementer", body="change X in path Y; tests in Z")`.
+3. Implementer acts on the handoff; lead synthesizes from completion + inbox.
+
+Full coordination semantics: [agents-skills.md](/docs/multi-agent#agent-teams).
 
 ### Autonomy & workflows
 
@@ -163,8 +193,12 @@ Presentation for `/vim`, `/nano`, and `/md-read` (`vimMode`, `nanoMode`,
 ### Permission mode dial
 
 `/mode` (or **Shift+Tab**) cycles the session **tool-permission posture**. This
-is distinct from `/autonomy` (exit gates). The header always shows `mode …`;
-yolo also paints a danger banner.
+is distinct from `/autonomy` (exit gates) and from the **sandbox** dial (OS
+isolation — what bash is allowed to touch). The header always shows `mode …`;
+yolo also paints a danger banner. Mode changes are accepted **mid-turn**: the
+new posture applies to subsequent tool permission checks in the same turn
+(in-flight permission asks are rejected so the model retries under the new
+rules).
 
 | Mode | Behavior |
 |---|---|
@@ -179,6 +213,14 @@ Persists per session in the JSONL log. Optional default for **new** sessions:
 picker (and global ctrl+d) to save the current posture as that default.
 Resume restores the session log, not the config default.
 
+### OS sandbox dial
+
+`sandbox` in [Config](/docs/config) (or `--sandbox`) sets OS process isolation
+for bash: `off` | `read-only` | `workspace-write` (default). This is **what is
+possible**; `permissionMode` is **when you get asked**. `/sandbox` prints the
+effective policy and backend; `/sandbox explain` shows the generated profile.
+`yolo` with `sandbox: off` requires `--i-know`. Full reference: [Sandbox](/docs/sandbox).
+
 Built-in skills also appear as slash commands: `/commit`, `/push`, `/pr`,
 `/ship`, `/review`, `/learn`, `/deslop`, `/verify` (plus custom skills under
 discovery roots). See [agents-skills.md](/docs/multi-agent) and
@@ -190,7 +232,7 @@ Prefix a line with `!` to run a local bash command in the session work
 directory without starting a model turn (for example `!pwd`, `!git status`).
 Output appears in the transcript as a bash tool cell. Empty `!` is ignored
 with a notice. Destructive commands that target paths outside the workspace
-are blocked by the same sandbox as the bash tool.
+are checked by the same best-effort path guard as the bash tool.
 
 ### Composer: `@file` / `@folder` mentions
 
@@ -247,17 +289,26 @@ unless `--auto` or `--dangerously-skip-permissions` is set
 
 ## UI
 
-The screen has a full-width header, footer hints, and danger banner when
-needed. Its left pane is one aggregate stack: `session` transcript, reserved
-notice line, slash-command completion, and `prompt ❯` composer. The right
-slot hosts one active window from the registry:
+**Before the first prompt**, the screen is a centered home layout: header,
+thin context bar, STRIKE wordmark, focused prompt box (mode: chat / shell /
+command), optional recent-history line, and a short composer-oriented footer.
+`ctrl+l` (or `/focus-right` / a pane jump like `/agents`) opens the multi-pane
+workspace early: the launch stack (empty transcript + composer) becomes the
+left pane and the right pane column fills with session panels. After the first
+message, the multi-pane session layout takes over either way.
+
+That layout has a full-width header, **context-sensitive** footer hints
+(composer vs right-pane navigation), and a danger banner when needed. Its left
+pane is one aggregate stack: `session` transcript, reserved notice line,
+slash-command completion, and mode-titled `chat ❯` / `shell ❯` / `command ❯`
+composer. The right slot hosts one active window from the registry:
 
 | Window | Role |
 |---|---|
 | `context` | setup summary (provider, model, agent, …) |
-| `activity` | tools/tips / subagent status |
+| `activity` | tools / subagent status / empty-state |
 | `agents` | multi-root session/agent tree (concurrent roots + children) |
-| `visualizer` | selected-node status, tokens/cost, activity sparkline |
+| `visualizer` | selected-node status, tokens/cost, tokens/turn sparkline |
 | `files` | workspace file tree (`host.Files`) |
 | `memory` | project memory browser |
 | `issues` | project issue browser |
@@ -265,10 +316,12 @@ slot hosts one active window from the registry:
 | `editor` | embedded nvim/vim/nano PTY for `/vim` or `/nano` (modal via `vimMode`/`nanoMode`) |
 
 Related right-pane windows stack as **groups** when the pane is tall/wide
-enough: session (`context`+`activity`), agents (`agents`+`visualizer`), and
-project (`memory`+`issues`) share a 50/50 split (vertical in a side column,
-horizontal in a bottom bar). `files`, `markdown`, and `editor` stay full-height
-singles. Compact or narrow terminals collapse each group to one pane.
+enough: session (`context`+`activity`[+`system` telemetry]), agents
+(`agents`+`visualizer`), and project (`memory`+`issues`). Sparse panes
+(context, system) size to their content; activity (and other flex members)
+absorb the remainder so empty bordered voids stay small. `files`, `markdown`,
+and `editor` stay full-height singles. Compact or narrow terminals collapse
+each group to one pane.
 
 ### Concurrent root sessions
 
@@ -292,16 +345,19 @@ Do not confuse these with:
 - **`ctrl+x` leader chords** — navigate **child/subagent** transcripts nested
   under a parent; they do not create or switch concurrent roots.
 
-Session worktree isolation defaults to `always` (per-root git worktree);
-configure via `session.worktree` in [config.md](/docs/config). Full chord table:
+Session worktree isolation defaults to `off` (launch cwd); set
+`session.worktree` to `auto` or `always` in [config.md](/docs/config) for
+per-root git worktrees. Full chord table:
 [keybinds.md](/docs/keybinds).
 
 Pane keys (orientation-independent): `ctrl+h` / `ctrl+l` focus the left
 (primary transcript) or right (secondary pane column); `ctrl+o` / `ctrl+p`
-cycle focus within the active stack group then to the next group. `ctrl+;`
-(or `/layout` / `/split`) toggles a vertical top/bottom split without swapping
-those chords. `ctrl+k` opens the command palette (when kill-to-end does not
-delete); `f1` (or `/keys`) opens a filterable keybind cheatsheet. Enter sends;
+cycle focus within the active stack group then to the next group;
+`ctrl+shift+o` / `ctrl+shift+p` jump to the next/previous stack group (first
+pane). `ctrl+;` (or `/layout` / `/split`) toggles a vertical top/bottom split
+without swapping those chords. `ctrl+k` opens the command palette (when
+kill-to-end does not delete); `f1` (or `/keys`) opens a filterable keybind
+cheatsheet. Enter sends;
 `ctrl+j`, Shift+Enter, or Alt+Enter inserts a newline (Shift+Enter CSI
 rewrites to Alt+Enter).
 `pgup`/`pgdn` (and `ctrl+up`/`ctrl+down`)
@@ -326,9 +382,11 @@ the cards and the header still owns the compact brand. The dashboard always
 shows keybindings. It shows get-started provider rows only when no provider is
 selected or the selected provider needs authentication, with provider rows
 bounded to fit (and a `/init` CTA when `AGENTS.md` is missing); first-run
-onboarding also mentions `/init`. Agents and skills appear only when valid
-configured entries exist; recent prompts only when prompt history exists. It
-repacks to fit the terminal on resize and collapses to a single column when
-narrow.
+onboarding also mentions `/init`. On a clean install the interactive TUI auto-opens `/ftue` once until you
+finish or dismiss it (state in `~/.strike/onboarding.json`). Re-run anytime
+with `/ftue`. Details: [First-time setup](/docs/ftue). Agents and
+skills appear only when valid configured entries exist; recent prompts only
+when prompt history exists. It repacks to fit the terminal on resize and
+collapses to a single column when narrow.
 
 Full keyboard reference: [keybinds.md](/docs/keybinds).

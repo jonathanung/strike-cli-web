@@ -36,11 +36,11 @@ no tool side effects).
 
 ## Guards (ordered, first trip wins)
 
-1. success — all criteria satisfied by critic
-2. human_abort — `/goal abort`
-3. budget — iterations / cost / wall clock
-4. no_progress — stable `state_hash` or identical action sequences
-5. irrecoverable — same tool error class 3×
+1. success — all criteria satisfied by critic  
+2. human_abort — `/goal abort`  
+3. budget — iterations / cost / wall clock  
+4. no_progress — stable `state_hash` or identical action sequences  
+5. irrecoverable — same tool error class 3×  
 
 A loop without guards never runs against real tools: empty allowlist blocks
 every action in `pre_act`.

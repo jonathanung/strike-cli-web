@@ -42,6 +42,12 @@ strike
 strike --provider anthropic --model <id>
 ```
 
+On a **clean install**, the interactive TUI auto-opens the [`/ftue`](/docs/ftue)
+setup wizard once (provider → model → optional project init → feature tour →
+optional scheduler presets → first prompt). Finish or dismiss so it does not
+repeat; re-run anytime with `/ftue`. Established installs (existing sessions or
+credentials) skip the surprise modal.
+
 In the TUI:
 
 | Action | How |
@@ -75,7 +81,7 @@ Sessions are JSONL event logs under `~/.strike`. Fork / undo / rewind:
 Tab cycles agents (`build`, `plan`, `explore`, …). Use `/agent` to pick one.
 Skills and custom personas load from `~/.strike` and the project. Deep dive:
 [Multi-agent](/docs/multi-agent). Goal harness: [Goal](/docs/goal). Recurring jobs:
-[Loop](/docs/loop).
+[Loop](/docs/loop). In-process build/test/model caps: [Scheduler](/docs/scheduler).
 
 ## 6. Optional: web cockpit
 
@@ -88,6 +94,9 @@ Experimental browser UI; the TUI remains primary. See [Web](/docs/web).
 
 ## Next steps
 
+- [First-time setup](/docs/ftue) — `/ftue` wizard and onboarding state
+- [Sandbox](/docs/sandbox) — OS isolation dial for bash
+- [Scheduler](/docs/scheduler) — named pools, presets, queue UI
 - [Config](/docs/config) — permissions, models, MCP, providers
 - [Editors](/docs/editors) — `/vim`, `/nano`, `/md-read` presentation
 - [MCP](/docs/mcp) — stdio + streamable HTTP tools
