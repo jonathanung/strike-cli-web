@@ -102,6 +102,7 @@ enterprise keys:
 | `sandbox` | Wins over global/project. **CLI `--sandbox` is ignored** so operators cannot loosen OS isolation from the command line. |
 | `permissionMode` | Wins over global/project and **session resume**. Mid-session `/mode` / Shift+Tab is **rejected** while locked. |
 | `permissionPreset` | Wins over user/project preset selection. |
+| `contentGuard.mode` | Wins over global/project. When set to **`deny`**, write-time content guards force deny (cannot be widened by project `off`/`ask`, yolo, or session grants). |
 | `permissions[]` | Concatenated after user/project rules (last-match in the config layer). **Deny** rules are also installed as a late evaluation **ceiling** so session always-grants, scoped grants, `--auto` / `--dangerously-skip-permissions`, and workflow phase widens cannot re-allow a managed deny. |
 
 Other managed keys (theme, model, MCP, …) merge with normal last-wins
@@ -130,7 +131,7 @@ scheduler presets: [First-time setup](/docs/ftue).
   "effort": "high",
   "defaultAgent": "build",
   "leanCode": "lite",
-  "deferTools": "off",
+  "deferTools": "on",
   "theme": "strike",
   "vimMode": "pane",
   "nanoMode": "pane",
@@ -141,6 +142,20 @@ scheduler presets: [First-time setup](/docs/ftue).
   "sandbox": "workspace-write",
   "network": {
     "allow": ["api.github.com", "*.npmjs.org", "10.0.0.0/8"]
+  },
+  "container": {
+    "execution": "local",
+    "baseImage": "ubuntu:24.04",
+    "packages": [],
+    "shell": "/bin/bash",
+    "resources": { "memory": "", "cpus": "", "pidsLimit": 512, "gpus": "" },
+    "workspace": { "mountPath": "/workspace", "ports": [], "persistHome": true },
+    "auth": {
+      "forwardEnv": ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "STRIKE_*"],
+      "forwardSSHAgent": false
+    },
+    "network": { "mode": "default", "allow": [] },
+    "engine": ""
   },
   "permissionAutoApproveSeconds": 0,
   "permissionAutoApproveExclude": ["bash"],
@@ -239,9 +254,52 @@ Inspect with `/permission presets`.
 | `dev` | Allow common local-dev bash (`go *`, `git status/diff/log/show`, `make test*`); deny force-push and `.env` writes; other mutations stay ask |
 | `yolo-with-sandbox` | Rule-level allow-all (`* *` allow). Does **not** turn off OS sandbox — keep `sandbox` at `workspace-write` or `read-only`. Later deny rules still win. Distinct from `permissionMode: yolo` |
 
+**Admission (`admission`):** register/load-time scans for MCP servers, skills,
+and plugins **before** tools bind / skills enter the catalog. Distinct from
+`permissionPreset` (per-call rules) and `sandbox` (OS isolation). Full matrix,
+scanners, and fail-open/closed behavior: [admission.md](https://github.com/jonathanung/strike/blob/main/docs/admission.md).
+
+```jsonc
+{
+  "admission": {
+    "preset": "default",              // permissive | default | strict
+    "allowPaths": ["~/trusted-skills"] // home-anchored only; bare ".strike/…" rejected
+  }
+}
+```
+
+| Preset | High-risk MCP tool shapes | Scanner errors |
+|---|---|---|
+| `permissive` | warn (critical → quarantine) | warn (fail-open) |
+| `default` | quarantine (critical → block) | warn (fail-open) |
+| `strict` | **block** before bind | **block** (fail-closed) |
+
 **Explain:** `/permission explain <tool> [pattern]` (or the
 `permission.Explain` / `Service.Explain` API) returns the effective action,
-matched rule, layer name, and match trail for a sample tool call.
+matched rule, layer name, and match trail for a sample tool call. For bash
+(and selected tools), explain also reports whether the decisive match used
+**action facts** or the raw **pattern** path (`eval=facts` / `eval=pattern`)
+plus a short fact summary (#888). See [isolation.md](/docs/isolation#action-facts-semantic-permission-projection-888).
+
+**Action facts + last-match-wins:** when a bash command parses completely,
+rules may match semantic keys (e.g. inner `rm *` inside `bash -c '…'`, path
+`**/.env`, `host:example.com`) in addition to the raw command string. Each
+rule uses **either** facts or pattern — not both — so deny cannot double-fire.
+Incomplete parses (expansions, `eval`, opaque scripts) never drive deny via
+facts; legacy pattern matching alone applies.
+
+**Dry-run preset:** `/permission explain --preset <id> <tool> [pattern]`
+evaluates under an alternate shipped preset without mutating the session
+(`ExplainPreset`). Useful for “what would `read-only` do on this call?”
+
+**Diff:** `/permission diff <presetA> <presetB>` lists added/removed/changed
+rules with layer labels (`permission.DiffPresets`). HTTP:
+`GET /v1/permissions/diff?left=&right=`, and explain accepts optional
+`preset=` for dry-run.
+
+**Managed ceiling:** explain output notes when the managed/MDM deny layer
+blocks a widen (stricter than the stack without managed). Sandbox dial and
+`network.allow` appear on the same explain surface when the host provides them.
 
 **Scoped approvals:** runtime grants may be bounded by scope and optional
 wall-clock TTL (`session`, `path-prefix`, `tool`, `command-class`). A scoped
@@ -272,6 +330,23 @@ Shift+Tab or `/mode` persist in the session JSONL, not back into this file.
 Distinct from `/autonomy` (workflow exit gates) and from `sandbox` (OS
 isolation).
 
+**User system prompt:** `systemPrompt` is optional user text that **replaces**
+(not appends) a composition slot. Whitespace-only values are ignored (they do
+not blank the overlay).
+
+| `systemPromptMode` | Behavior |
+|---|---|
+| `overlay` (default) | Replace the provider overlay only; shared baseline stays |
+| `defaults` | Replace **shared + provider** with `systemPrompt`; tools, environment, instructions, memory, and ledger still append |
+
+**Precedence** for the overlay/defaults slot: custom agent persona body
+(`agents/*.md`) **wins over** config `systemPrompt`, which **wins over** the
+built-in provider overlay. When a persona wins, shared baseline still applies
+even if `systemPromptMode` is `defaults` (defaults mode only applies when the
+config prompt is the active slot content). Visible in `/context` and `/diag`
+as kind `config` with source `config:systemPrompt+mode:overlay|defaults`.
+Details: [agents-skills.md](/docs/multi-agent#system-prompt-layers).
+
 **Lean code:** `leanCode` is `off` | `lite` (default) | `full`. Injects
 agent-scoped efficiency guidance into the system prompt (strict ladder for
 build/general/debugger; softer scaling-aware lean for plan/orchestrator;
@@ -279,19 +354,51 @@ none for explore/reviewer/tester/validator/commit). Inspired by
 [ponytail](https://github.com/DietrichGebert/ponytail) (clean-room wording).
 Details: [agents-skills.md](/docs/multi-agent#lean-code-ponytail-lite).
 
-**Deferred tool schemas:** `deferTools` is `on` | `off` (default off). When
-`on`, non-core tools are omitted from the provider `tools[]` array until
-`toolsearch` discovers them (or the model calls them by name). Core coding
-tools stay always available: `read`/`glob`/`grep`/`edit`/`write`/
-`apply_patch`/`bash`, the `task*` family, `toolsearch`, `question`, and plan
-workflow tools. Deferred surface includes optional built-ins (`webfetch`,
-`websearch`, todo/memory/issue, `sleep`, `skill`, `notebook_edit`, …) and all
-`mcp_*` tools. Discovery lives on the process registry: matches from `toolsearch`
-load full schemas on the **next** model request (including the next
-iteration of the same turn’s tool loop). Tools already present as assistant
-tool calls in history are re-promoted on each stream (so `--continue` keeps
-schemas for tools used earlier). Set `"deferTools": "on"` in global or
-project config to enable.
+**Deferred tool schemas:** `deferTools` is `on` (default) | `off`. When
+`on` (or unset), non-core tools are omitted from the provider `tools[]` array
+until `toolsearch` discovers them, the model calls them by name, or
+deterministic workflow activation promotes them. Core coding tools stay always
+available: `read`/`glob`/`grep`/`edit`/`write`/`apply_patch`/`move`/`delete`/
+`bash`, progressive `task`, `toolsearch`, and `question`. Deferred surface
+includes compatibility delegation shims (`delegate`, `task_status`,
+`task_read`, `task_message`, `task_interrupt`, `wait`), team coordination
+(`agent_roster`, `agent_message`, `agent_broadcast`, `agent_thread`,
+`agent_ownership`, `team_task`, `patch_collab`), plan tools (`plan_write`,
+`plan_read`, `plan_delegate`, `enter_plan_mode`, `exit_plan_mode`,
+`phase_done`), optional built-ins (`webfetch`, `websearch`, todo/memory/issue,
+`sleep`, `skill`, `notebook_edit`, …), and all `mcp_*` tools. Discovery lives
+on the process registry: matches from `toolsearch` load full schemas on the
+**next** model request (including the next iteration of the same turn’s tool
+loop). Tools already present as assistant tool calls in history are
+re-promoted on each stream (so `--continue` keeps schemas for tools used
+earlier). Set `"deferTools": "off"` in global or project config to expose the
+full permitted registry.
+
+**Progressive `task` schema:** the unified `task` tool starts with a compact
+basic schema (prompt-only create plus `status` / `wait` / `cancel`). The full
+advanced contract (routing, budget, verify, `context_bundle`, lifecycle
+`get`/`list`/`read`/`message`/`transition`, …) loads after `toolsearch`
+matches `task`, a call uses advanced fields/actions, or workflow activation
+promotes it. Providers always see a single tool named `task`; the executor
+accepts the full argument surface regardless of the schema level currently
+advertised. Session resume restores advanced when history used advanced args.
+
+**Workflow tool activation:** when `deferTools` is on, deterministic engine
+state promotes deferred families without `toolsearch` or a classifier:
+plan mode / plan agent / active workflow / active plan handoff → plan tools
+(`plan_write`/`plan_read`/`plan_delegate`, `enter_plan_mode`/`exit_plan_mode`/
+`phase_done`); any live or historical child → roster/messaging/ownership plus
+advanced `task`; two or more live children → team tools (`agent_broadcast`,
+`team_task`, `patch_collab`). Hard-denied tools stay omitted. Guidance source
+tags include `+activate:<families>`.
+
+**Rollback / permanent default:** progressive disclosure (`deferTools` on) is
+the shipped default. Offline comparison lives in
+`go test ./internal/eval/progressive` and [Eval](/docs/eval). Roll
+back to `"deferTools": "off"` if progressive completion drops by more than 5
+absolute points or median wall time rises by more than +25% vs full exposure
+on that fixture pack (schema reduction below 30% on solo first-turn is a soft
+warning only).
 
 **Permission soft-approve / auto-approve:** session mode `soft-approve`
 (`permissionMode`, `/mode`, Shift+Tab) arms a **visible** 15s countdown on
@@ -375,6 +482,43 @@ remains unsupported (same as manual upgrade).
 Probe state is cached under `~/.strike/cache/update-check.json`. Editable under
 `/settings` → Defaults.
 
+## Container (native containerization, E12)
+
+Layered JSON for `internal/container` (epic
+[#547](https://github.com/jonathanung/strike/issues/547)). Merge order matches
+the rest of config: **defaults → global → project → managed**.
+
+| Source | Path |
+|---|---|
+| Inline | `"container": { … }` in `~/.strike/config` or `./.strike/config` |
+| Dedicated file | `container.jsonc` / `container.json` under the same `.strike` roots (like `mcp.jsonc`) |
+
+Dedicated files overlay the inline block at the same layer (global file after
+global config; project file after project config).
+
+| Field | Meaning |
+|---|---|
+| `execution` | `local` (default) or `container` — where the agent runs (CLI flag in E12.4) |
+| `baseImage` | Dockerfile `FROM` (default `ubuntu:24.04`) |
+| `packages` | Extra apt packages at build |
+| `shell` | Login shell (default `/bin/bash`) |
+| `resources` | `memory`, `cpus`, `pidsLimit`, `gpus` → create flags |
+| `workspace` | `mountPath`, `hostPath`, `ports` (`host:container`), `persistHome`, `extraBinds` |
+| `auth` | `forwardEnv` globs, `envFile`, `requiredEnv`, `forwardSSHAgent` (credentials never baked into images) |
+| `network.mode` | `default` (bridge) or `none` |
+| `network.allow` | Reserved container egress allowlist (same shape as top-level `network.allow`) |
+| `dockerfile` | Optional hand-written Dockerfile path |
+| `engine` | Override CLI binary (`docker` / `podman` / absolute path) |
+| `needsNode` / `nodeVersion` | Install Node via NodeSource (`nodeVersion` major, default 22) |
+| `needsPython` / `pythonVersion` | Install Python apt packages (default version `3`) |
+| `needsGo` / `goVersion` | Install `golang-go` (+ build deps); `goVersion` is informational |
+| `needsRust` | Install Rust via rustup |
+
+Scaffold with `/devcontainer` or `strike container detect` (E12.5).
+
+Runtime mapping: `Config.Container.ToRuntime(version)` → `container.Config` for
+`Manager`. See [container.md](https://github.com/jonathanung/strike/blob/main/docs/container.md) and [isolation.md](/docs/isolation).
+
 ## Scheduler
 
 `scheduler` bounds concurrent agent work **inside one Strike OS process**
@@ -435,8 +579,8 @@ via `secret.RedactEvent` (see [secrets.md](/docs/secrets)).
 
 Portable **session packages** (`format: strike.session`) export/import the
 redacted event sequence + meta for support bundles — distinct from the
-human-readable markdown transcript (`/export`, #221) and from checkpoint stack
-persistence across `--continue` (#573). Live `/fork` / `/rewind` copy into a new
+human-readable markdown transcript (`/export`, #221) and from durable checkpoint stacks
+under `~/.strike/checkpoints/` (#573). Live `/fork` / `/rewind` copy into a new
 id with `meta.forkedFrom` lineage.
 
 | `session.retentionMaxSessions` | Cap closed sessions retained (0 = unlimited) |
@@ -544,14 +688,22 @@ notice is delivered. Soft stall (default 300s idle) and loop (default 6
 identical tools) flags always appear on `task_status` / `agent_roster` without
 killing when no hard threshold is set.
 
-**Stale children (#517):** folded into stall — same `stall` signal and optional
-`stallAfterS` hard threshold; not a second detector.
+**Stale children (#517):** folded into stall — not a second detector.
+
+| Mode | Trigger | Parent-visible | Kills child? |
+|---|---|---|---|
+| **Soft stall** | Default **300s** without progress (or `stallAfterS` when set, for the soft flag) | `budget.stall=true`, `idle_s`, `last_progress_at`, `stall_after_s` on `task_status` / `agent_roster`; live state `needs_attention` + `block_reason`; rising-edge `child.escalated` with `action=signaled` + lead mailbox; `wait` on `task.stale` or `task.blocked` | **No** |
+| **Hard stall** | `stallAfterS` / spawn `stall_after_s` configured and idle ≥ threshold | Same pulse fields + `child.escalated` `interrupted`/`finalizing`, terminal `blocked`, mailbox | **Yes** (after optional finalization) |
+
+Progress clears soft stall flags and allows a later rising-edge signal. Prefer
+`wait` / `task` action=wait over busy-polling status.
 
 **Session cost envelope (#577 / #542):** when `maxSessionCostUSD` is configured
-it remains the **outer** cost cap for the whole session. Per-agent
-`maxCostUsd` nests inside that envelope and never raises the session ceiling.
-Until session cost pricing ships, `maxCostUsd` is accepted and exposed but not
-enforced (usage stays 0).
+it remains the **outer** cost cap for the whole session (CLI `--max-cost`
+overrides when present). Per-agent `maxCostUsd` nests inside that envelope and
+never raises the session ceiling. Until full session cost pricing and hard-stop
+enforcement land (#577), `maxCostUsd` / the outer envelope are accepted and
+exposed in config and docs; treat enforcement as landing with that issue.
 
 **Isolated worktree path (explicit apply):** for true filesystem isolation,
 prefer separate root sessions with `session.worktree=always` (or
@@ -615,8 +767,8 @@ Remap app-level chords without recompiling. Ids match the in-app cheatsheet
   "nav.jump-bottom": "ctrl+b",
   "global.palette": "ctrl+k",
   "composer.newline": ["ctrl+j", "alt+enter"],
-  "nav.window-next": "ctrl+o",
-  "nav.window-prev": "ctrl+p",
+  "nav.window-next": "ctrl+p",
+  "nav.window-prev": "ctrl+o",
   "nav.group-next": "ctrl+shift+o",
   "nav.group-prev": "ctrl+shift+p",
   "nav.tool-expand": "alt+enter"

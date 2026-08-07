@@ -89,28 +89,54 @@ host process and are not written into session events.
 - Encrypting session JSONL at rest
 - Guaranteeing zero false negatives on novel token formats
 
-
 ## Write-time content guards (#890)
 
-Structured file tools (`write`, `edit`, `apply_patch`, …) can scan **content
-about to hit disk** for credential-shaped material and high-risk patterns
-before the mutation commits. Findings share `internal/security.Finding` types
-with [Admission](/docs/admission) scans; guard actions are `allow` | `ask` |
-`deny` (distinct from admission's bind-time `block` / `quarantine`).
+Egress redaction does **not** stop agents from writing credential-shaped
+material to the workspace. Write guards scan **proposed file content** on
+`write` / `edit` / `apply_patch` / `notebook_edit` **before** disk commit.
 
-This complements egress redaction (above) and [Safefile](/docs/safefile)
-path/symlink hardening — redaction cleans what leaves the process; content
-guards and safefile bound what enters the workspace.
+| | Egress redaction (`pkg/redact`) | Write guard (`contentGuard`) |
+|---|---|---|
+| When | After content exists (logs, timeline, tool results, exports) | Before mutators write |
+| Action | Replace with `[REDACTED…]` placeholders | `allow` / `ask` / `deny` |
+| Error code | n/a | `content_guard_denied` (stable; visible on tool results / timeline) |
+| Patterns | Shared credential library (`redact.Findings`) | Same credentials + high-confidence dangerous sinks (language-limited) |
+
+**Default posture:** credential shapes (PEM private keys, `AKIA…`, provider
+API key forms, GitHub/Slack tokens, labeled secrets) → **deny**. High-confidence
+dangerous sinks (`eval`/`exec`/`os.system`/`subprocess(…shell=True)` /
+JS `eval`/`new Function`/`child_process.exec`) → **ask**.
+
+Config (`contentGuard` — see [config.md](/docs/config)):
+
+```jsonc
+{
+  "contentGuard": {
+    "mode": "default",              // off | default | ask | deny
+    "pathAllow": ["**/testdata/**"]  // skip globs (false-positive escape)
+  }
+}
+```
+
+- **ask** mode upgrades all findings to interactive `content_guard` permission
+  asks (allow-once or session path always-grant; audited via
+  `permission.decided`).
+- **deny** mode hard-blocks all findings.
+- **off** disables the scanner unless managed locks deny.
+- Managed/MDM `contentGuard.mode: deny` sets a **ForcedDeny** ceiling: project
+  config (including `pathAllow`), yolo, and session grants cannot widen it.
+- `permissionMode: yolo` may upgrade remaining **ask** findings only; it never
+  bypasses deny-severity hits or the managed ceiling.
+
+Optional skill `/write-guards` documents the same rules for the model.
+
+**Non-goals:** full SAST product; blocking all security bugs; high-entropy
+token heuristics on write (those stay egress-only via `ScrubToolOutput`).
 
 ## Related
 
-- #890 — write-time content guards
-- [Admission](/docs/admission) — register/load-time capability scans
-- [Audit](/docs/audit) — durable trust-boundary decision log
-- [Safefile](/docs/safefile) — hardened path I/O
-
-
 - #796 — secret refs + session/engine scrub wiring
+- #890 — write-time content guards on edit/write/apply_patch
 - #790 — structured timeline / trace export (`pkg/redact` + `pkg/timeline`)
 - #792 — prompt/config diagnostic bundle (`pkg/diag` + `/diag`)
 - [auth.md](/docs/auth) — credential store and login

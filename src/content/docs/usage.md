@@ -31,8 +31,8 @@ strike launches without any provider configured. Pick one inside the TUI:
 /system                        # focus the system right pane (needs telemetry on)
 /telemetry                     # toggle local system metrics pane (CPU/RAM/disk)
 /telemetry on|off|status       # show/hide or report; on by default (also --telemetry)
-/pets                          # focus the pets right pane (ASCII companions)
-/pets cat|dog|panda|fish       # pick a pet and focus the pane
+/pets                          # focus agents pane (ASCII pet above the tree)
+/pets <name>                   # assign pet to focused agent (cat, dog, owl, …)
 /session                       # browse past root sessions for this workspace
                                # (auto-titles); ctrl+a shows all workspaces
 /session <id>                  # resume a specific session by id (any workspace)
@@ -89,9 +89,9 @@ strike launches without any provider configured. Pick one inside the TUI:
                                # export/import portable JSON (default path
                                # strike-memory.json). import merges by key;
                                # add --replace to wipe first
-/queue                         # browse/edit prompts queued while a turn runs
-                               # (reorder, promote, delete, edit text, or
-                               # interrupt to run the next item now)
+/queue                         # focus queue right pane (queued prompts,
+                               # scheduled /loop jobs, scheduler pool waits;
+                               # reorder/edit/delete/run-next; m = overlay)
  /issues [list|add|get|close|export|import] …
                                # project-scoped issue tracker; export/import
                                # portable JSON (default strike-issues.json).
@@ -128,7 +128,7 @@ strike launches without any provider configured. Pick one inside the TUI:
 /quit                          # alias of /exit
 # Keybind mirrors (same actions as chords; see keybinds.md and /keys):
 /focus-left /focus-right       # focus panes (ctrl+h / ctrl+l)
-/window-next /window-prev      # cycle right-pane windows (ctrl+o / ctrl+p)
+/window-next /window-prev      # cycle right-pane windows (ctrl+p / ctrl+o)
 /group-next /group-prev        # cycle right-pane stack groups (ctrl+shift+o / ctrl+shift+p)
 /scroll-up /scroll-down        # transcript scroll
 /jump-bottom                   # jump to latest output (ctrl+t)
@@ -140,6 +140,8 @@ strike launches without any provider configured. Pick one inside the TUI:
 /agent-next                    # cycle agent persona (tab)
 /mode-next                     # cycle permission mode (shift+tab)
 /permission explain bash ls    # why allow/ask/deny (matched rule + layer)
+/permission explain --preset read-only write main.go  # dry-run alternate preset
+/permission diff read-only dev  # added/removed/changed rules between presets
 /permission presets            # shipped permissionPreset catalog
 /tool-prev /tool-next          # select tool cells (alt+[ / alt+])
 /tool-expand /tool-copy        # expand or copy selected cell
@@ -159,18 +161,18 @@ strike launches without any provider configured. Pick one inside the TUI:
 | `/session <id>` | resume that root session by id (works across workspaces; list filter does not apply) |
 | `/rename [title]` | rename the current session (brief auto-titles; agents pane `r` too) |
 | `/fork` | copy the current session JSONL into a new id (idle only) |
-| `/undo` | undo last turn in place (idle only); bare opens picker with **path preview** (harness create/update/delete from the last turn) and coverage warnings; `chat` keeps disk; `files` restores per-file checkpoints from that turn (never `git reset --hard`). Oversized/unreadable originals are skipped and counted. **Bash** (and other non-snapshotted tools) mark the turn *uncovered* — restore still runs for harness file tools, but the notice warns that shell mutations are not reverted (full bash coverage is #572). Checkpoint bytes are in-memory for the process lifetime; they do not survive `--continue` yet (#573) |
+| `/undo` | undo last turn in place (idle only); bare opens picker with **path preview** (harness create/update/delete from the last turn), **skipped-file count**, and coverage warnings; `chat` keeps disk; `files` restores per-file checkpoints from that turn (never `git reset --hard`). Files over **2 MiB** (`DefaultCheckpointMaxBytes`) or unreadable originals are skipped and counted. **Bash** mutations are covered via a per-session shadow-git baseline reconciled at turn end (formatters, codegen, `sed -i`, `go generate`, …). If shadow-git is unavailable, the turn is marked *uncovered* and the notice warns that shell changes may remain. Checkpoint stack persists under `~/.strike/checkpoints/<session-id>/` so `--continue` can still restore files (retention: last 50 turns; removed with the session). Full guide: [Checkpoints](/docs/checkpoints) |
 | `/rewind` | fork a **new** session from a completed turn (idle only); original session stays listable; bare opens turn picker; `/rewind n` keeps turns 1..n. Workspace file revert is not part of rewind (use `/undo files` on the live session) |
-| `/export` | dump the visible transcript to markdown (user/assistant/tool summaries); redacts credentials via `pkg/redact` (see [secrets.md](/docs/secrets)); default path under `.strike/exports/` or tmp; `--open` launches `$EDITOR`. Human-readable only (#221) — machine-readable session packages and log durability live in `internal/session` (#803); checkpoint stack across `--continue` is #573 |
+| `/export` | dump the visible transcript to markdown (user/assistant/tool summaries); redacts credentials via `pkg/redact` (see [Secrets](/docs/secrets)); default path under `.strike/exports/` or tmp; `--open` launches `$EDITOR`. Human-readable only (#221) — machine-readable session packages and log durability live in `internal/session` (#803); checkpoint stack across `--continue` lives under `~/.strike/checkpoints/` |
 | `/timeline` | collapsed structured run timeline (turns/tools/provider attempts/children/**permission decisions**/verification with durations); `/timeline export [path]` writes versioned redacted JSON (or `.jsonl`). Complements session JSONL and agent roster/budget fields — not a second full transcript. Related library (no slash command yet): multi-agent **run snapshots** in `internal/replay` (`RunSnapshot`) capture delegated spawn identity + handoff/gates for offline echo replay/compare under `~/.strike/runs/` — compact complement to JSONL, not a full transcript duplicate (#782) |
-| `/permission` | explain why a tool call is allow/ask/deny, or list shipped presets. `/permission explain bash "git status"` shows matched rule + layer; `/permission presets` documents `read-only` vs `dev` vs `yolo-with-sandbox` (config `permissionPreset`). Hard denials and interactive rejects surface a notice with the same explain command. See [config.md](/docs/config) |
-| `/diag` | export a **versioned prompt/config diagnostic bundle** (JSON): ordered system-prompt layers with source ids/sizes (same map as `/context`), instruction precedence, effective dials (model, effort, leanCode, permission mode, sandbox, compaction, scheduler limits), and config digests — never full secret-bearing files. Default path under `.strike/exports/` or tmp. `/diagnostic` is an alias. Also linked from the `/timeline` modal footer. Works for solo and child sessions (lineage on the bundle). See [secrets.md](/docs/secrets) |
+| `/permission` | explain why a tool call is allow/ask/deny, dry-run an alternate preset (`--preset`), diff two presets, or list shipped presets. `/permission explain bash "git status"` shows matched rule + layer + managed ceiling, and for bash whether **facts** or raw **pattern** matching decided the result (action facts, #888); `/permission diff read-only dev` lists rule deltas; `/permission presets` documents `read-only` vs `dev` vs `yolo-with-sandbox` (config `permissionPreset`). Hard denials and interactive rejects surface a notice with the same explain command. See [Config](/docs/config) and [Isolation](/docs/isolation) |
+| `/diag` | export a **versioned prompt/config diagnostic bundle** (JSON): ordered system-prompt layers with source ids/sizes (same map as `/context`), instruction precedence, effective dials (model, effort, leanCode, permission mode, sandbox, compaction, scheduler limits), and config digests — never full secret-bearing files. Default path under `.strike/exports/` or tmp. `/diagnostic` is an alias. Also linked from the `/timeline` modal footer. Works for solo and child sessions (lineage on the bundle). See [Secrets](/docs/secrets) |
 | `/copy` | copy plain text of the last assistant response (not tool output) to the system clipboard via OSC52; same as `alt+y`; notice on success/failure |
 | `/compact` | ask the engine to compact model history |
 | `/memory` | bare = list browser (focuses memory pane); `list [tag]`, `get <key>`, `set <key> <value>`, `rm <key>`, `export [path]`, `import <path> [--replace]` (portable JSON; relative paths stay under project root) |
-| `/queue` | browse prompts buffered while a turn runs: reorder (`shift+↑/↓` or `K`/`J`), promote (`p`), in-place edit (`enter`), load into composer (`e`), delete (`d`), clear (`c`), or interrupt and run the FIFO head next (`x`). Empty-composer `bksp` still pops the last item; idle `esc` clears the whole queue |
+| `/queue` | focus the **queue** right pane: buffered prompts (while a turn runs), session `/loop` jobs, and scheduler pool waits. Pane keys: reorder (`shift+↑/↓` or `K`/`J`), promote (`p`), edit (`enter`), load into composer (`e`), delete prompt or stop loop (`d`), clear prompts (`c`), run next (`x`), overlay browser (`m`). Empty-composer `bksp` still pops the last item; idle `esc` clears the whole prompt queue |
 | `/issues` | bare = list browser (focuses issues pane); `list [open\|closed]`, `add <title>`, `get <id>`, `close <id>`, `export [path]`, `import <path> [--replace]` (same portable rules as memory) |
-| `/agents` `/activity` `/files` `/diagnostics` `/visualizer` `/system` `/pets` | jump focus to the named right pane (`/agent` remains persona select; `/system` needs telemetry on; `/pets [name]` picks cat/dog/panda/fish) |
+| `/agents` `/activity` `/queue` `/files` `/diagnostics` `/visualizer` `/system` `/pets` | jump focus to the named right pane (`/agent` remains persona select; `/system` needs telemetry on; `/pets [name]` focuses agents and sets the focused agent's companion) |
 | `/telemetry [on\|off\|status]` | local system metrics pane (CPU/RAM/disk); **on by default** (~1 Hz sampler). Disable with `/telemetry off` |
 | `/loop` | schedule a recurring prompt (`15m`, `2h`, …); session-only; `/loop list`, `/loop stop [id]` — see [Loop](/docs/loop). Distinct from [`/goal`](/docs/goal) and from the in-process [Scheduler](/docs/scheduler) resource pools |
 | `/workflow` | list/inspect/start/stop loaded workflows; start previews phase permission grants; palette expands actions |
@@ -197,9 +199,11 @@ team-create step. Concurrent roots are independent teams.
 | `task({prompt, criteria, deps, route, budget, verify, context_bundle, …})` | Advanced create — same runtime |
 | `task({action:"get"\|"list"\|"status"\|"read"\|"message"\|"transition"\|"cancel"\|"wait", …})` | Lifecycle + control ops |
 
-Legacy names (`delegate`, `task_status`, `task_read`, `task_message`,
-`task_interrupt`, `wait`) remain as compatibility shims over the same handlers
-(usage is telemetry-counted). `team_task` stays the shared claim board;
+Prefer the unified **`task`** tool for all new delegation. Legacy names
+(`delegate`, `task_status`, `task_read`, `task_message`, `task_interrupt`,
+`wait`) remain as compatibility shims over the same handlers (usage is
+telemetry-counted); they stay registered but are deferred under default
+`deferTools` until discovered or called. `team_task` stays the shared claim board;
 `plan_delegate` stays the plan-section wrapper.
 
 | Capability | How |
@@ -269,7 +273,7 @@ rules).
 | `yolo` | skip permission asks; explicit deny rules still apply |
 
 Persists per session in the JSONL log. Optional default for **new** sessions:
-`permissionMode` in [config.md](/docs/config), or **ctrl+d** in the `/mode`
+`permissionMode` in [Config](/docs/config), or **ctrl+d** in the `/mode`
 picker (and global ctrl+d) to save the current posture as that default.
 Resume restores the session log, not the config default.
 
@@ -278,13 +282,48 @@ Resume restores the session log, not the config default.
 `sandbox` in [Config](/docs/config) (or `--sandbox`) sets OS process isolation
 for bash: `off` | `read-only` | `workspace-write` (default). This is **what is
 possible**; `permissionMode` is **when you get asked**. `/sandbox` prints the
-effective policy and backend; `/sandbox explain` shows the generated profile.
+effective policy and backend; `/sandbox explain` shows the generated profile
+(including write-deny globs, `network.allow`, and egress enforcement level).
 `yolo` with `sandbox: off` requires `--i-know`. Full reference: [Sandbox](/docs/sandbox).
 
 OS capability blocks (read-only FS, seatbelt deny, …) surface on bash as
 `errorCode=sandbox_denied` with a human reason (timeline + model tool result).
-See the isolation matrix: [isolation.md](/docs/isolation) (sandbox vs worktrees vs
+When `network.allow` is set, bash preflight also blocks known network clients
+(`curl`/`wget`/`ssh`/…) outside the list as `errorCode=network_denied` (shared
+allowlist with webfetch; not an OS per-host filter).
+See the isolation matrix: [Isolation](/docs/isolation) (sandbox vs worktrees vs
 planned containers).
+
+
+### Built-in tools (highlights)
+
+Path tools bind relative paths to the **workspace**. Absolute paths may also
+target the **session temporary directory**
+(`$TMPDIR/strike/<session-id>/` or `os.TempDir()/strike/<session-id>/`):
+
+- Created lazily per engine session; path appears in the environment prompt layer
+- `write` / `edit` / `apply_patch` / `notebook_edit` / `move` / `delete` may
+  write under that root (siblings, `..`, and symlink escapes stay denied)
+- Removed on `Run` shutdown; bounded stale cleanup after crashes (live sessions
+  refresh mtime so idle peers do not delete an active scratch root)
+- Relative paths still bind only to the workspace
+
+| Tool | Role |
+|---|---|
+| `move` | Rename/move a file within workspace or session temp (prefer over bash `mv`). Optional `overwrite`, `baseHash`; refuses directories and symlink leaves |
+| `delete` | Delete a file (or directory with `recursive=true`) in workspace or session temp (prefer over bash `rm`). Optional `baseHash` |
+| `websearch` | Permissioned web search (titles/URLs/snippets); configure backend via config `webSearch`. Use `webfetch` for page bodies. Deferred when `deferTools` is on |
+| `diagnostics` | Read-only LSP workspace/file diagnostics (severity filter, bounded JSON). Soft status when servers are down. Deferred; discover via `toolsearch` |
+| `toolsearch` | Discover deferred tools by name/description (loads full schemas on the next model request) |
+
+**Progressive tool disclosure** (default): `deferTools: on` keeps a small always-on
+core (`read`/`glob`/`grep`/`edit`/`write`/`apply_patch`/`move`/`delete`/`bash`,
+progressive `task`, `toolsearch`, `question`) and defers optional built-ins, team
+shims, plan tools, and MCP until discovery, direct call, history resume, or
+workflow activation. Progressive `task` starts with a compact basic schema and
+promotes the advanced contract on demand. Details and rollback gate:
+[Config](/docs/config) · offline eval: [Eval](/docs/eval).
+
 
 Built-in skills also appear as slash commands: `/commit`, `/push`, `/pr`,
 `/ship`, `/review`, `/learn`, `/deslop`, `/verify` (plus custom skills under
@@ -328,7 +367,7 @@ a real provider needs credentials — see [auth.md](/docs/auth).
 Provider selection happens in-app with `/provider`; `--provider` on the
 command line just pre-selects (and validates credentials eagerly). Custom
 OpenAI-/Anthropic-compatible endpoints: `/settings`, `.strike/providers.jsonc`,
-or config `providers` — see [config.md](/docs/config).
+or config `providers` — see [Config](/docs/config).
 
 ## CLI session resume & headless exec
 
@@ -418,23 +457,28 @@ composer. The right slot hosts one active window from the registry:
 
 | Window | Role |
 |---|---|
-| `context` | setup summary (provider, model, agent, …) |
+| `context` | setup summary (provider, model, agent, …); context doctor via `/context` |
 | `activity` | tools / subagent status / empty-state |
-| `agents` | multi-root session/agent tree (concurrent roots + children) |
+| `queue` | buffered prompts, scheduled `/loop` jobs, scheduler pool waits (`/queue`) |
+| `agents` | multi-root session/agent tree + **ASCII pets** above the focused agent (`/pets [name]`) |
 | `visualizer` | selected-node status, tokens/cost, tokens/turn sparkline |
 | `files` | workspace file tree (`host.Files`) |
+| `diagnostics` | live language-server findings (`/diagnostics`; Enter opens file) |
 | `memory` | project memory browser |
 | `issues` | project issue browser |
+| `plans` | root-owned structured plans |
 | `markdown` | markdown reader (`/md-read <path|@path>`; or modal via `mdReadMode`) |
 | `editor` | embedded nvim/vim/nano PTY for `/vim` or `/nano` (modal via `vimMode`/`nanoMode`) |
 
 Related right-pane windows stack as **groups** when the pane is tall/wide
-enough: session (`context`+`activity`[+`system` telemetry]), agents
-(`agents`+`visualizer`), and project (`memory`+`issues`). Sparse panes
-(context, system) size to their content; activity (and other flex members)
-absorb the remainder so empty bordered voids stay small. `files`, `markdown`,
-and `editor` stay full-height singles. Compact or narrow terminals collapse
-each group to one pane.
+enough: session (`context`+`activity`+`queue`[+`system` telemetry]), agents
+(`agents`+`visualizer`), files (`files`+`diagnostics`), and project
+(`memory`+`issues`+`plans`). Sparse panes (context, system, empty queue) size to
+their content; activity (and other flex members) absorb the remainder so empty
+bordered voids stay small. `files`/`diagnostics`, `markdown`, and `editor` stay
+full-height when alone. Compact or narrow terminals collapse each group to one
+pane. Open config files without a JSON round-trip via **`/config`** (picker for
+global/project slots and sidecars).
 
 ### Concurrent root sessions
 
@@ -459,13 +503,13 @@ Do not confuse these with:
   under a parent; they do not create or switch concurrent roots.
 
 Session worktree isolation defaults to `off` (launch cwd); set
-`session.worktree` to `auto` or `always` in [config.md](/docs/config) for
+`session.worktree` to `auto` or `always` in [Config](/docs/config) for
 per-root git worktrees. Full chord table:
 [keybinds.md](/docs/keybinds).
 
 Pane keys (orientation-independent): `ctrl+h` / `ctrl+l` focus the left
-(primary transcript) or right (secondary pane column); `ctrl+o` / `ctrl+p`
-cycle focus within the active stack group then to the next group;
+(primary transcript) or right (secondary pane column); `ctrl+p` / `ctrl+o`
+cycle focus next / previous within the active stack group then to the next group;
 `ctrl+shift+o` / `ctrl+shift+p` jump to the next/previous stack group (first
 pane). `ctrl+;` (or `/layout` / `/split`) toggles a vertical top/bottom split
 without swapping those chords. `ctrl+k` opens the command palette (when
@@ -502,4 +546,12 @@ skills appear only when valid configured entries exist; recent prompts only
 when prompt history exists. It repacks to fit the terminal on resize and
 collapses to a single column when narrow.
 
-Full keyboard reference: [keybinds.md](/docs/keybinds).
+Full keyboard reference: [Keybinds](/docs/keybinds).
+
+## See also
+
+- [Checkpoints](/docs/checkpoints) — `/undo`, bash shadow-git coverage, durable stack
+- [Multi-agent](/docs/multi-agent) — progressive `task`, delegation policy, handoffs
+- [Config](/docs/config) — `deferTools`, `$schema`, `autoupdate`, `maxSessionCostUSD`, `webSearch`
+- [Web](/docs/web) — experimental multi-session cockpit parity
+- [Eval](/docs/eval) — swebench / tbench / sweep / progressive disclosure runners

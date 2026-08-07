@@ -577,16 +577,14 @@ const pages = {
   theme: rewriteLinks(readCli('theme.md')),
   web: rewriteLinks(readCli('web.md')),
   'peer-ecosystem': rewriteLinks(readCli('peer-ecosystem.md')),
-  plugins: rewriteLinks(readCli('plugins.md')),
-  'plugin-panes': rewriteLinks(readCli('plugin-panes.md')),
   isolation: polishIsolation(readCli('isolation.md')),
   harnesses: rewriteLinks(readCli('harnesses.md')),
   secrets: polishSecrets(readCli('secrets.md')),
 }
 
 // Web-only hub pages are authored under src/content/docs/ and are NOT
-// overwritten here: sandbox, scheduler, ftue, containers, admission, audit,
-// safefile, telemetry, checkpoints, eval.
+// overwritten here: sandbox, scheduler, ftue, plugins, plugin-panes, containers,
+// admission, audit, safefile, telemetry, checkpoints, eval.
 
 for (const [slug, md] of Object.entries(pages)) {
   writeFileSync(join(outDir, `${slug}.md`), md.endsWith('\n') ? md : md + '\n')
@@ -618,7 +616,7 @@ Markdown under this directory is vendored for the on-domain \`/docs\` hub.
 | \`config\` | configure | \`docs/config.md\` (slimmed → hub pages) |
 | \`mcp\` | configure | MCP section of \`docs/config.md\` |
 | \`theme\` | configure | \`docs/theme.md\` |
-| \`plugins\` | configure | \`docs/plugins.md\` |
+| \`plugins\` | configure | **Web-only** — install/trust/catalog user guide |
 | \`secrets\` | configure | \`docs/secrets.md\` (+ hub write-time guards section) |
 | \`admission\` | configure | **Web-only** — MCP/skills/plugin bind-time scans |
 | \`audit\` | configure | **Web-only** — durable trust-boundary decision log |
@@ -626,7 +624,7 @@ Markdown under this directory is vendored for the on-domain \`/docs\` hub.
 | \`telemetry\` | configure | **Web-only** — versioned export families (not cloud analytics) |
 | \`web\` | advanced | \`docs/web.md\` (experimental) |
 | \`peer-ecosystem\` | advanced | \`docs/peer-ecosystem.md\` |
-| \`plugin-panes\` | advanced | \`docs/plugin-panes.md\` |
+| \`plugin-panes\` | use | **Web-only** — pane/1 user overview |
 | \`eval\` | advanced | **Web-only** — internal SWE-bench / tbench runners |
 
 Relative links rewrite to \`/docs/<slug>\`. Architecture, contributing, nix,
