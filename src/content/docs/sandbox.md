@@ -165,6 +165,9 @@ structured file tools do not go through bwrap/seatbelt the same way shell does.
 
 ## Related
 
+- [Containers](/docs/containers) — Docker/Podman runtime isolation
+- [Isolation](/docs/isolation) — full layer map
+
 - [Isolation](/docs/isolation) — full matrix
 - [Config](/docs/config) — `sandbox`, `network.allow`, permissions
 - [Usage](/docs/usage) — permission mode dial, `/sandbox`, composer `!`

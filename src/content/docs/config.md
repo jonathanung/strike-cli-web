@@ -30,7 +30,7 @@ here yet.
 2. Global `~/.strike/config` (+ `mcp.jsonc` / `providers.jsonc` / `keybinds.jsonc`)
 3. Project `./.strike/config` (+ same sidecar files)
 4. **Managed/MDM** system `managed-config` (+ `managed-config.d/`) — see
-   [Managed / MDM config](#managed--mdm-config-enterprise) below
+   [Managed / MDM config](#managed-mdm-config-enterprise) below
 
 **Round-trip / save policy:** hand-edited comments and `$schema` are kept on
 disk until a **programmatic write** runs (`SetGlobalDefaults`, theme /

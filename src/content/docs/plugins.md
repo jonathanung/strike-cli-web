@@ -330,7 +330,7 @@ Deterministic merge order for **enabled** plugins (later wins where noted):
 5. **Project plugins** — enabled entries under `./.strike/plugins/`, same
    sort.
 6. Managed/MDM policy still applies as a ceiling on security dials
-   ([config.md](/docs/config#managed--mdm-config-enterprise)); plugins cannot
+   ([config.md](/docs/config#managed-mdm-config-enterprise)); plugins cannot
    weaken managed denies.
 
 Peer import trees (`.claude`, `.opencode`) stay **outside** the plugin system;

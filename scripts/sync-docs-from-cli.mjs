@@ -57,6 +57,9 @@ const ANCHOR_REMAP = {
   '/docs/config#theme': '/docs/theme',
   '/docs/config#scheduler-in-process-resource-limits': '/docs/scheduler',
   '/docs/config#external-harnesses-harnesses': '/docs/harnesses',
+  // CLI / GitHub double-hyphen from "Managed / MDM" → collapsed hub id
+  '/docs/config#managed--mdm-config-enterprise': '/docs/config#managed-mdm-config-enterprise',
+  '#managed--mdm-config-enterprise': '#managed-mdm-config-enterprise',
   // CLI short anchors omit trailing "(normative)" from numbered sections
   '/docs/plugins#9-path-confinement': '/docs/plugins#9-path-confinement-normative',
   '/docs/plugins#10-secret-handling': '/docs/plugins#10-secret-handling-normative',
@@ -68,8 +71,10 @@ function readCli(name) {
 
 function remapAnchors(md) {
   let out = md
-  for (const [from, to] of Object.entries(ANCHOR_REMAP)) {
-    out = out.replaceAll(from, to)
+  // Longer keys first so path+frag wins over bare frag when both match
+  const keys = Object.keys(ANCHOR_REMAP).sort((a, b) => b.length - a.length)
+  for (const from of keys) {
+    out = out.replaceAll(from, ANCHOR_REMAP[from])
   }
   return out
 }
