@@ -4,23 +4,36 @@ import {
   Activity,
   Bot,
   Boxes,
+  ClipboardList,
+  Container,
   Download,
+  FlaskConical,
   GitBranch,
   Globe,
   Goal,
   History,
   ImageIcon,
   KeyRound,
+  Layers,
   MemoryStick,
+  Package,
+  PanelRight,
   Pencil,
   Plug,
   Repeat,
+  ScanSearch,
   Shield,
+  ShieldCheck,
   Sparkles,
   Terminal,
   Command,
   ArrowUpRight,
   Undo2,
+  Wallet,
+  Wrench,
+  Palette,
+  Keyboard,
+  Settings2,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Section } from './ui/Section'
@@ -31,10 +44,10 @@ type Feature = {
   title: string
   description: string
   icon: LucideIcon
+  /** Docs deep-link — every headlining feature must point at a real /docs slug */
+  docsTo: string
   /** Optional product-still anchor under #product-stills */
   stillId?: string
-  /** Optional docs deep-link */
-  docsTo?: string
   experimental?: boolean
 }
 
@@ -49,7 +62,7 @@ const groups: FeatureGroup[] = [
   {
     id: 'cockpit',
     title: 'Cockpit',
-    blurb: 'Multi-pane TUI workspace — transcript, side panes, and live telemetry.',
+    blurb: 'Multi-pane TUI workspace — transcript, side panes, themes, and live telemetry.',
     features: [
       {
         title: 'Solid-surface TUI',
@@ -84,35 +97,49 @@ const groups: FeatureGroup[] = [
         docsTo: '/docs/editors',
       },
       {
-        title: 'In-TUI pickers',
+        title: 'Themes',
         description:
-          'Slash commands for /provider, /model, /auth, /theme, and more — no config spelunking.',
-        icon: Sparkles,
+          'Solid chrome themes with adaptive terminal colors — pick live in-TUI, including plugin-contributed palettes.',
+        icon: Palette,
+        docsTo: '/docs/theme',
+      },
+      {
+        title: 'Keybinds & pickers',
+        description:
+          'F1 / /keys cheatsheet plus slash pickers for /provider, /model, /auth, /theme, and more — no config spelunking.',
+        icon: Keyboard,
         stillId: 'stills-mentions',
         docsTo: '/docs/keybinds',
+      },
+      {
+        title: 'Plugin panes',
+        description:
+          'Right-pane contributions via the pane/1 ABI — static or process panes cycle beside agents, files, and context.',
+        icon: PanelRight,
+        docsTo: '/docs/plugin-panes',
       },
     ],
   },
   {
     id: 'agents',
     title: 'Agents',
-    blurb: 'Concurrent agent roots, isolation, goals, loops, and customizable personas.',
+    blurb: 'Concurrent roots, delegation, goals, loops, harnesses, and isolation that composes.',
     features: [
       {
-        title: 'Concurrent roots',
+        title: 'Multi-agent orchestration',
         description:
-          'Spin up n agent roots in the agents pane, filter by status, and watch children and activity side by side.',
+          'Concurrent agent roots, progressive task/delegate, structured handoffs, teams, and path-ownership so parallel work stays coordinated.',
         icon: Bot,
         stillId: 'stills-agents',
         docsTo: '/docs/multi-agent',
       },
       {
-        title: 'Git worktrees per session',
+        title: 'Isolation & worktrees',
         description:
-          'Each session can run in an isolated git worktree so parallel agents do not collide on disk.',
+          'Layered isolation map — sandbox, session git worktrees, scheduler pools, process caps, and containers compose without replacing each other.',
         icon: GitBranch,
         stillId: 'stills-agents',
-        docsTo: '/docs/config#session-worktrees',
+        docsTo: '/docs/isolation',
       },
       {
         title: 'Agents, skills & workflows',
@@ -136,12 +163,26 @@ const groups: FeatureGroup[] = [
         icon: Repeat,
         docsTo: '/docs/loop',
       },
+      {
+        title: 'Function harnesses',
+        description:
+          'Custom task functions (Go/TS/Lean) with brokered tools, provider calls, and the same permissions, sandbox, and protocol events as the built-in loop.',
+        icon: Wrench,
+        docsTo: '/docs/harnesses',
+      },
+      {
+        title: 'Cost & agent budgets',
+        description:
+          'Per-child and session cost envelopes, soft finalization on budget stop, and /cost so spend stays visible and bounded.',
+        icon: Wallet,
+        docsTo: '/docs/config',
+      },
     ],
   },
   {
     id: 'safety',
     title: 'Safety',
-    blurb: 'Permission dial, OS sandbox, and hard gates so tools only run with your say-so.',
+    blurb: 'Permission dial, OS sandbox, containers, admission, and audit — tools only run with your say-so.',
     features: [
       {
         title: 'Permission mode dial',
@@ -155,29 +196,57 @@ const groups: FeatureGroup[] = [
         title: 'OS sandbox dial',
         description:
           'Linux bwrap / macOS seatbelt for bash (workspace-write by default). Independent of permission mode; yolo + sandbox off needs --i-know.',
-        icon: Shield,
+        icon: ShieldCheck,
         docsTo: '/docs/sandbox',
+      },
+      {
+        title: 'Containers',
+        description:
+          'Native Docker/Podman runtime isolation — launch-inside, eject, attach, isolation badge, and one managed container per repo.',
+        icon: Container,
+        docsTo: '/docs/containers',
       },
       {
         title: 'In-process scheduler',
         description:
           'Named pools (process, build, test, model, …) and build-system presets cap concurrent agent work; queue chips when blocked.',
-        icon: Activity,
+        icon: Layers,
         docsTo: '/docs/scheduler',
+      },
+      {
+        title: 'Admission scans',
+        description:
+          'Load-time admission for MCP, skills, and plugins — capability surfaces are scanned before they bind into the registry.',
+        icon: ScanSearch,
+        docsTo: '/docs/admission',
+      },
+      {
+        title: 'Audit log',
+        description:
+          'Compact trust-boundary decision log under ~/.strike/audit/ — complements session JSONL without storing chat payloads.',
+        icon: ClipboardList,
+        docsTo: '/docs/audit',
+      },
+      {
+        title: 'Secrets redaction',
+        description:
+          'Credential scrubbing on exports, traces, and tool results, plus secret-ref env indirection so keys stay out of logs.',
+        icon: KeyRound,
+        docsTo: '/docs/secrets',
       },
     ],
   },
   {
     id: 'extensibility',
     title: 'Extensibility',
-    blurb: 'Providers, MCP, auth, and experimental strike serve (TUI primary).',
+    blurb: 'Plugins, MCP, providers, progressive tools, config, and experimental strike serve.',
     features: [
       {
-        title: 'Providers & auth',
+        title: 'Plugins',
         description:
-          'Anthropic, OpenAI, xAI, Google, Kimi, DeepSeek — plus custom OpenAI-/Anthropic-compatible endpoints in providers.jsonc. OAuth and API keys in-TUI.',
-        icon: KeyRound,
-        docsTo: '/docs/auth',
+          'Versioned contribution packs — agents, skills, workflows, themes, MCP, harnesses, and panes with install, trust, catalog, and lockfile integrity.',
+        icon: Package,
+        docsTo: '/docs/plugins',
       },
       {
         title: 'MCP (stdio + HTTP)',
@@ -185,6 +254,34 @@ const groups: FeatureGroup[] = [
           'Connect Model Context Protocol servers over stdio or streamable HTTP and expose their tools inside Strike.',
         icon: Plug,
         docsTo: '/docs/mcp',
+      },
+      {
+        title: 'Providers & auth',
+        description:
+          'Anthropic, OpenAI, xAI, Google, Kimi, DeepSeek — plus custom OpenAI-/Anthropic-compatible endpoints. OAuth and API keys in-TUI.',
+        icon: Sparkles,
+        docsTo: '/docs/auth',
+      },
+      {
+        title: 'Progressive tools',
+        description:
+          'deferTools keeps a lean always-on core; toolsearch and workflow activation promote optional tools (websearch, team, MCP) on demand.',
+        icon: ScanSearch,
+        docsTo: '/docs/config',
+      },
+      {
+        title: 'Config & settings',
+        description:
+          'Global/project JSONC, managed MDM layer, /settings ports, and a versioned config schema for editor autocomplete.',
+        icon: Settings2,
+        docsTo: '/docs/config',
+      },
+      {
+        title: 'First-time setup',
+        description:
+          '/ftue wizard — provider, model, optional tour, scheduler presets, and onboarding state for a clean first run.',
+        icon: Sparkles,
+        docsTo: '/docs/ftue',
       },
       {
         title: 'strike serve',
@@ -199,21 +296,35 @@ const groups: FeatureGroup[] = [
   {
     id: 'continuity',
     title: 'Continuity',
-    blurb: 'Install, upgrade, fork, undo, resume, and script without losing the thread.',
+    blurb: 'Checkpoints, sessions, workspace tools, eval, install, and headless runs without losing the thread.',
     features: [
       {
-        title: 'Fork, undo & rewind',
+        title: 'Checkpoints & undo',
         description:
-          '/fork duplicates a session; /undo drops the last turn (chat or files); /rewind forks from an earlier turn.',
+          'Per-turn file snapshots power /undo so you can drop the last model turn and restore workspace files — without git reset --hard.',
         icon: Undo2,
+        docsTo: '/docs/checkpoints',
+      },
+      {
+        title: 'Session resume & fork',
+        description:
+          '/fork duplicates a session; --continue / --session resumes durable JSONL history; /rewind forks from an earlier turn.',
+        icon: History,
         docsTo: '/docs/usage',
       },
       {
-        title: 'Session resume',
+        title: 'Session tools',
         description:
-          'Continue with --continue / --session. Transcripts stored as JSONL for durable history.',
-        icon: History,
+          'Private session temp dir, websearch, diagnostics (LSP), and move/delete path tools — permissioned workspace helpers beside bash.',
+        icon: Wrench,
         docsTo: '/docs/usage',
+      },
+      {
+        title: 'Eval runners',
+        description:
+          'Internal swebench, tbench, parameter sweeps, and progressive-disclosure fixtures for regression signal — not published pass rates.',
+        icon: FlaskConical,
+        docsTo: '/docs/eval',
       },
       {
         title: 'Install & upgrade',
@@ -225,7 +336,7 @@ const groups: FeatureGroup[] = [
       {
         title: 'Headless one-shot',
         description:
-          'Run strike exec for scripted, non-interactive agent turns in CI or pipelines.',
+          'Run strike exec for scripted, non-interactive agent turns in CI or pipelines — JSON envelopes when you need them.',
         icon: Command,
         docsTo: '/docs/usage',
       },
@@ -247,6 +358,7 @@ export function Features() {
         <h2 className="text-2xl font-bold tracking-tight text-text sm:text-3xl">Features</h2>
         <p className="mx-auto mt-3 max-w-2xl text-text-muted">
           What ships in Strike today — Cockpit · Agents · Safety · Extensibility · Continuity.
+          Each card links to the docs.
         </p>
       </div>
 
@@ -308,16 +420,14 @@ export function Features() {
                       </p>
 
                       <div className="mt-4 flex min-w-0 flex-col gap-2">
-                        {feature.docsTo ? (
-                          <Link
-                            to={feature.docsTo}
-                            aria-label={`Docs: ${feature.title}`}
-                            className="inline-flex min-h-11 w-fit items-center gap-1.5 rounded-lg text-sm font-medium text-accent transition-colors hover:text-sky focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-                          >
-                            Docs
-                            <ArrowUpRight className="size-3.5 shrink-0" aria-hidden />
-                          </Link>
-                        ) : null}
+                        <Link
+                          to={feature.docsTo}
+                          aria-label={`Docs: ${feature.title}`}
+                          className="inline-flex min-h-11 w-fit items-center gap-1.5 rounded-lg text-sm font-medium text-accent transition-colors hover:text-sky focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                        >
+                          Docs
+                          <ArrowUpRight className="size-3.5 shrink-0" aria-hidden />
+                        </Link>
 
                         {still ? (
                           <a
