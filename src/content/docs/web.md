@@ -558,24 +558,6 @@ buses) unless a child issue records a hard gap and updates this section.
 | #920 WEBSESS.5 | History polish, resume/fork UX, deep links |
 | #921 WEBSESS.6 | Tests + operator docs/smoke for the multi-session happy path |
 
-### Parity panes (plans, goals, MCP, plugins, context doctor)
-
-When bootstrap capabilities are true, the inspector exposes TUI-adjacent tabs:
-
-| Tab / surface | Capability | Notes |
-|---|---|---|
-| **context** | always | Context doctor snapshot (`inspect.prompt`); pin/exclude via `context.controls`; fit warnings |
-| **mcp** | `mcp` | Server status; retry/disable |
-| **plugins** / **panes** | `plugins` / `panes` | Lifecycle parity with TUI `/plugin`; pane/1 contributions |
-| **goals** | `goals` | Loop-harness list/run/pause/resume/abort |
-| **workflows** | workflows host | Catalog + draft authoring |
-| **timeline** | `timeline` | Structured run timeline + export |
-| **settings** | settings host | Dials including `sandbox`, `notify`, `leanCode`, `deferTools`, `sessionWorktree`, `autoupdate` |
-| Prompt **queue** | UI-local | Composer queue while busy (remove/edit/reorder/clear) — not a server queue API |
-
-Visual declutter / density is tracked under epic #399 (children #912–#915). Full
-TUI multi-agent parity remains a non-goal for the multi-session contract (#467).
-
 ### Manual smoke (multi-session)
 
 Run after #917+ land; checklist expanded in #921:

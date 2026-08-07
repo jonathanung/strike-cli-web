@@ -50,8 +50,8 @@ Right-pane **stack groups** (related panes shown together when space allows):
 
 | Group | Panes (split) |
 |---|---|
-| Session | `context` + `activity` + `queue` (+ `telemetry` when enabled) |
-| Agents | `agents` + `visualizer` (ASCII pets render above the focused agent in `agents`) |
+| Session | `context` + `activity` (+ `telemetry` when enabled) |
+| Agents | `agents` + `visualizer` |
 | Files | `files` + `diagnostics` |
 | Project | `memory` + `issues` + `plans` |
 | Singles | `markdown`, `editor` (full height each) |

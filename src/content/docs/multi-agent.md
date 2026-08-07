@@ -94,15 +94,10 @@ ceilings (depth, optional max live children, budget) never override. See
 **Progressive `task`** is the one decision path for delegation: prompt-only
 spawn, optional advanced fields (criteria/deps/subscribe/route/budget/verify/
 context_bundle), and actions get|list|status|read|message|transition|cancel|wait.
-Under default `deferTools`, the model first sees a **basic** schema (prompt
-create + `status`/`wait`/`cancel`); the **advanced** contract loads after
-`toolsearch`, an advanced call, or workflow activation — same runtime either
-way. Status and terminal handoff semantics are identical regardless of entry
-path. Prefer progressive **`task`** for spawn and control. Legacy
-`delegate` / `task_*` / `wait` tools are compatibility shims (telemetry-counted);
-deferred by default until discovered or called. At MaxChildDepth, `task` is
-stripped from leaves; leaves may still use `delegate` get/list/transition for
-ownership-gated self-report.
+Status and terminal handoff semantics are identical regardless of entry path.
+Prefer progressive **`task`** for spawn and control. Legacy `delegate` / `task_*` / `wait` tools are compatibility shims (telemetry-
+counted); deferred by default until discovered or called. At MaxChildDepth, `task` is stripped from leaves; leaves may still use
+`delegate` get/list/transition for ownership-gated self-report.
 
 Parent-only workflows are unchanged: if you never call `agent_*` tools,
 progressive `task` (and its compat shims) behave as before.
@@ -131,12 +126,7 @@ completion events, inbox, and contracts. Children should message the lead early
 when blocked. Mid-flight bodies stay plain text plus optional contract fields.
 **Completion** is structured: every terminal child emits a handoff with
 `summary`, `files_changed`, `verification`, `findings`, `blockers`, and
-`recommended_next_action` (empty arrays/strings allowed). Soft per-child budget
-exhaustion attempts **one reserved finalization turn** so the child can return a
-**partial** handoff (`quality`: `complete` | `partial` | `unavailable`) before
-stop; hard cancel skips finalization. **Stale children** fold into the stall
-detector (soft signal vs hard `stallAfterS` kill) — see
-[Config](/docs/config#per-agent-budgets-sessionagentbudget). The engine merges
+`recommended_next_action` (empty arrays/strings allowed). The engine merges
 tool-tracked file mutations into `files_changed` and sets `incomplete` when the
 child did not supply parseable structured fields. Messages inject at tool-round /
 idle turn boundaries (never mid-tool-call). Defaults **allow** team messaging;
@@ -454,3 +444,12 @@ Example custom file:
   ]
 }
 ```
+
+### Adjacent skill resources
+
+Disk skills may reference adjacent files under their **source root** (the
+directory containing `SKILL.md`, or the parent of a flat `name.md`). The
+`skill` tool accepts optional `resource` (relative path only). Paths are
+traversal-protected (`..` and absolute paths rejected). Catalog changes can be
+reloaded via `config.SkillCatalog.Reload` without restarting the process.
+

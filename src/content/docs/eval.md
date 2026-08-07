@@ -176,6 +176,23 @@ reduction below 30% on solo first-turn is a soft warning only.
 See [Config](/docs/config) (deferred tools, progressive `task`, workflow
 activation) and [Usage](/docs/usage).
 
+
+
+## Repeated-trial metrics (pass@k)
+
+Eval point metrics can include repeated-trial statistics when a case is run
+multiple times:
+
+| Field | Meaning |
+|---|---|
+| `pass@k` | Probability at least one of k trials succeeds |
+| `pass^k` | Probability all k trials succeed |
+| `flakiness` | Trial-to-trial instability signal |
+| `confidenceN` | Effective sample size for the estimate |
+
+These appear on `PointMetrics` / report JSON when trials are configured. Still
+**internal signal only** — do not publish pass rates in product marketing.
+
 ## Related
 
 - [Config](/docs/config) — `deferTools`, `leanCode`, compaction, sandbox dials
