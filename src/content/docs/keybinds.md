@@ -21,7 +21,7 @@ Registry: `keybindSlashPrimary` / `keybindNoSlashReason` in
 |---|---|---|
 | `enter` | send prompt | — |
 | `ctrl+j` / `shift+enter` / `alt+enter` | newline (shift+enter CSI rewrites to `alt+enter`; enhanced ctrl+j → `alt+j`; bare LF is also `ctrl+j`; empty-composer `alt+enter` expands a tool cell instead) | — |
-| `esc` | interrupt turn (cancels tools/LLM; shows “interrupted”) / reject permission / close modal | `/interrupt` |
+| `esc` | interrupt turn (cancels tools/LLM; notice “interrupted”, header **canceled**, transcript row) / reject permission / close modal | `/interrupt` |
 | `ctrl+c` | quit | `/exit`, `/quit` |
 | `ctrl+k` | command palette (when kill-to-end does not delete) | `/palette` |
 | `f1` | keybind cheatsheet | `/keys` |
@@ -39,7 +39,7 @@ Registry: `keybindSlashPrimary` / `keybindNoSlashReason` in
 | `ctrl+t` | jump to latest output | `/jump-bottom` |
 | `alt+y` | copy last assistant response (OSC52) | `/copy` |
 | `ctrl+h` / `ctrl+l` | focus left (primary transcript) / right (secondary pane column) — **orientation-independent**; on the lean home screen, `ctrl+l` also opens the multi-pane workspace (launch left, panels right) | `/focus-left`, `/focus-right` |
-| `ctrl+o` / `ctrl+p` | cycle right-pane focus next / previous within the active stack group, then to the next group | `/window-next`, `/window-prev` |
+| `ctrl+p` / `ctrl+o` | cycle right-pane focus next / previous within the active stack group, then to the next group | `/window-next`, `/window-prev` |
 | `ctrl+shift+o` / `ctrl+shift+p` | cycle right-pane **stack groups** next / previous (lands on the group's first pane) | `/group-next`, `/group-prev` |
 | `ctrl+;` | toggle split orientation | `/layout`, `/split` |
 
@@ -50,10 +50,12 @@ Right-pane **stack groups** (related panes shown together when space allows):
 
 | Group | Panes (split) |
 |---|---|
-| Session | `context` + `activity` (+ `telemetry` when enabled) |
-| Agents | `agents` + `visualizer` |
-| Project | `memory` + `issues` |
-| Singles | `files`, `markdown`, `editor` (full height each) |
+| Session | `context` + `activity` + `queue` (+ `telemetry` when enabled) |
+| Agents | `agents` + `visualizer` (ASCII pets render above the focused agent in `agents`) |
+| Files | `files` + `diagnostics` |
+| Project | `memory` + `issues` + `plans` |
+| Singles | `markdown`, `editor` (full height each) |
+| Plugin | installed `pane/1` contributions (shared stack; `/pane <id>`) |
 
 Focus cycle order is deterministic: top→bottom (or left→right in a bottom-bar
 split) inside the group, then the next group. Narrow/compact terminals collapse
@@ -95,6 +97,24 @@ and jumps to the first pane of the next/previous group. See [usage.md](/docs/usa
 | `ctrl+k` | kill to line end (when it deletes; else command palette) |
 | `ctrl+y` | yank |
 | `↑` / `↓` | prompt history (when composer has no multiline cursor motion) |
+
+## Queue pane (prompts, loops, pool waits)
+
+| Key / command | Action |
+|---|---|
+| `/queue` | focus the queue right pane (buffered prompts, `/loop` jobs, scheduler waits) |
+| empty composer + `bksp` | pop last queued prompt into the composer |
+| idle `esc` | clear the whole queue (when no turn is running) |
+| queue pane `↑`/`↓` / `j`/`k` | move selection |
+| queue pane `shift+↑`/`shift+↓` or `K`/`J` | reorder selected prompt |
+| queue pane `enter` | edit selected prompt text (opens overlay editor) |
+| queue pane `e` | load selected prompt into composer |
+| queue pane `p` | promote selected prompt to next (FIFO head) |
+| queue pane `d` / `delete` / `bksp` | remove selected prompt or stop selected loop |
+| queue pane `c` | clear all buffered prompts |
+| queue pane `x` | interrupt running turn (if any) and run the FIFO head next |
+| queue pane `m` | open full-screen queue overlay browser |
+| queue modal `esc` / `q` | close overlay |
 
 ## Agents pane (concurrent roots)
 

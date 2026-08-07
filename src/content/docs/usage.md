@@ -19,7 +19,7 @@ strike launches without any provider configured. Pick one inside the TUI:
                                # (active level shows on the top status bar)
 /effort xhigh                  # off | low | medium | high | xhigh | max
 /autonomy                      # exit-gate policy picker
-/autonomy supervised           # supervised | agent | checks
+/autonomy supervised           # supervised | agent | checks | skip-all
 /mode                          # permission posture picker (Shift+Tab cycles)
 /mode soft-approve             # default | plan | soft-approve | accept-edits | yolo
 /agent                         # centered agent picker
@@ -31,6 +31,8 @@ strike launches without any provider configured. Pick one inside the TUI:
 /system                        # focus the system right pane (needs telemetry on)
 /telemetry                     # toggle local system metrics pane (CPU/RAM/disk)
 /telemetry on|off|status       # show/hide or report; on by default (also --telemetry)
+/pets                          # focus agents pane (ASCII pet above the tree)
+/pets <name>                   # assign pet to focused agent (cat, dog, owl, …)
 /session                       # browse past root sessions for this workspace
                                # (auto-titles); ctrl+a shows all workspaces
 /session <id>                  # resume a specific session by id (any workspace)
@@ -49,9 +51,12 @@ strike launches without any provider configured. Pick one inside the TUI:
 /auth anthropic                # masked API-key input (also: /auth <p> key)
 /auth status                   # anthropic: none · openai: oauth+key · …
 /auth logout <provider>
-/settings                      # defaults (theme, editor, mode) + custom providers
-/theme                         # centered color-theme picker (bundled +
-                               # ~/.strike/themes + ./.strike/themes)
+/settings                      # defaults, compaction/prune dials, custom providers
+/config                        # open .strike config files in embedded editor
+                               # (picker; optional: nano, global|project, slot)
+/theme                         # theme picker (builtin/user/project/plugin);
+                               # cursor previews, enter applies, esc reverts,
+                               # ctrl+d saves default; shows plugin provenance
 /theme <id>                    # apply a theme by id
 /theme dark|light|auto         # session appearance (forced / restore detect)
 /layout                        # toggle horizontal/vertical pane split
@@ -66,6 +71,10 @@ strike launches without any provider configured. Pick one inside the TUI:
 /export [path] [--open]        # write the transcript to markdown (default
                                # .strike/exports/… or $TMPDIR); --open hands
                                # the file to $EDITOR / $VISUAL
+/timeline                      # collapsed structured run timeline
+/timeline export [path]        # versioned redacted JSON/JSONL trace export
+/diag [export [path]]          # prompt/config diagnostic bundle (JSON)
+/diagnostic …                  # alias of /diag
 /copy                          # copy last assistant response to clipboard
                                # (OSC52; also alt+y)
 /vim [path|@path[:line]]       # open file in editor (embedded/modal/takeover)
@@ -80,6 +89,9 @@ strike launches without any provider configured. Pick one inside the TUI:
                                # export/import portable JSON (default path
                                # strike-memory.json). import merges by key;
                                # add --replace to wipe first
+/queue                         # focus queue right pane (queued prompts,
+                               # scheduled /loop jobs, scheduler pool waits;
+                               # reorder/edit/delete/run-next; m = overlay)
  /issues [list|add|get|close|export|import] …
                                # project-scoped issue tracker; export/import
                                # portable JSON (default strike-issues.json).
@@ -89,8 +101,15 @@ strike launches without any provider configured. Pick one inside the TUI:
 /loop <interval> <job>         # recurring LLM job (session-only; see loop.md)
 /loop list                     # list active loops
 /loop stop [id]                # stop one loop or all
-/context                       # context doctor (layers + request token slices)
-/effective-prompt              # alias of /context
+/workflow                      # list loaded workflows (source · valid · phases)
+/workflow inspect <name>       # phases, gates, fingerprint, grants
+/workflow start <name>         # preview phase grants, then activate
+/workflow stop                 # clear active phase (keeps session history)
+/context                       # context doctor (layers + ~tok by source)
+/context pin|exclude <kind>    # pin or exclude a system-prompt layer kind
+/context include|unpin <kind>  # undo exclude/pin
+/context clear                 # clear pin/exclude sets
+/effective-prompt              # alias of bare /context
 /cost                          # session token totals and estimated USD cost
 /keys                          # filterable keybind cheatsheet (also f1)
 /legend                        # UI icons, status glyphs, and chrome meanings
@@ -101,12 +120,15 @@ strike launches without any provider configured. Pick one inside the TUI:
  /ftue                          # setup wizard: provider, model, optional
                                # /init, feature tour, scheduler presets,
                                # first prompt (manual)
-/mcp                           # MCP status; retry/disable servers
+ /mcp                           # MCP status; retry/disable servers
+ /plugin                        # plugin manager (install, trust, update, remove)
+ /lsp                           # language server status; retry/disable
+ /diagnostics                   # focus the diagnostics right pane
 /exit                          # quit strike (same as ctrl+c)
 /quit                          # alias of /exit
 # Keybind mirrors (same actions as chords; see keybinds.md and /keys):
 /focus-left /focus-right       # focus panes (ctrl+h / ctrl+l)
-/window-next /window-prev      # cycle right-pane windows (ctrl+o / ctrl+p)
+/window-next /window-prev      # cycle right-pane windows (ctrl+p / ctrl+o)
 /group-next /group-prev        # cycle right-pane stack groups (ctrl+shift+o / ctrl+shift+p)
 /scroll-up /scroll-down        # transcript scroll
 /jump-bottom                   # jump to latest output (ctrl+t)
@@ -117,6 +139,10 @@ strike launches without any provider configured. Pick one inside the TUI:
 /edit-prompt                   # external editor for prompt (ctrl+e)
 /agent-next                    # cycle agent persona (tab)
 /mode-next                     # cycle permission mode (shift+tab)
+/permission explain bash ls    # why allow/ask/deny (matched rule + layer)
+/permission explain --preset read-only write main.go  # dry-run alternate preset
+/permission diff read-only dev  # added/removed/changed rules between presets
+/permission presets            # shipped permissionPreset catalog
 /tool-prev /tool-next          # select tool cells (alt+[ / alt+])
 /tool-expand /tool-copy        # expand or copy selected cell
 /tool-review /tool-apply       # review/apply selected edit
@@ -135,21 +161,29 @@ strike launches without any provider configured. Pick one inside the TUI:
 | `/session <id>` | resume that root session by id (works across workspaces; list filter does not apply) |
 | `/rename [title]` | rename the current session (brief auto-titles; agents pane `r` too) |
 | `/fork` | copy the current session JSONL into a new id (idle only) |
-| `/undo` | undo last turn in place (idle only); bare opens picker; `chat` keeps disk; `files` restores per-file checkpoints from that turn (never `git reset --hard`) |
+| `/undo` | undo last turn in place (idle only); bare opens picker with **path preview** (harness create/update/delete from the last turn), **skipped-file count**, and coverage warnings; `chat` keeps disk; `files` restores per-file checkpoints from that turn (never `git reset --hard`). Files over **2 MiB** (`DefaultCheckpointMaxBytes`) or unreadable originals are skipped and counted. **Bash** mutations are covered via a per-session shadow-git baseline reconciled at turn end (formatters, codegen, `sed -i`, `go generate`, …). If shadow-git is unavailable, the turn is marked *uncovered* and the notice warns that shell changes may remain. Checkpoint stack persists under `~/.strike/checkpoints/<session-id>/` so `--continue` can still restore files (retention: last 50 turns; removed with the session). Full guide: [Checkpoints](/docs/checkpoints) |
 | `/rewind` | fork a **new** session from a completed turn (idle only); original session stays listable; bare opens turn picker; `/rewind n` keeps turns 1..n. Workspace file revert is not part of rewind (use `/undo files` on the live session) |
-| `/export` | dump the visible transcript to markdown (user/assistant/tool summaries); redacts common API-key shapes; default path under `.strike/exports/` or tmp; `--open` launches `$EDITOR` |
+| `/export` | dump the visible transcript to markdown (user/assistant/tool summaries); redacts credentials via `pkg/redact` (see [Secrets](/docs/secrets)); default path under `.strike/exports/` or tmp; `--open` launches `$EDITOR`. Human-readable only (#221) — machine-readable session packages and log durability live in `internal/session` (#803); checkpoint stack across `--continue` lives under `~/.strike/checkpoints/` |
+| `/timeline` | collapsed structured run timeline (turns/tools/provider attempts/children/**permission decisions**/verification with durations); `/timeline export [path]` writes versioned redacted JSON (or `.jsonl`). Complements session JSONL and agent roster/budget fields — not a second full transcript. Related library (no slash command yet): multi-agent **run snapshots** in `internal/replay` (`RunSnapshot`) capture delegated spawn identity + handoff/gates for offline echo replay/compare under `~/.strike/runs/` — compact complement to JSONL, not a full transcript duplicate (#782) |
+| `/permission` | explain why a tool call is allow/ask/deny, dry-run an alternate preset (`--preset`), diff two presets, or list shipped presets. `/permission explain bash "git status"` shows matched rule + layer + managed ceiling, and for bash whether **facts** or raw **pattern** matching decided the result (action facts, #888); `/permission diff read-only dev` lists rule deltas; `/permission presets` documents `read-only` vs `dev` vs `yolo-with-sandbox` (config `permissionPreset`). Hard denials and interactive rejects surface a notice with the same explain command. See [Config](/docs/config) and [Isolation](/docs/isolation) |
+| `/diag` | export a **versioned prompt/config diagnostic bundle** (JSON): ordered system-prompt layers with source ids/sizes (same map as `/context`), instruction precedence, effective dials (model, effort, leanCode, permission mode, sandbox, compaction, scheduler limits), and config digests — never full secret-bearing files. Default path under `.strike/exports/` or tmp. `/diagnostic` is an alias. Also linked from the `/timeline` modal footer. Works for solo and child sessions (lineage on the bundle). See [Secrets](/docs/secrets) |
 | `/copy` | copy plain text of the last assistant response (not tool output) to the system clipboard via OSC52; same as `alt+y`; notice on success/failure |
 | `/compact` | ask the engine to compact model history |
 | `/memory` | bare = list browser (focuses memory pane); `list [tag]`, `get <key>`, `set <key> <value>`, `rm <key>`, `export [path]`, `import <path> [--replace]` (portable JSON; relative paths stay under project root) |
+| `/queue` | focus the **queue** right pane: buffered prompts (while a turn runs), session `/loop` jobs, and scheduler pool waits. Pane keys: reorder (`shift+↑/↓` or `K`/`J`), promote (`p`), edit (`enter`), load into composer (`e`), delete prompt or stop loop (`d`), clear prompts (`c`), run next (`x`), overlay browser (`m`). Empty-composer `bksp` still pops the last item; idle `esc` clears the whole prompt queue |
 | `/issues` | bare = list browser (focuses issues pane); `list [open\|closed]`, `add <title>`, `get <id>`, `close <id>`, `export [path]`, `import <path> [--replace]` (same portable rules as memory) |
-| `/agents` `/activity` `/files` `/visualizer` `/system` | jump focus to the named right pane (`/agent` remains persona select; `/system` needs telemetry on) |
+| `/agents` `/activity` `/queue` `/files` `/diagnostics` `/visualizer` `/system` `/pets` | jump focus to the named right pane (`/agent` remains persona select; `/system` needs telemetry on; `/pets [name]` focuses agents and sets the focused agent's companion) |
 | `/telemetry [on\|off\|status]` | local system metrics pane (CPU/RAM/disk); **on by default** (~1 Hz sampler). Disable with `/telemetry off` |
 | `/loop` | schedule a recurring prompt (`15m`, `2h`, …); session-only; `/loop list`, `/loop stop [id]` — see [Loop](/docs/loop). Distinct from [`/goal`](/docs/goal) and from the in-process [Scheduler](/docs/scheduler) resource pools |
-| `/context` | context doctor modal: system-prompt layer sizes, history msg count, **request token attribution** (system / tools / messages / tool_results; local ~4 chars/token estimate, labeled `estimated`), oversized warnings (previews redacted) |
+| `/workflow` | list/inspect/start/stop loaded workflows; start previews phase permission grants; palette expands actions |
+| `/context` | context doctor modal: system-prompt layers with **per-source ~token estimates**, history msg count, request token attribution (system / tools / messages / tool_results; local ~4 chars/token, labeled `estimated`), pin/exclude/shed state, oversized warnings (previews redacted). Subcommands: `pin`/`unpin`/`exclude`/`include` `<kind>`, `clear`. Fit warnings also appear on the timeline before hard overflow when the window is known. Layer order: shared → tools → config_system\|persona\|provider → phase → plan → lean_code → environment → instruction → project_memory. Kind examples: `project_memory`, `lean_code`, `instruction`, `persona`. For a file export of the same map plus config digests, use `/diag` |
 | `/cost` | session input/output/cache totals from usage events; est. USD when catalog rates known; unknown stays explicit |
 | `/init` | light local scan → write `AGENTS.md`; confirms before overwrite |
 | `/ftue` | setup wizard (provider → model → optional `/init` → tour → scheduler presets → first prompt). Finish/dismiss acknowledges onboarding; manual re-run always available. Full guide: [First-time setup](/docs/ftue) |
 | `/mcp` | MCP status (`up`/`down`/`error`/`disabled`); `/mcp retry [name]`, `/mcp disable <name>` (see [config.md](/docs/mcp)) |
+| `/plugin` | TUI plugin manager: browse installed/remote plugins, inspect capabilities, install/update/enable/disable/remove/trust with confirmation (see [plugins.md](/docs/plugins)) |
+| `/lsp` | language server status; `/lsp retry [name]`, `/lsp disable <name>` (see [config.md](/docs/config#language-servers-lsp)) |
+| `/diagnostics` | focus the diagnostics right pane (live language-server findings) |
 
 ### Agent teams
 
@@ -157,38 +191,68 @@ strike launches without any provider configured. Pick one inside the TUI:
 children, those agents (lead + children) form an implicit team — no separate
 team-create step. Concurrent roots are independent teams.
 
+**Progressive `task` API** is the single model-facing delegation surface:
+
+| Call | Meaning |
+|---|---|
+| `task({prompt})` | Simple non-blocking spawn (lifecycle object created automatically) |
+| `task({prompt, criteria, deps, route, budget, verify, context_bundle, …})` | Advanced create — same runtime |
+| `task({action:"get"\|"list"\|"status"\|"read"\|"message"\|"transition"\|"cancel"\|"wait", …})` | Lifecycle + control ops |
+
+Prefer the unified **`task`** tool for all new delegation. Legacy names
+(`delegate`, `task_status`, `task_read`, `task_message`, `task_interrupt`,
+`wait`) remain as compatibility shims over the same handlers (usage is
+telemetry-counted); they stay registered but are deferred under default
+`deferTools` until discovered or called. `team_task` stays the shared claim board;
+`plan_delegate` stays the plan-section wrapper.
+
 | Capability | How |
 |---|---|
-| Spawn teammates | `task` with optional `name` (stable alias) and `agent` persona |
-| List roster | `agent_roster` |
+| Spawn teammates | progressive `task` with optional `name` (stable alias) and `agent` persona |
+| List roster | `agent_roster` (includes objective, last action, files, budget remaining) |
 | Peer message | `agent_message` (`to` = `session_id` or `name`) |
+| Contracts | `agent_message` with `task_id` / `urgency` / `kind=request`+`require_ack`; read via `agent_thread`; ack with `kind=ack` |
 | Fan-out | `agent_broadcast` (all other teammates; use sparingly) |
-| Parent steer only | `task_message` (owned child; not peer chat) |
-| Finish signal | `[child.completed]` on the lead |
+| Parent steer only | `task` action=`message` (or compat `task_message`; not peer chat) |
+| Per-child budgets | `task` `budget` (or compat `delegate`) or config `session.agentBudget`; soft exceed → `child.escalated` (`action=finalizing`) + one reserved structured handoff turn, then stop; hard cancel skips finalization |
+| Live pulse | `task` action=`status` (objective, last_action, files_touched, budget, stall/loop) |
+| Finish signal | `[child.completed]` on the lead (structured handoff JSON) |
 
 Messages land at tool-round / idle boundaries (safe injection). Defaults allow
 in-team messaging; out-of-team targets fail closed; permission deny rules still
-apply. Parent-only flows that never call `agent_*` tools are unchanged.
+apply. Parent-only flows that never call `agent_*` tools are unchanged. Prefer
+contracts (task-bound threads, ack TTL, urgency) over chatty status ping-pong.
 
 **Example — parallel explore + implement with one peer handoff:**
 
 1. Lead: `task(name=explorer, agent=explore, …)` and
    `task(name=implementer, agent=general, …)` in the same turn.
-2. Explorer: `agent_message(to="implementer", body="change X in path Y; tests in Z")`.
-3. Implementer acts on the handoff; lead synthesizes from completion + inbox.
+2. Explorer: `agent_message(to="implementer", body="change X in path Y; tests in Z", task_id=…, kind="request")`.
+3. Implementer acks (`kind=ack`, `in_reply_to`) and acts; lead synthesizes from
+   `[child.completed]` structured handoff + inbox / `agent_thread`.
 
 Full coordination semantics: [agents-skills.md](/docs/multi-agent#agent-teams).
 
 ### Autonomy & workflows
 
+`/workflow` lists, inspects, starts, and stops loaded workflows (builtin,
+global `~/.strike/workflows`, project `.strike/workflows`, and plugin sources).
+Bare `/workflow` lists the catalog with source and validation state. Start
+always previews phase-0 permission grants before mutating engine state; only
+validated workflows can activate. Stop clears phase state without rewriting
+session history. The command palette expands list/start/stop/inspect actions.
+
 `/autonomy` sets the session exit-gate policy for multi-phase workflows
-(see [agents-skills.md](/docs/multi-agent)):
+(see [agents-skills.md](/docs/multi-agent)). The dial is **authoritative** for
+every phase exit (`phase_done`, `exit_plan_mode`); workflow-authored exit
+types are not. Distinct from `/mode` (tool permissions) and from `--auto`.
 
 | Mode | Behavior |
 |---|---|
-| `supervised` (default) | you approve phase gates |
-| `agent` | model clears gates via `phase_done` |
-| `checks` | configured check commands must exit 0 |
+| `supervised` (default) | you approve every phase exit |
+| `agent` | model clears gates via `phase_done` / `exit_plan_mode` |
+| `checks` | phase check commands must exit 0 (trust-gated `phase_check`) |
+| `skip-all` | bypass workflow/plan approval only — tool permissions unchanged; plan handoff records `approvalSource=skip-all` |
 
 ### Permission mode dial
 
@@ -209,7 +273,7 @@ rules).
 | `yolo` | skip permission asks; explicit deny rules still apply |
 
 Persists per session in the JSONL log. Optional default for **new** sessions:
-`permissionMode` in [config.md](/docs/config), or **ctrl+d** in the `/mode`
+`permissionMode` in [Config](/docs/config), or **ctrl+d** in the `/mode`
 picker (and global ctrl+d) to save the current posture as that default.
 Resume restores the session log, not the config default.
 
@@ -218,8 +282,48 @@ Resume restores the session log, not the config default.
 `sandbox` in [Config](/docs/config) (or `--sandbox`) sets OS process isolation
 for bash: `off` | `read-only` | `workspace-write` (default). This is **what is
 possible**; `permissionMode` is **when you get asked**. `/sandbox` prints the
-effective policy and backend; `/sandbox explain` shows the generated profile.
+effective policy and backend; `/sandbox explain` shows the generated profile
+(including write-deny globs, `network.allow`, and egress enforcement level).
 `yolo` with `sandbox: off` requires `--i-know`. Full reference: [Sandbox](/docs/sandbox).
+
+OS capability blocks (read-only FS, seatbelt deny, …) surface on bash as
+`errorCode=sandbox_denied` with a human reason (timeline + model tool result).
+When `network.allow` is set, bash preflight also blocks known network clients
+(`curl`/`wget`/`ssh`/…) outside the list as `errorCode=network_denied` (shared
+allowlist with webfetch; not an OS per-host filter).
+See the isolation matrix: [Isolation](/docs/isolation) (sandbox vs worktrees vs
+planned containers).
+
+
+### Built-in tools (highlights)
+
+Path tools bind relative paths to the **workspace**. Absolute paths may also
+target the **session temporary directory**
+(`$TMPDIR/strike/<session-id>/` or `os.TempDir()/strike/<session-id>/`):
+
+- Created lazily per engine session; path appears in the environment prompt layer
+- `write` / `edit` / `apply_patch` / `notebook_edit` / `move` / `delete` may
+  write under that root (siblings, `..`, and symlink escapes stay denied)
+- Removed on `Run` shutdown; bounded stale cleanup after crashes (live sessions
+  refresh mtime so idle peers do not delete an active scratch root)
+- Relative paths still bind only to the workspace
+
+| Tool | Role |
+|---|---|
+| `move` | Rename/move a file within workspace or session temp (prefer over bash `mv`). Optional `overwrite`, `baseHash`; refuses directories and symlink leaves |
+| `delete` | Delete a file (or directory with `recursive=true`) in workspace or session temp (prefer over bash `rm`). Optional `baseHash` |
+| `websearch` | Permissioned web search (titles/URLs/snippets); configure backend via config `webSearch`. Use `webfetch` for page bodies. Deferred when `deferTools` is on |
+| `diagnostics` | Read-only LSP workspace/file diagnostics (severity filter, bounded JSON). Soft status when servers are down. Deferred; discover via `toolsearch` |
+| `toolsearch` | Discover deferred tools by name/description (loads full schemas on the next model request) |
+
+**Progressive tool disclosure** (default): `deferTools: on` keeps a small always-on
+core (`read`/`glob`/`grep`/`edit`/`write`/`apply_patch`/`move`/`delete`/`bash`,
+progressive `task`, `toolsearch`, `question`) and defers optional built-ins, team
+shims, plan tools, and MCP until discovery, direct call, history resume, or
+workflow activation. Progressive `task` starts with a compact basic schema and
+promotes the advanced contract on demand. Details and rollback gate:
+[Config](/docs/config) · offline eval: [Eval](/docs/eval).
+
 
 Built-in skills also appear as slash commands: `/commit`, `/push`, `/pr`,
 `/ship`, `/review`, `/learn`, `/deslop`, `/verify` (plus custom skills under
@@ -263,7 +367,7 @@ a real provider needs credentials — see [auth.md](/docs/auth).
 Provider selection happens in-app with `/provider`; `--provider` on the
 command line just pre-selects (and validates credentials eagerly). Custom
 OpenAI-/Anthropic-compatible endpoints: `/settings`, `.strike/providers.jsonc`,
-or config `providers` — see [config.md](/docs/config).
+or config `providers` — see [Config](/docs/config).
 
 ## CLI session resume & headless exec
 
@@ -273,6 +377,11 @@ or config `providers` — see [config.md](/docs/config).
 ./strike --telemetry             # ensure local system metrics pane (on by default)
 ./strike exec "fix the flaky test"   # one-shot headless turn → stdout
 ./strike exec -                  # read prompt from stdin
+./strike exec --json "…"         # single result object on stdout
+./strike exec --output-format stream-json "…"  # protocol Event envelopes (JSONL)
+./strike rpc --provider echo     # stdio JSON-RPC Op/Event bridge (NDJSON)
+./strike acp --provider echo     # Agent Client Protocol agent (Zed / Devin)
+./strike mcp-serve --provider echo --auto   # MCP server (stdio) for hosts
 ```
 
 System telemetry (local host CPU/RAM/disk only — not cloud analytics) is **on
@@ -281,11 +390,54 @@ by default** (~1 Hz sampler). Disable with `/telemetry off`; re-enable with
 
 `--continue` and `--session` cannot be combined. `strike exec` accepts the
 same `--provider` / `--model` / `--effort` /
-`--auto` / `--dangerously-skip-permissions` flags as the TUI. Permission and
-question prompts cannot be answered interactively in exec; asks are rejected
-unless `--auto` or `--dangerously-skip-permissions` is set
+`--auto` / `--dangerously-skip-permissions` flags as the TUI, plus
+`--output-format text|json|stream-json` (default `text`) and `--json`
+(shorthand for `json`). Formats:
+
+| Format | Stdout |
+|---|---|
+| `text` | plain assistant text (default) |
+| `json` | one `{"type":"result",…}` object when the turn ends |
+| `stream-json` | one `pkg/protocol` Event envelope per line (same shape as session JSONL) |
+
+Exit codes: `0` turn ok, `1` turn/runtime error, `2` usage error. Permission
+and question prompts cannot be answered interactively in exec; asks are
+rejected unless `--auto` or `--dangerously-skip-permissions` is set
 (configured/agent denies still apply). Full flag list:
 [install.md](/docs/install) or `strike --help`.
+
+`strike rpc` is a long-lived stdio bridge: newline-delimited JSON-RPC 2.0 on
+stdin/stdout (same Op/Event envelopes as `pkg/protocol` and the serve
+WebSocket). Ops go in (`user.input`, `permission.reply`, or method `op` with
+an OpEnvelope); events come out as `event` notifications. Diagnostics stay on
+stderr. See `strike rpc --help`.
+
+`strike acp` speaks the [Agent Client Protocol](https://agentclientprotocol.com/)
+so editors like Zed and Devin Desktop can embed strike as an ACP agent. It maps
+`session/new` / `session/prompt` / `session/cancel` onto Op/Event
+(`user.input`, `interrupt`, tool and text events as `session/update`, permission
+asks as `session/request_permission`). Stdout is pure ACP JSON-RPC; diagnostics
+on stderr. See `strike acp --help`.
+
+### MCP server mode (`strike mcp-serve`)
+
+Exposes strike as a tools-only [MCP](https://modelcontextprotocol.io) server on
+stdio so hosts (Claude Code, Codex, …) can delegate work via a `strike_task`
+tool. Each call runs one headless turn (same engine path as `strike exec`) and
+returns the assistant summary. Wire traffic is stdout; diagnostics go to
+stderr. Same provider/model/effort/sandbox/`--auto` flags as exec. Example host
+config:
+
+```json
+{
+  "mcpServers": {
+    "strike": {
+      "command": "strike",
+      "args": ["mcp-serve", "--provider", "anthropic", "--auto"]
+    }
+  }
+}
+```
 
 ## UI
 
@@ -305,23 +457,28 @@ composer. The right slot hosts one active window from the registry:
 
 | Window | Role |
 |---|---|
-| `context` | setup summary (provider, model, agent, …) |
+| `context` | setup summary (provider, model, agent, …); context doctor via `/context` |
 | `activity` | tools / subagent status / empty-state |
-| `agents` | multi-root session/agent tree (concurrent roots + children) |
+| `queue` | buffered prompts, scheduled `/loop` jobs, scheduler pool waits (`/queue`) |
+| `agents` | multi-root session/agent tree + **ASCII pets** above the focused agent (`/pets [name]`) |
 | `visualizer` | selected-node status, tokens/cost, tokens/turn sparkline |
 | `files` | workspace file tree (`host.Files`) |
+| `diagnostics` | live language-server findings (`/diagnostics`; Enter opens file) |
 | `memory` | project memory browser |
 | `issues` | project issue browser |
+| `plans` | root-owned structured plans |
 | `markdown` | markdown reader (`/md-read <path|@path>`; or modal via `mdReadMode`) |
 | `editor` | embedded nvim/vim/nano PTY for `/vim` or `/nano` (modal via `vimMode`/`nanoMode`) |
 
 Related right-pane windows stack as **groups** when the pane is tall/wide
-enough: session (`context`+`activity`[+`system` telemetry]), agents
-(`agents`+`visualizer`), and project (`memory`+`issues`). Sparse panes
-(context, system) size to their content; activity (and other flex members)
-absorb the remainder so empty bordered voids stay small. `files`, `markdown`,
-and `editor` stay full-height singles. Compact or narrow terminals collapse
-each group to one pane.
+enough: session (`context`+`activity`+`queue`[+`system` telemetry]), agents
+(`agents`+`visualizer`), files (`files`+`diagnostics`), and project
+(`memory`+`issues`+`plans`). Sparse panes (context, system, empty queue) size to
+their content; activity (and other flex members) absorb the remainder so empty
+bordered voids stay small. `files`/`diagnostics`, `markdown`, and `editor` stay
+full-height when alone. Compact or narrow terminals collapse each group to one
+pane. Open config files without a JSON round-trip via **`/config`** (picker for
+global/project slots and sidecars).
 
 ### Concurrent root sessions
 
@@ -346,13 +503,13 @@ Do not confuse these with:
   under a parent; they do not create or switch concurrent roots.
 
 Session worktree isolation defaults to `off` (launch cwd); set
-`session.worktree` to `auto` or `always` in [config.md](/docs/config) for
+`session.worktree` to `auto` or `always` in [Config](/docs/config) for
 per-root git worktrees. Full chord table:
 [keybinds.md](/docs/keybinds).
 
 Pane keys (orientation-independent): `ctrl+h` / `ctrl+l` focus the left
-(primary transcript) or right (secondary pane column); `ctrl+o` / `ctrl+p`
-cycle focus within the active stack group then to the next group;
+(primary transcript) or right (secondary pane column); `ctrl+p` / `ctrl+o`
+cycle focus next / previous within the active stack group then to the next group;
 `ctrl+shift+o` / `ctrl+shift+p` jump to the next/previous stack group (first
 pane). `ctrl+;` (or `/layout` / `/split`) toggles a vertical top/bottom split
 without swapping those chords. `ctrl+k` opens the command palette (when
@@ -389,4 +546,12 @@ skills appear only when valid configured entries exist; recent prompts only
 when prompt history exists. It repacks to fit the terminal on resize and
 collapses to a single column when narrow.
 
-Full keyboard reference: [keybinds.md](/docs/keybinds).
+Full keyboard reference: [Keybinds](/docs/keybinds).
+
+## See also
+
+- [Checkpoints](/docs/checkpoints) — `/undo`, bash shadow-git coverage, durable stack
+- [Multi-agent](/docs/multi-agent) — progressive `task`, delegation policy, handoffs
+- [Config](/docs/config) — `deferTools`, `$schema`, `autoupdate`, `maxSessionCostUSD`, `webSearch`
+- [Web](/docs/web) — experimental multi-session cockpit parity
+- [Eval](/docs/eval) — swebench / tbench / sweep / progressive disclosure runners

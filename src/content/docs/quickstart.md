@@ -82,6 +82,7 @@ Tab cycles agents (`build`, `plan`, `explore`, …). Use `/agent` to pick one.
 Skills and custom personas load from `~/.strike` and the project. Deep dive:
 [Multi-agent](/docs/multi-agent). Goal harness: [Goal](/docs/goal). Recurring jobs:
 [Loop](/docs/loop). In-process build/test/model caps: [Scheduler](/docs/scheduler).
+Plugins: [Plugins](/docs/plugins).
 
 ## 6. Optional: web cockpit
 
@@ -96,11 +97,14 @@ Experimental browser UI; the TUI remains primary. See [Web](/docs/web).
 
 - [First-time setup](/docs/ftue) — `/ftue` wizard and onboarding state
 - [Sandbox](/docs/sandbox) — OS isolation dial for bash
+- [Isolation](/docs/isolation) — sandbox × worktrees × scheduler × planned containers
 - [Scheduler](/docs/scheduler) — named pools, presets, queue UI
 - [Config](/docs/config) — permissions, models, MCP, providers
+- [Plugins](/docs/plugins) — versioned contribution bundles and trust
 - [Editors](/docs/editors) — `/vim`, `/nano`, `/md-read` presentation
 - [MCP](/docs/mcp) — stdio + streamable HTTP tools
 - [Theme](/docs/theme) — TUI chrome and color themes
+- [Secrets](/docs/secrets) — redaction and secret refs
 - [Multi-agent](/docs/multi-agent) — agents, skills, discovery roots
 - [Keybinds](/docs/keybinds) — full keyboard map
 

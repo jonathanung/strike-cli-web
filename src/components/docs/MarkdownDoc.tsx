@@ -15,6 +15,7 @@ function flattenText(node: ReactNode): string {
   return ''
 }
 
+/** Heading ids for in-page anchors (collapse runs of spaces/hyphens). */
 function slugifyHeading(text: string): string {
   return text
     .toLowerCase()

@@ -51,7 +51,22 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://strike.jonathanung.ca/docs/isolation</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://strike.jonathanung.ca/docs/scheduler</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://strike.jonathanung.ca/docs/checkpoints</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://strike.jonathanung.ca/docs/containers</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -71,6 +86,11 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://strike.jonathanung.ca/docs/harnesses</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://strike.jonathanung.ca/docs/config</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -86,14 +106,54 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://strike.jonathanung.ca/docs/plugins</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://strike.jonathanung.ca/docs/secrets</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://strike.jonathanung.ca/docs/admission</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://strike.jonathanung.ca/docs/audit</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://strike.jonathanung.ca/docs/safefile</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://strike.jonathanung.ca/docs/telemetry</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://strike.jonathanung.ca/docs/web</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://strike.jonathanung.ca/docs/eval</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://strike.jonathanung.ca/docs/peer-ecosystem</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://strike.jonathanung.ca/docs/plugin-panes</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://strike.jonathanung.ca/changelog</loc>

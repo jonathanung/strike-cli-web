@@ -1,13 +1,117 @@
 # Config
 
-`~/.strike/config` (global) merged with `./.strike/config` (project), both
-JSON.
+`~/.strike/config` (global) merged with `./.strike/config` (project), then
+optional **managed/MDM** system config (highest). User and project files
+accept **JSON or JSONC** (`//` line comments and `/* block comments */`, same
+stripper as `mcp.jsonc` / `providers.jsonc` / `keybinds.jsonc`). An optional
+top-level `"$schema"` key is **ignored** at load (editor autocomplete only;
+Strike never fetches a schema URL at runtime).
+
+**Published JSON Schema (editor DX):** point `$schema` at the versioned file in
+this repo (stable `main` raw URL):
+
+```text
+https://raw.githubusercontent.com/jonathanung/strike/main/schemas/strike-config.schema.json
+```
+
+Local path (clone/checkout): `schemas/strike-config.schema.json`. The schema
+documents high-traffic main-config keys (dials, permissions, hooks, sandbox,
+compaction/prune, session, scheduler, MCP/LSP shapes, …). Root and nested
+objects use **`additionalProperties: true`** so unknown/future keys and
+editor-only fields stay valid — matching runtime `encoding/json` (unknown keys
+ignored). Alignment with Go structs is best-effort via
+`TestStrikeConfigSchemaAlign` (not full codegen). Sidecar files
+(`mcp.jsonc` / `providers.jsonc` / `keybinds.jsonc`) are **not** fully schema'd
+here yet.
+
+**Load order (later wins for scalars; permission rules concatenate):**
+
+1. Built-in defaults
+2. Global `~/.strike/config` (+ `mcp.jsonc` / `providers.jsonc` / `keybinds.jsonc`)
+3. Project `./.strike/config` (+ same sidecar files)
+4. **Managed/MDM** system `managed-config` (+ `managed-config.d/`) — see
+   [Managed / MDM config](#managed-mdm-config-enterprise) below
+
+**Round-trip / save policy:** hand-edited comments and `$schema` are kept on
+disk until a **programmatic write** runs (`SetGlobalDefaults`, theme /
+presentation / dials / scheduler presets, custom provider upsert/remove,
+`AppendProjectPermission`, etc.). Those paths read JSONC, then rewrite
+**pretty-printed pure JSON** via `encoding/json` — comments and `$schema` are
+dropped. Prefer keeping durable commentary in a sibling note, or avoid
+`/settings`-style writers if you need comments to survive. For raw
+comment-preserving edits, use **`/config`** (picker opens `~/.strike` /
+`./.strike` files in the embedded editor without a JSON round-trip on close).
+Programmatic saves only touch user/project paths — they never write managed
+files.
 
 **Symlinks:** `~/.strike` and `<project>/.strike` may be directory symlinks
 (state lives elsewhere). Strike resolves them before opening history/memory/
 issues and before writing config. A file symlink at `~/.strike/config` (for
 example stow/dotfiles) is preserved on save — the referent is updated, not
 replaced by a plain file.
+
+## Managed / MDM config (enterprise)
+
+For organizations that need centralized policy users cannot override, Strike
+loads a **managed** config layer from a system directory (file-based MDM,
+same idea as Claude Code `managed-settings.json`). This is **out of scope for
+casual users** — leave the directory empty and Strike behaves as before.
+
+### Paths
+
+| Platform | Directory |
+|---|---|
+| Linux / other Unix | `/etc/strike/` |
+| macOS | `/Library/Application Support/Strike/` |
+| Windows | `%ProgramFiles%\Strike\` (usually `C:\Program Files\Strike\`) |
+
+Files under that root:
+
+| File | Role |
+|---|---|
+| `managed-config` / `managed-config.json` / `managed-config.jsonc` | Primary policy (first existing extension wins) |
+| `managed-config.d/*.json` and `*.jsonc` | Drop-in fragments, sorted by filename, merged after the primary file |
+
+Hidden drop-ins (names starting with `.`) are ignored. Use numeric prefixes to
+control order (`10-sandbox.json`, `20-permissions.json`).
+
+**Test / custom deploy root:** set `STRIKE_MANAGED_ROOT` to an absolute
+directory; system defaults are skipped when the env var is set.
+
+Managed files use the **same JSON/JSONC schema** as user config. Typical
+enterprise keys:
+
+```jsonc
+// /etc/strike/managed-config.jsonc
+{
+  "sandbox": "read-only",
+  "permissionMode": "default",
+  "permissionPreset": "dev",
+  "permissions": [
+    { "permission": "bash", "pattern": "rm -rf *", "action": "deny" },
+    { "permission": "write", "pattern": "**/.env", "action": "deny" },
+    { "permission": "webfetch", "pattern": "*", "action": "deny" }
+  ]
+}
+```
+
+### What is enforceable
+
+| Control | Behavior when set in managed |
+|---|---|
+| `sandbox` | Wins over global/project. **CLI `--sandbox` is ignored** so operators cannot loosen OS isolation from the command line. |
+| `permissionMode` | Wins over global/project and **session resume**. Mid-session `/mode` / Shift+Tab is **rejected** while locked. |
+| `permissionPreset` | Wins over user/project preset selection. |
+| `contentGuard.mode` | Wins over global/project. When set to **`deny`**, write-time content guards force deny (cannot be widened by project `off`/`ask`, yolo, or session grants). |
+| `permissions[]` | Concatenated after user/project rules (last-match in the config layer). **Deny** rules are also installed as a late evaluation **ceiling** so session always-grants, scoped grants, `--auto` / `--dangerously-skip-permissions`, and workflow phase widens cannot re-allow a managed deny. |
+
+Other managed keys (theme, model, MCP, …) merge with normal last-wins
+semantics; only the security dials above are hard-locked against CLI/session
+override. Invalid managed files **fail Load** (fail closed) so a broken MDM
+push is visible at startup rather than silently dropped.
+
+Strike never writes managed paths. Deploy with your OS package manager, MDM
+profile, or configuration management (Ansible, Puppet, …).
 
 ## First-time onboarding
 
@@ -17,23 +121,51 @@ installs migrate without a surprise modal. Full wizard steps, tour, and
 scheduler presets: [First-time setup](/docs/ftue).
 
 
-```json
+```jsonc
+// ~/.strike/config or ./.strike/config — JSONC comments allowed
 {
+  // Optional editor hint; ignored by Strike at load (no network fetch)
+  "$schema": "https://raw.githubusercontent.com/jonathanung/strike/main/schemas/strike-config.schema.json",
   "provider": "anthropic",
   "model": "claude-sonnet-5",
   "effort": "high",
   "defaultAgent": "build",
   "leanCode": "lite",
-  "deferTools": "off",
+  "deferTools": "on",
   "theme": "strike",
   "vimMode": "pane",
   "nanoMode": "pane",
   "mdReadMode": "embedded",
   "notify": "unfocused-only",
+  "autoupdate": "notify",
   "permissionMode": "default",
   "sandbox": "workspace-write",
+  "network": {
+    "allow": ["api.github.com", "*.npmjs.org", "10.0.0.0/8"]
+  },
+  "container": {
+    "execution": "local",
+    "baseImage": "ubuntu:24.04",
+    "packages": [],
+    "shell": "/bin/bash",
+    "resources": { "memory": "", "cpus": "", "pidsLimit": 512, "gpus": "" },
+    "workspace": { "mountPath": "/workspace", "ports": [], "persistHome": true },
+    "auth": {
+      "forwardEnv": ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "STRIKE_*"],
+      "forwardSSHAgent": false
+    },
+    "network": { "mode": "default", "allow": [] },
+    "engine": ""
+  },
   "permissionAutoApproveSeconds": 0,
   "permissionAutoApproveExclude": ["bash"],
+  "maxChildDepth": 0,
+  "toolRetry": {
+    "maxAttempts": 3,
+    "baseDelayMs": 200,
+    "maxDelayMs": 2000,
+    "loopThreshold": 3
+  },
   "compactionStrategy": "trim",
   "compactionModel": "",
   "compactionThreshold": 0.70,
@@ -45,7 +177,36 @@ scheduler presets: [First-time setup](/docs/ftue).
   "pruneProtectTools": [],
   "session": {
     "worktree": "off",
-    "worktreeCleanup": "keep"
+    "worktreeCleanup": "keep",
+    "overlapPolicy": "warn",
+    // Optional durability retention hooks (#803). Zero / omitted = unlimited.
+    // Applied via session.ApplyRetention (not automatic on every launch).
+    "retentionMaxSessions": 0,
+    "retentionMaxAgeDays": 0,
+    "retentionMaxBytes": 0,
+    // Timeline / trace storage bounds (#810). Coordinates with retention* above.
+    "timelineMaxEntries": 0,
+    "timelineArgsPreviewMax": 0,
+    "timelineOutputPreviewMax": 0,
+    "timelineBlobSpill": false,
+    "traceRetentionMaxFiles": 0,
+    "traceRetentionMaxAgeDays": 0,
+    "traceRetentionMaxBytes": 0,
+    "delegationPolicy": {
+      "mode": "enforce",
+      "tinyPromptRunes": 280,
+      "maxPathsLocal": 1,
+      "maxLiveChildren": 0
+    },
+    "agentBudget": {
+      "maxWallClockS": 0,
+      "maxTokens": 0,
+      "maxCostUsd": 0,
+      "maxToolCalls": 0,
+      "maxDangerousTools": 0,
+      "stallAfterS": 0,
+      "loopDetectN": 0
+    }
   },
   "scheduler": {
     "presets": ["cargo", "npm"],
@@ -62,6 +223,7 @@ scheduler presets: [First-time setup](/docs/ftue).
       { "pattern": "make *", "class": "build" }
     ]
   },
+  "permissionPreset": "dev",
   "permissions": [
     { "permission": "bash", "pattern": "go *", "action": "allow" },
     { "permission": "write", "pattern": "**/*.env", "action": "deny" }
@@ -70,14 +232,95 @@ scheduler presets: [First-time setup](/docs/ftue).
 ```
 
 Rules concatenate across layers; the last matching rule wins, so project
-config overrides global, and session "always" grants override both.
+config overrides global, managed overrides both for rules present there, and
+session "always" grants override user/project — but **not** managed denies
+(see evaluation order).
+
+**Evaluation order (last-match-wins):** defaults → optional
+`permissionPreset` → `permissions[]` (global then project then managed) →
+optional `--dangerously-skip-permissions` allow-all → project runtime grants
+→ active agent profile → session always grants → scoped TTL grants →
+permission-mode late denies (plan) → workflow phase profile → **managed deny
+ceiling** → mode ask-upgrade (yolo / accept-edits only upgrade remaining
+Ask→Allow; never widen Deny).
+
+**Permission presets (`permissionPreset`):** shipped named rulesets inserted
+after defaults and before `permissions[]`. Empty means no preset layer.
+Inspect with `/permission presets`.
+
+| ID | Behavior |
+|---|---|
+| `read-only` | Allow read/search/LSP; **deny** write, edit, bash, webfetch, websearch, mcp, hooks |
+| `dev` | Allow common local-dev bash (`go *`, `git status/diff/log/show`, `make test*`); deny force-push and `.env` writes; other mutations stay ask |
+| `yolo-with-sandbox` | Rule-level allow-all (`* *` allow). Does **not** turn off OS sandbox — keep `sandbox` at `workspace-write` or `read-only`. Later deny rules still win. Distinct from `permissionMode: yolo` |
+
+**Admission (`admission`):** register/load-time scans for MCP servers, skills,
+and plugins **before** tools bind / skills enter the catalog. Distinct from
+`permissionPreset` (per-call rules) and `sandbox` (OS isolation). Full matrix,
+scanners, and fail-open/closed behavior: [admission.md](https://github.com/jonathanung/strike/blob/main/docs/admission.md).
+
+```jsonc
+{
+  "admission": {
+    "preset": "default",              // permissive | default | strict
+    "allowPaths": ["~/trusted-skills"] // home-anchored only; bare ".strike/…" rejected
+  }
+}
+```
+
+| Preset | High-risk MCP tool shapes | Scanner errors |
+|---|---|---|
+| `permissive` | warn (critical → quarantine) | warn (fail-open) |
+| `default` | quarantine (critical → block) | warn (fail-open) |
+| `strict` | **block** before bind | **block** (fail-closed) |
+
+**Explain:** `/permission explain <tool> [pattern]` (or the
+`permission.Explain` / `Service.Explain` API) returns the effective action,
+matched rule, layer name, and match trail for a sample tool call. For bash
+(and selected tools), explain also reports whether the decisive match used
+**action facts** or the raw **pattern** path (`eval=facts` / `eval=pattern`)
+plus a short fact summary (#888). See [isolation.md](/docs/isolation#action-facts-semantic-permission-projection-888).
+
+**Action facts + last-match-wins:** when a bash command parses completely,
+rules may match semantic keys (e.g. inner `rm *` inside `bash -c '…'`, path
+`**/.env`, `host:example.com`) in addition to the raw command string. Each
+rule uses **either** facts or pattern — not both — so deny cannot double-fire.
+Incomplete parses (expansions, `eval`, opaque scripts) never drive deny via
+facts; legacy pattern matching alone applies.
+
+**Dry-run preset:** `/permission explain --preset <id> <tool> [pattern]`
+evaluates under an alternate shipped preset without mutating the session
+(`ExplainPreset`). Useful for “what would `read-only` do on this call?”
+
+**Diff:** `/permission diff <presetA> <presetB>` lists added/removed/changed
+rules with layer labels (`permission.DiffPresets`). HTTP:
+`GET /v1/permissions/diff?left=&right=`, and explain accepts optional
+`preset=` for dry-run.
+
+**Managed ceiling:** explain output notes when the managed/MDM deny layer
+blocks a widen (stricter than the stack without managed). Sandbox dial and
+`network.allow` appear on the same explain surface when the host provides them.
+
+**Scoped approvals:** runtime grants may be bounded by scope and optional
+wall-clock TTL (`session`, `path-prefix`, `tool`, `command-class`). A scoped
+grant that would override a parent **Deny** is rejected (does not silently
+widen). Session always / project decisions remain the TUI reply path;
+programmatic `Service.Grant` is the scoped+TTL API.
+
+**Audit trail:** hard **deny**, **ask** suspend, and user **reply** outcomes
+emit `permission.decided` (plus `permission.asked` / `permission.resolved`
+when the user is prompted). Synchronous allows are not audited (avoids
+flooding session JSONL on high-frequency read/search tools). `/timeline`
+folds audit events into `kind: permission` entries with redacted patterns
+(see [secrets.md](/docs/secrets) / `pkg/redact`).
 
 **Two-dial model:** `sandbox` (what OS isolation makes *possible* for bash)
 and `permissionMode` (when the agent is *asked*) are independent. Default
 `sandbox` is `workspace-write` (`off` | `read-only` | `workspace-write`);
 override with `--sandbox`. `yolo` + `sandbox: off` requires `--i-know`.
 OS backends, permission→profile compile, bash text guard honesty, and TOCTOU
-path hardening: [Sandbox](/docs/sandbox).
+path hardening: [Sandbox](/docs/sandbox). Full layer map (worktrees, scheduler,
+planned containers, process caps): [Isolation](/docs/isolation).
 
 
 **Permission mode dial:** `permissionMode` sets the default tool-permission
@@ -87,6 +330,23 @@ Shift+Tab or `/mode` persist in the session JSONL, not back into this file.
 Distinct from `/autonomy` (workflow exit gates) and from `sandbox` (OS
 isolation).
 
+**User system prompt:** `systemPrompt` is optional user text that **replaces**
+(not appends) a composition slot. Whitespace-only values are ignored (they do
+not blank the overlay).
+
+| `systemPromptMode` | Behavior |
+|---|---|
+| `overlay` (default) | Replace the provider overlay only; shared baseline stays |
+| `defaults` | Replace **shared + provider** with `systemPrompt`; tools, environment, instructions, memory, and ledger still append |
+
+**Precedence** for the overlay/defaults slot: custom agent persona body
+(`agents/*.md`) **wins over** config `systemPrompt`, which **wins over** the
+built-in provider overlay. When a persona wins, shared baseline still applies
+even if `systemPromptMode` is `defaults` (defaults mode only applies when the
+config prompt is the active slot content). Visible in `/context` and `/diag`
+as kind `config` with source `config:systemPrompt+mode:overlay|defaults`.
+Details: [agents-skills.md](/docs/multi-agent#system-prompt-layers).
+
 **Lean code:** `leanCode` is `off` | `lite` (default) | `full`. Injects
 agent-scoped efficiency guidance into the system prompt (strict ladder for
 build/general/debugger; softer scaling-aware lean for plan/orchestrator;
@@ -94,19 +354,51 @@ none for explore/reviewer/tester/validator/commit). Inspired by
 [ponytail](https://github.com/DietrichGebert/ponytail) (clean-room wording).
 Details: [agents-skills.md](/docs/multi-agent#lean-code-ponytail-lite).
 
-**Deferred tool schemas:** `deferTools` is `on` | `off` (default off). When
-`on`, non-core tools are omitted from the provider `tools[]` array until
-`toolsearch` discovers them (or the model calls them by name). Core coding
-tools stay always available: `read`/`glob`/`grep`/`edit`/`write`/
-`apply_patch`/`bash`, the `task*` family, `toolsearch`, `question`, and plan
-workflow tools. Deferred surface includes optional built-ins (`webfetch`,
-todo/memory/issue, `sleep`, `skill`, `notebook_edit`, …) and all `mcp_*`
-tools. Discovery lives on the process registry: matches from `toolsearch`
-load full schemas on the **next** model request (including the next
-iteration of the same turn’s tool loop). Tools already present as assistant
-tool calls in history are re-promoted on each stream (so `--continue` keeps
-schemas for tools used earlier). Set `"deferTools": "on"` in global or
-project config to enable.
+**Deferred tool schemas:** `deferTools` is `on` (default) | `off`. When
+`on` (or unset), non-core tools are omitted from the provider `tools[]` array
+until `toolsearch` discovers them, the model calls them by name, or
+deterministic workflow activation promotes them. Core coding tools stay always
+available: `read`/`glob`/`grep`/`edit`/`write`/`apply_patch`/`move`/`delete`/
+`bash`, progressive `task`, `toolsearch`, and `question`. Deferred surface
+includes compatibility delegation shims (`delegate`, `task_status`,
+`task_read`, `task_message`, `task_interrupt`, `wait`), team coordination
+(`agent_roster`, `agent_message`, `agent_broadcast`, `agent_thread`,
+`agent_ownership`, `team_task`, `patch_collab`), plan tools (`plan_write`,
+`plan_read`, `plan_delegate`, `enter_plan_mode`, `exit_plan_mode`,
+`phase_done`), optional built-ins (`webfetch`, `websearch`, todo/memory/issue,
+`sleep`, `skill`, `notebook_edit`, …), and all `mcp_*` tools. Discovery lives
+on the process registry: matches from `toolsearch` load full schemas on the
+**next** model request (including the next iteration of the same turn’s tool
+loop). Tools already present as assistant tool calls in history are
+re-promoted on each stream (so `--continue` keeps schemas for tools used
+earlier). Set `"deferTools": "off"` in global or project config to expose the
+full permitted registry.
+
+**Progressive `task` schema:** the unified `task` tool starts with a compact
+basic schema (prompt-only create plus `status` / `wait` / `cancel`). The full
+advanced contract (routing, budget, verify, `context_bundle`, lifecycle
+`get`/`list`/`read`/`message`/`transition`, …) loads after `toolsearch`
+matches `task`, a call uses advanced fields/actions, or workflow activation
+promotes it. Providers always see a single tool named `task`; the executor
+accepts the full argument surface regardless of the schema level currently
+advertised. Session resume restores advanced when history used advanced args.
+
+**Workflow tool activation:** when `deferTools` is on, deterministic engine
+state promotes deferred families without `toolsearch` or a classifier:
+plan mode / plan agent / active workflow / active plan handoff → plan tools
+(`plan_write`/`plan_read`/`plan_delegate`, `enter_plan_mode`/`exit_plan_mode`/
+`phase_done`); any live or historical child → roster/messaging/ownership plus
+advanced `task`; two or more live children → team tools (`agent_broadcast`,
+`team_task`, `patch_collab`). Hard-denied tools stay omitted. Guidance source
+tags include `+activate:<families>`.
+
+**Rollback / permanent default:** progressive disclosure (`deferTools` on) is
+the shipped default. Offline comparison lives in
+`go test ./internal/eval/progressive` and [Eval](/docs/eval). Roll
+back to `"deferTools": "off"` if progressive completion drops by more than 5
+absolute points or median wall time rises by more than +25% vs full exposure
+on that fixture pack (schema reduction below 30% on solo first-turn is a soft
+warning only).
 
 **Permission soft-approve / auto-approve:** session mode `soft-approve`
 (`permissionMode`, `/mode`, Shift+Tab) arms a **visible** 15s countdown on
@@ -119,6 +411,40 @@ count down or auto-approve. Disabled by default (mode `default`, seconds `0`).
 duration without selecting soft-approve mode; when soft-approve is active and
 seconds is unset/`0`, the default is **15**. Names in
 `permissionAutoApproveExclude` (case-insensitive) never auto-approve.
+Both are editable under `/settings` → Defaults (auto-approve applies to the
+current session immediately).
+
+**Max child depth:** `maxChildDepth` bounds nested `task` tool spawns (root
+depth 0). Zero/unset means the engine default (**1**: children cannot spawn
+further tasks). Values above **8** clamp to 8. Editable under `/settings` →
+Defaults; takes effect for **new** sessions (already-running engines keep their
+bound).
+
+**Tool retry / error recovery:** `toolRetry` controls harness auto-retry and
+loop detection for tool dispatch (issue #795). Policy is **error code ×
+idempotency** (see `internal/tool/retry.go`):
+
+| | `safe-retry` | `conditional` | `unsafe` |
+|---|---|---|---|
+| `transient` / `timeout` | auto-retry + backoff | fail (no blind mutation retry) | fail |
+| `precondition_failed` | recover hint | recover hint | fail |
+| other codes | fail | fail | fail |
+
+Mutative tools (`edit` / `write` / `apply_patch` / `bash` / …) never
+auto-retry on generic or transient failure — that prevents double-apply.
+Provider stream retries remain separate (`MaxStreamAttempts` in the engine).
+
+| Key | Meaning | Default |
+|---|---|---|
+| `toolRetry.maxAttempts` | attempts per tool call including the first; `1` disables auto-retry | `3` |
+| `toolRetry.baseDelayMs` | first backoff step (full jitter applied) | `200` |
+| `toolRetry.maxDelayMs` | backoff cap | `2000` |
+| `toolRetry.loopThreshold` | identical consecutive failing tool+args before the turn stops with `loop_detected` | `3` |
+
+When the loop detector trips the engine emits `tool.loop_detected`, settles the
+tool as blocked, and ends the turn (`stopReason: loop_detected`). Auto-retries
+emit `tool.retrying` (timeline) before each backoff sleep.
+
 
 ## Desktop notifications (`notify`)
 
@@ -134,6 +460,64 @@ paths, prompts, or secrets.
 | `off` | never notify |
 
 Unknown values are ignored at load time.
+
+## Autoupdate (`autoupdate`)
+
+Startup (and at most once per 24h) GitHub Releases check that reuses the same
+release metadata path as `strike upgrade` / `/upgrade`. The probe is async and
+time-bounded so TUI startup is not blocked on the network. Offline, rate-limit,
+and API failures stay silent.
+
+| Value | Behavior |
+|---|---|
+| `notify` (default) | when a newer release exists, show status chrome + optional desktop notify; path is `/upgrade` or `strike upgrade` |
+| `off` | no startup release check |
+| `auto` | opt-in: when the binary is writable, download+replace in place (no re-exec); otherwise same as `notify` with a Nix/package-manager hint |
+
+**Default never replaces the binary** — only `auto` may. Nix store installs and
+other non-writable binaries never attempt replace; the notice tells you to
+update the flake/lock input or re-run the install script. Windows self-update
+remains unsupported (same as manual upgrade).
+
+Probe state is cached under `~/.strike/cache/update-check.json`. Editable under
+`/settings` → Defaults.
+
+## Container (native containerization, E12)
+
+Layered JSON for `internal/container` (epic
+[#547](https://github.com/jonathanung/strike/issues/547)). Merge order matches
+the rest of config: **defaults → global → project → managed**.
+
+| Source | Path |
+|---|---|
+| Inline | `"container": { … }` in `~/.strike/config` or `./.strike/config` |
+| Dedicated file | `container.jsonc` / `container.json` under the same `.strike` roots (like `mcp.jsonc`) |
+
+Dedicated files overlay the inline block at the same layer (global file after
+global config; project file after project config).
+
+| Field | Meaning |
+|---|---|
+| `execution` | `local` (default) or `container` — where the agent runs (CLI flag in E12.4) |
+| `baseImage` | Dockerfile `FROM` (default `ubuntu:24.04`) |
+| `packages` | Extra apt packages at build |
+| `shell` | Login shell (default `/bin/bash`) |
+| `resources` | `memory`, `cpus`, `pidsLimit`, `gpus` → create flags |
+| `workspace` | `mountPath`, `hostPath`, `ports` (`host:container`), `persistHome`, `extraBinds` |
+| `auth` | `forwardEnv` globs, `envFile`, `requiredEnv`, `forwardSSHAgent` (credentials never baked into images) |
+| `network.mode` | `default` (bridge) or `none` |
+| `network.allow` | Reserved container egress allowlist (same shape as top-level `network.allow`) |
+| `dockerfile` | Optional hand-written Dockerfile path |
+| `engine` | Override CLI binary (`docker` / `podman` / absolute path) |
+| `needsNode` / `nodeVersion` | Install Node via NodeSource (`nodeVersion` major, default 22) |
+| `needsPython` / `pythonVersion` | Install Python apt packages (default version `3`) |
+| `needsGo` / `goVersion` | Install `golang-go` (+ build deps); `goVersion` is informational |
+| `needsRust` | Install Rust via rustup |
+
+Scaffold with `/devcontainer` or `strike container detect` (E12.5).
+
+Runtime mapping: `Config.Container.ToRuntime(version)` → `container.Config` for
+`Manager`. See [container.md](https://github.com/jonathanung/strike/blob/main/docs/container.md) and [isolation.md](/docs/isolation).
 
 ## Scheduler
 
@@ -171,6 +555,165 @@ Each `bash` invocation is a fresh process whose cwd is that session workdir
 does not affect later bash calls or other tools; chain with `&&` or
 `(cd subdir && …)` when a single command needs a subdirectory.
 
+### Parallel children and path overlap
+
+Within one session team, `task` children share the lead's tool CWD. Write tools
+(`edit`, `write`, `apply_patch`, `notebook_edit`) register path touches on a
+shared ownership map. When two **active** agents claim the same path:
+
+| `session.overlapPolicy` | Behavior |
+|---|---|
+| `warn` (default) | write proceeds; tool output gets a warning; engine emits `path.overlap` |
+| `block` | conflicting write is refused |
+| `off` | track only (no warning/event) |
+
+### Session log durability and retention
+
+Session transcripts are JSONL under `~/.strike/sessions/<id>.jsonl` with a
+sidecar `<id>.meta.json`. New logs start with a `session.header` line carrying
+`schemaVersion` (currently `1`). Each event append writes a full JSON line and
+`fsync`s so a crash cannot leave an unreadable half-record; resume skips a
+trailing torn line and fails with an actionable error on interior corruption or
+an unsupported newer schema (upgrade strike). Secrets are scrubbed on append
+via `secret.RedactEvent` (see [secrets.md](/docs/secrets)).
+
+Portable **session packages** (`format: strike.session`) export/import the
+redacted event sequence + meta for support bundles — distinct from the
+human-readable markdown transcript (`/export`, #221) and from durable checkpoint stacks
+under `~/.strike/checkpoints/` (#573). Live `/fork` / `/rewind` copy into a new
+id with `meta.forkedFrom` lineage.
+
+| `session.retentionMaxSessions` | Cap closed sessions retained (0 = unlimited) |
+| `session.retentionMaxAgeDays` | Drop closed sessions older than N days (0 = off) |
+| `session.retentionMaxBytes` | Cap total closed log+meta bytes (0 = off) |
+| `session.timelineMaxEntries` | Cap in-memory run timeline entries (0 = library default 10000) |
+| `session.timelineArgsPreviewMax` | Inline tool-args preview rune cap (0 = 512) |
+| `session.timelineOutputPreviewMax` | Inline tool-output preview rune cap (0 = 2048) |
+| `session.timelineBlobSpill` | Spill oversized redacted payloads to `~/.strike/traces/<id>/blobs/` with `blob:sha256:` refs |
+| `session.traceRetentionMaxFiles` | Cap top-level trees under traces + runs (0 = unlimited) |
+| `session.traceRetentionMaxAgeDays` | Drop trace/run session trees older than N days (0 = off) |
+| `session.traceRetentionMaxBytes` | Cap total bytes under traces + runs trees (0 = off) |
+
+Build a policy with `session.RetentionFromConfig` and run
+`Manager.ApplyRetention` from tooling or a maintenance path. Open sessions are
+never deleted. Project config overrides global per field when non-zero.
+
+**Trace storage (#810):** the structured run timeline (`pkg/timeline`, `/timeline`)
+keeps bounded inline previews. With `timelineBlobSpill`, full redacted payloads
+that exceed the preview caps are written under
+`~/.strike/traces/<sessionId>/blobs/` (content-addressed; **no fsync** — session
+JSONL remains the durability boundary so the turn/UI loop is not blocked on
+observability I/O). Entries carry `argsRef` / `outputRef` (`blob:sha256:<hex>`)
+and `truncated: true`. In-memory builders prune oldest **terminal** entries when
+over `timelineMaxEntries`. `Builder.Metrics()` exposes Observe latency and
+spill/truncate/prune counters.
+
+Sidecar retention uses the same count/age/size axes as session retention:
+
+- `session.ApplyTraceRetention(tracesDir, runsDir, policy)` — caps
+  `~/.strike/traces` and `~/.strike/runs` (recordings / run snapshots)
+- `Manager.ApplyRetentionWithSidecars` — session JSONL retention then deletes
+  matching trace/run trees for each removed session id
+
+Build the sidecar policy with `session.TraceRetentionFromConfig` from
+`traceRetentionMax*`. Not automatic on launch.
+
+Lead and children can query the map with `agent_ownership` (`list`), and claim
+path prefixes with `lease` / `release` (exclusive or shared). Finished children
+are deactivated so they no longer cause overlap. Structured handoff
+`files_changed` (when available) can be merged via the same tracker.
+
+### Delegation-worthiness policy (`session.delegationPolicy`)
+
+Before every `task` / `delegate` create, the engine runs a deterministic
+worthiness gate (#876) so tiny or tightly coupled work stays local and fan-out
+respects concurrency/budget ceilings. Capability routing (#778) runs only after
+the policy chooses to delegate.
+
+| Field | Meaning |
+|---|---|
+| `mode` | `off` (always spawn), `advise` (record preferred action but spawn), `enforce` (soft-local returns status `local`; hard ceilings deny). When the block is omitted, the CLI defaults to `enforce`. Zero-value engine Options (tests/embedders) stay `off`. |
+| `tinyPromptRunes` | Bare prompts at or below this rune count prefer local (default 280) |
+| `maxPathsLocal` | Bare tasks with ≤N `context_bundle` paths prefer local (default 1; negative disables) |
+| `maxLiveChildren` | Hard-deny when live children reach this count (0 = unlimited) |
+
+**Soft prefer local** (overridable with `force_delegate=true` on the tool call):
+
+- Bare tiny prompt (no agent/specialty/criteria/deps/verify) with few scoped paths
+- Requested paths overlap active ownership claims of other live agents
+
+**Soft prefer delegate**: intentional signals (agent pin, specialty/capabilities,
+criteria, deps, verify gates) or multi-path independent work.
+
+**Hard deny** (never overridable): depth ceiling (`maxChildDepth`), optional
+`maxLiveChildren`, delegation object ceiling, and session budget exhausted when
+a `SessionBudgetExhausted` hook is wired (session cost envelope #577).
+
+Decisions expose a structured `policyReason` on tool metadata and
+`child.started`. Engine counters (`delegate` / `local` / `deny` / `override`)
+support comparing elapsed time and cost with policy on vs off.
+
+Orchestrator guidance has a single pre-spawn decision table matching this gate.
+
+### Per-agent budgets (`session.agentBudget`)
+
+Optional defaults for every `task` / `delegate` child in a session. Spawn-time
+`budget` fields on the tool call overlay any non-zero dimension. Zero means
+unlimited for that dimension.
+
+| Field | Meaning |
+|---|---|
+| `maxWallClockS` | Wall-clock seconds before fail + interrupt |
+| `maxTokens` | Accumulated stream tokens before fail |
+| `maxCostUsd` | USD before fail (enforced when cost pricing lands; see below) |
+| `maxToolCalls` | Tool invocations before fail |
+| `maxDangerousTools` | bash/write/edit/apply_patch/notebook_edit calls before fail |
+| `stallAfterS` | Hard block after this many seconds without progress |
+| `loopDetectN` | Hard block when the same tool name repeats N times |
+
+On hard exceed the engine emits `child.escalated` and stops the child. Soft
+resource budgets (`wall_clock`, `tokens`, `cost_usd`, `tool_calls`,
+`dangerous_tools`, and hard `stall`/`loop`) first attempt **one reserved
+finalization turn** (tools disabled, ~45s wall ceiling) so the child can return
+a structured partial handoff before termination (#879). `child.escalated`
+`action` is `finalizing` then the child ends with `ChildCompleted.budgetKind` +
+`finalization` (`succeeded`|`failed`) and handoff `quality`
+(`complete`|`partial`|`unavailable`). Hard cancel, parent shutdown, and trust
+boundary failures skip finalization (`finalization=skipped_hard`,
+`action=interrupted`). Already-written typed artifacts and engine-tracked
+`files_changed` are always merged into the terminal handoff.
+
+Delegation is marked `failed` or `blocked`, and a structured lead/owner mailbox
+notice is delivered. Soft stall (default 300s idle) and loop (default 6
+identical tools) flags always appear on `task_status` / `agent_roster` without
+killing when no hard threshold is set.
+
+**Stale children (#517):** folded into stall — not a second detector.
+
+| Mode | Trigger | Parent-visible | Kills child? |
+|---|---|---|---|
+| **Soft stall** | Default **300s** without progress (or `stallAfterS` when set, for the soft flag) | `budget.stall=true`, `idle_s`, `last_progress_at`, `stall_after_s` on `task_status` / `agent_roster`; live state `needs_attention` + `block_reason`; rising-edge `child.escalated` with `action=signaled` + lead mailbox; `wait` on `task.stale` or `task.blocked` | **No** |
+| **Hard stall** | `stallAfterS` / spawn `stall_after_s` configured and idle ≥ threshold | Same pulse fields + `child.escalated` `interrupted`/`finalizing`, terminal `blocked`, mailbox | **Yes** (after optional finalization) |
+
+Progress clears soft stall flags and allows a later rising-edge signal. Prefer
+`wait` / `task` action=wait over busy-polling status.
+
+**Session cost envelope (#577 / #542):** when `maxSessionCostUSD` is configured
+it remains the **outer** cost cap for the whole session (CLI `--max-cost`
+overrides when present). Per-agent `maxCostUsd` nests inside that envelope and
+never raises the session ceiling. Until full session cost pricing and hard-stop
+enforcement land (#577), `maxCostUsd` / the outer envelope are accepted and
+exposed in config and docs; treat enforcement as landing with that issue.
+
+**Isolated worktree path (explicit apply):** for true filesystem isolation,
+prefer separate root sessions with `session.worktree=always` (or
+`strike --worktree`), or dogfood sibling checkouts (e.g. under
+`strike-cli-worktrees/`). Apply back to the primary tree with an explicit
+`git merge` / `cherry-pick` / patch apply from the child branch or worktree —
+never silent clobber of the shared primary checkout. Per-child worktrees inside
+one `task` fan-out remain a follow-up; overlap detection is the in-session
+safety rail today.
+
 **ctrl+d saves defaults**: on the main screen it persists the current
 provider/model/agent/effort/theme to `~/.strike/config`; in the provider
 picker it saves the highlighted provider; in the model picker it saves
@@ -178,15 +721,37 @@ provider + model; in the effort picker it saves the highlighted level; in
 the theme picker it saves the highlighted theme id.
 
 **/settings Defaults**: interactive editor for theme, vimMode, nanoMode,
-mdReadMode, permissionMode, and effort (plus a read-only view of
-provider/model/agent). Changes write `~/.strike/config` and apply theme/editor
-presentation to the current session immediately.
+mdReadMode, **permissionMode**, **permissionAutoApproveSeconds**,
+**permissionAutoApproveExclude**, **sandbox**, **notify**, **autoupdate**,
+**leanCode**, **deferTools**, **session.worktree**, **maxChildDepth**, and
+effort (plus a read-only view of provider/model/agent). Changes write
+`~/.strike/config`. Theme, editor/reader presentation, notify, and auto-approve
+countdown/exclude apply to the current session immediately; permissionMode,
+sandbox, leanCode, deferTools, session.worktree, autoupdate, and maxChildDepth
+affect **new** sessions (use `/mode` / Shift+Tab for the live permission dial,
+and `/sandbox` to inspect the OS dial already bound for this process).
+Autoupdate probes run at process start from the config loaded at launch.
+Programmatic `/settings` saves drop JSONC comments; use **`/config`** (or
+Settings → **Open config files…**) for hand-edited files and sidecars
+(`mcp.jsonc`, `providers.jsonc`, `keybinds.jsonc`, agents/skills/themes/
+workflows).
+
+**/settings Compaction**: editor for history compaction and continuous prune
+dials (`compactionStrategy`, `compactionModel`, `compactionThreshold`,
+`compactionBuffer`, `keepUserTurns`, `pruneProtectTokens`,
+`pruneMinimumTokens`, `pruneKeepUserTurns`, `pruneProtectTools`). Writes
+`~/.strike/config`; values apply to **new** sessions (the running engine keeps
+the dials it was started with). Pick lists cover common ranges; summarize
+model and prune-protect tools use free-text input (empty clears).
+
+Peer settings inventory (Claude Code / OpenCode → strike): see
+[peer-ecosystem.md](/docs/peer-ecosystem#settings-inventory).
 
 ## Theme
 
-`theme` is a color-theme id (bundled + `~/.strike/themes` + `./.strike/themes`).
-In the TUI: bare `/theme` opens a picker; `/theme <id>` applies one. Full chrome
-modes, surfaces, and web cockpit parity: [Theme](/docs/theme).
+`theme` is a color-theme id (bundled + `~/.strike/themes` + `./.strike/themes`
++ plugin contributions). In the TUI: bare `/theme` opens a picker; `/theme <id>`
+applies one. Full chrome modes, surfaces, and web cockpit parity: [Theme](/docs/theme).
 
 
 ## Keybinds
@@ -202,8 +767,8 @@ Remap app-level chords without recompiling. Ids match the in-app cheatsheet
   "nav.jump-bottom": "ctrl+b",
   "global.palette": "ctrl+k",
   "composer.newline": ["ctrl+j", "alt+enter"],
-  "nav.window-next": "ctrl+o",
-  "nav.window-prev": "ctrl+p",
+  "nav.window-next": "ctrl+p",
+  "nav.window-prev": "ctrl+o",
   "nav.group-next": "ctrl+shift+o",
   "nav.group-prev": "ctrl+shift+p",
   "nav.tool-expand": "alt+enter"
@@ -239,6 +804,124 @@ object to persist defaults.
 
 List/permission modal conventions (`lists.*`, `perm.*`) and agents-pane local
 controls (`agents.*`) are not remappable.
+
+## Language servers (LSP)
+
+Configure stdio language servers so file tool mutations (`write` / `edit` /
+`apply_patch` / `notebook_edit`) drive `textDocument/didOpen` /
+`didChange` / `didClose`, and `publishDiagnostics` notifications are collected
+per URI. A dead language server degrades to no diagnostics and never takes
+down the session (same crash isolation as MCP).
+
+By default strike ships a server map for **Go** (`gopls`), **TypeScript**
+(`typescript-language-server --stdio`), **Python** (`pylsp`), and **Rust**
+(`rust-analyzer`). Missing binaries degrade to per-server `error` status and
+never take down the session. Clear the map with `"servers": {}`, or replace it
+entirely by setting `lsp.servers` in config.
+
+```json
+// ~/.strike/config or ./.strike/config
+{
+  "lsp": {
+    "servers": {
+      "go": {
+        "command": "gopls",
+        "extensions": [".go"]
+      },
+      "typescript": {
+        "command": "typescript-language-server",
+        "args": ["--stdio"],
+        "extensions": [".ts", ".tsx", ".js", ".jsx"]
+      },
+      "python": {
+        "command": "pylsp",
+        "extensions": [".py"]
+      },
+      "rust": {
+        "command": "rust-analyzer",
+        "extensions": [".rs"]
+      }
+    }
+  }
+}
+```
+
+| Field | Required | Notes |
+|---|---|---|
+| `command` | yes | Executable on `PATH` or absolute path |
+| `args` | no | Extra argv after command |
+| `env` | no | Env overlay for the subprocess (never logged) |
+| `extensions` | yes | File extensions this server owns (with or without leading `.`). First server claiming an extension wins. Servers with no extensions are skipped. |
+
+**Layering:** when a config layer sets `lsp.servers` (including `{}`), it
+**replaces** the previous layer's server map entirely (same as MCP). Omitted
+`servers` leaves the lower layer's map. Scalar diagnostics knobs
+(`diagnosticsSeverity`, `diagnosticsMaxChars`, `diagnosticsWaitMs`) overlay
+last-wins when set. Omitted `lsp` leaves the lower layer unchanged.
+
+### Diagnostics in tool results
+
+After a successful `write` / `edit` / `apply_patch` / `notebook_edit`, strike
+waits briefly for `publishDiagnostics` on the touched paths and appends a
+single `--- diagnostics ---` block to the tool `Result` the model sees.
+Multi-file `apply_patch` shares one wait window and one block (not one block
+per file). A dead language server degrades to no injection.
+
+| Field | Default | Notes |
+|---|---|---|
+| `diagnosticsSeverity` | `error` | Minimum severity to inject: `error`, `warning`, `info`, or `hint`. Errors-only by default; set `warning` to opt in to warnings. |
+| `diagnosticsMaxChars` | `4000` | Cap on injected text (runes). Excess lines become `… (N more diagnostic(s) truncated)`. |
+| `diagnosticsWaitMs` | `400` | Max wait for `publishDiagnostics` after a mutation. Negative skips the wait (snapshot immediately). |
+
+```json
+{
+  "lsp": {
+    "diagnosticsSeverity": "warning",
+    "diagnosticsMaxChars": 6000,
+    "diagnosticsWaitMs": 600,
+    "servers": {
+      "go": { "command": "gopls", "extensions": [".go"] }
+    }
+  }
+}
+```
+
+### `/lsp` and the diagnostics pane
+
+- `/lsp` — status (`up` / `down` / `error` / `disabled`); command, extensions, open docs
+- `/lsp retry [name]` — reconnect one server, or every non-up server
+- `/lsp disable <name>` — stop a server for the session
+- `/diagnostics` — focus the right-pane diagnostics browser (findings from live servers; Enter opens the file)
+
+### Navigation and diagnostics tools (optional)
+
+Read-only tools call the language server for code navigation and diagnostics
+queries. They are **not** core tools: when `deferTools` is `on`, their schemas
+stay out of the hot provider Tools array until `toolsearch` discovers them (or
+the model calls them by name).
+
+| Tool | LSP method / source | Args |
+|---|---|---|
+| `definition` | `textDocument/definition` | `filePath`, `line` (1-based), optional `character` (0-based) |
+| `references` | `textDocument/references` | same position args; includes declaration |
+| `symbols` | `textDocument/documentSymbol` or `workspace/symbol` | `filePath` and/or `query` |
+| `diagnostics` | cached `publishDiagnostics` from live servers | optional `path` (file or directory; omit = workspace), optional `severity` (`error` default, `warning`, `info`, `hint`), optional `maxResults` (default 100, max 500) |
+
+`diagnostics` returns a stable JSON payload: `file`, `range` (1-based
+line/character start+end), `severity`, `source`, `code`, `message`, plus
+server status, counts, and a `truncated` flag. Results are sorted
+deterministically. Paths stay workspace-scoped.
+
+A missing or dead language server returns structured status / a soft message in
+the tool result (never hangs or takes down the session). Default permission is
+Allow (read-only).
+
+## External harnesses
+
+Named subprocess harnesses used by agent frontmatter `harness: <name>`.
+Config keys (`command`, `args`, `env`, `mode`, persistent-worker limits):
+see the full reference — [Harnesses](/docs/harnesses#external-process-configuration).
+
 
 ## MCP servers
 
@@ -510,12 +1193,74 @@ project **concatenate**). Each entry is either a **declarative rule**
 Invalid rows are dropped at load. Peer event-name mapping (CC/OpenCode/Crush):
 [peer-ecosystem.md](/docs/peer-ecosystem#hooks-alignment).
 
+### Shell hook stdin payload
+
+Shell hooks (`command`) receive one JSON object on stdin (not env vars):
+
+| Field | When | Notes |
+|---|---|---|
+| `event` | always | `pre_tool_use` or `post_tool_use` |
+| `session_id` | always | session id |
+| `cwd` | always | engine workdir |
+| `tool_name` | tool events | e.g. `edit`, `write` |
+| `tool_call_id` | tool events | call id |
+| `tool_input` | tool events | raw tool args object (`filePath` for `edit`/`write`) |
+| `tool_output` | `post_tool_use` | tool result text |
+| `is_error` | `post_tool_use` | `true` when the tool failed |
+
+Exit **0** allows; non-zero **blocks** (pre: deny tool; post: mark the completed call blocked and replace feedback). Timeouts and start failures **fail-open**. Prefer always-exit-0 recipes for non-blocking side effects (formatters, notify).
+
+### Post-edit formatters (recipe)
+
+Strike has **no** first-class `formatters` map (OpenCode-style plugin host is out of scope). Run formatters with `post_tool_use` shell hooks after successful `edit` / `write`. Requires `jq` on `PATH` for the snippets below.
+
+**Non-blocking Go format** (recommended default — formatter failure does not fail the tool):
+
+```json
+{
+  "hooks": [
+    {
+      "event": "post_tool_use",
+      "matcher": "{edit,write}",
+      "timeoutMs": 15000,
+      "command": "payload=$(cat); echo \"$payload\" | jq -e '.is_error == true' >/dev/null 2>&1 && exit 0; f=$(echo \"$payload\" | jq -r '.tool_input.filePath // empty'); [ -n \"$f\" ] || exit 0; case \"$f\" in *.go) gofmt -w \"$f\" 2>/dev/null || true ;; esac; exit 0"
+    }
+  ]
+}
+```
+
+**Multi-language sketch** (still non-blocking; adjust tools to taste):
+
+```json
+{
+  "hooks": [
+    {
+      "event": "post_tool_use",
+      "matcher": "{edit,write}",
+      "timeoutMs": 30000,
+      "command": "payload=$(cat); echo \"$payload\" | jq -e '.is_error == true' >/dev/null 2>&1 && exit 0; f=$(echo \"$payload\" | jq -r '.tool_input.filePath // empty'); [ -n \"$f\" ] || exit 0; case \"$f\" in *.go) gofmt -w \"$f\" 2>/dev/null || true ;; *.ts|*.tsx|*.js|*.jsx|*.json|*.css|*.md) command -v prettier >/dev/null && prettier --write \"$f\" 2>/dev/null || true ;; *.py) command -v ruff >/dev/null && ruff format \"$f\" 2>/dev/null || true ;; esac; exit 0"
+    }
+  ]
+}
+```
+
+**Blocking format** (rare): omit the trailing `|| true` / `exit 0` so a non-zero formatter exit marks the tool result blocked. Prefer non-blocking unless you intentionally gate the agent on format success.
+
+Notes:
+
+- Matcher is doublestar on **tool name** (`{edit,write}` is fine); it does not filter by file extension — do that in the shell `case`.
+- `apply_patch` and other mutators are not covered by this matcher; add separate rows if you format those paths.
+- Project hooks concatenate after global hooks; put team formatters in `./.strike/config` (or your project config path).
+- Editor/`$EDITOR` format-on-save remains a valid alternative outside the agent loop.
+- Peer inventory: [peer-ecosystem.md](/docs/peer-ecosystem#settings-inventory) (Formatters → hooks recipe).
+
 ## History compaction
 
 `/compact` and automatic threshold/overflow compaction shrink model-facing
 history while keeping a recent tail. Continuous tool-result prune
 (`internal/engine/prune.go`) blanks older tool bodies under that ceiling;
-threshold compaction is the coarser whole-history rewrite.
+threshold compaction is the coarser whole-history rewrite. Edit these dials in
+JSON or interactively via **`/settings` → Compaction**.
 
 | Field | Values | Default |
 |---|---|---|

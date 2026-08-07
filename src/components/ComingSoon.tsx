@@ -2,7 +2,6 @@ import { motion, useReducedMotion } from 'framer-motion'
 import {
   Blocks,
   Globe,
-  Puzzle,
   Server,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -28,12 +27,6 @@ const upcoming: Upcoming[] = [
     description:
       'An always-on Strike daemon for long-running agent work. Not a multiplayer web IDE.',
     icon: Server,
-  },
-  {
-    title: 'User plugins',
-    description:
-      'A standardized plugin scheme so you can extend Strike with your own integrations — not opaque vendor hooks.',
-    icon: Puzzle,
   },
   {
     title: 'End-to-end test workflow',
