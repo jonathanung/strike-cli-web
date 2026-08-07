@@ -15,13 +15,13 @@ function flattenText(node: ReactNode): string {
   return ''
 }
 
+/** Match GitHub-style heading ids (CLI docs use these in cross-links). */
 function slugifyHeading(text: string): string {
   return text
     .toLowerCase()
     .trim()
     .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
+    .replace(/ /g, '-')
 }
 
 function isInternalPath(href: string): boolean {

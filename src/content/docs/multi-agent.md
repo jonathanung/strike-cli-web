@@ -22,6 +22,9 @@ from several trees; **later roots override earlier ones by name**.
 - Markdown only — no OpenCode plugin JS/TS execution.
 - OpenCode-style `model: provider/id` splits into provider + model when `provider` is unset.
 - Nested Claude/OpenCode `permission:` maps map to strike permission rules (best-effort).
+- Future **plugin bundles** package agents/skills (and other surfaces) under a
+  versioned manifest + trust contract — see [plugins.md](/docs/plugins). Peer
+  trees above stay separate from that system.
 
 ## Project process skills (`.claude/skills`)
 
@@ -60,7 +63,7 @@ Effort pins still apply on phase switches unless locked. Shipping built-ins
 | **tester** | run `make test` / vet / build; report only |
 | **debugger** | root-cause investigation |
 | **validator** | goal-backward requirements check; PASS/FAIL/UNVERIFIED only |
-| **orchestrator** | plan → delegate via `task` to specialists → synthesize (not solo bulk impl) |
+| **orchestrator** | plan → pre-spawn worthiness decision → `task` to specialists → synthesize (tiny/coupled work stays local) |
 | **pr-babysitter** | own an open PR through CI/review (watch, fix branch failures, push); overlap with issue-handler skill (skill = full issue→merge; agent = in-session PR watch) |
 
 **Tab cycles agents**; bare `/agent` opens a picker; `/agent [name]` selects
@@ -82,31 +85,52 @@ messaging).
 live/terminal children in that tree. No `TeamCreate` step and no opt-in flag —
 parent + children already are the team. Concurrent root sessions stay separate
 teams. Depth and fan-out stay bounded (`MaxChildDepth`; orchestrator prefers a
-few sequential or small parallel slices).
+few sequential or small parallel slices). A delegation-worthiness policy
+(`session.delegationPolicy`, default `enforce`) runs before spawn: bare tiny or
+path-overlapping work returns status `local` unless `force_delegate`; hard
+ceilings (depth, optional max live children, budget) never override. See
+[config.md](/docs/config#delegation-worthiness-policy-sessiondelegationpolicy).
+
+**Progressive `task`** is the one decision path for delegation: prompt-only
+spawn, optional advanced fields (criteria/deps/subscribe/route/budget/verify/
+context_bundle), and actions get|list|status|read|message|transition|cancel|wait.
+Status and terminal handoff semantics are identical regardless of entry path.
+Legacy `delegate` / `task_*` / `wait` tools are compatibility shims (telemetry-
+counted). At MaxChildDepth, `task` is stripped from leaves; leaves may still use
+`delegate` get/list/transition for ownership-gated self-report.
 
 Parent-only workflows are unchanged: if you never call `agent_*` tools,
-`task` / `task_message` / `task_status` / `task_read` / `task_interrupt` behave
-as before.
+progressive `task` (and its compat shims) behave as before.
 
 | Tool / event | Role |
 |--------------|------|
+| `task` | Progressive delegation API (create + lifecycle/control actions) |
 | `agent_message` / `agent_broadcast` | Mid-flight peer coordination (any teammate: child↔child, child↔lead) |
+| `agent_thread` | Read task/delegation-bound message thread |
 | `team_task` | Shared claim/assign board (create/list/update/claim/complete; CAS) |
-| `[child.completed]` | Finished work product — terminal summary when a child ends |
-| `task_message` | Parent→owned-child steer only (not team chat) |
-| `task_status` / `task_read` | Rare one-off pulse / transcript slice — **not** busy-poll |
+| `[child.completed]` | Finished work product — structured handoff JSON when a child ends |
+| `task` action=`message` (compat `task_message`) | Parent→owned-child steer only (not team chat) |
+| `task` action=`status`/`read` (compat `task_status`/`task_read`) | Rare one-off pulse / transcript slice — **not** busy-poll (includes `handoff` when terminal) |
 | `agent_roster` | Who is on the team and live state |
-| `task_interrupt` | Cancel an owned child |
+| `task` action=`cancel` (compat `task_interrupt`) | Cancel an owned child |
 | `todowrite` / `todoread` | Solo session todo list (full-replace) — **not** multi-agent claim |
 
-**Semantics:** prefer **messages** for mid-flight blockers/handoffs/questions;
-prefer **completion** for finished deliverables. Lead should not busy-poll
-`task_status` — use completion events + inbox. Children should message the lead
-early when blocked. Avoid chatty loops (no status ping-pong). Plain text bodies
-are enough; optional conventions (`blocker` / `handoff` / `question`) are fine
-without structured kinds. Messages inject at tool-round / idle turn boundaries
-(never mid-tool-call). Defaults **allow** team messaging; out-of-team targets
-fail closed; config/agent deny rules still hard-block.
+**Semantics:** prefer **coordination contracts** on `agent_message` over chatty
+status loops: bind `task_id` (team_task or delegation id) and read the thread
+with `agent_thread`; set `urgency` (`normal` \| `high` \| `blocker`); use
+`kind=request` / `require_ack` with `ack_timeout_seconds` so un-acked peers
+emit `agent.contract.timeout` and escalate to the lead (or `escalate_to`);
+ack with `kind=ack` + `in_reply_to`. Prefer **completion handoff JSON** for
+finished deliverables. Lead should not busy-poll status — use `task` action=`wait`,
+completion events, inbox, and contracts. Children should message the lead early
+when blocked. Mid-flight bodies stay plain text plus optional contract fields.
+**Completion** is structured: every terminal child emits a handoff with
+`summary`, `files_changed`, `verification`, `findings`, `blockers`, and
+`recommended_next_action` (empty arrays/strings allowed). The engine merges
+tool-tracked file mutations into `files_changed` and sets `incomplete` when the
+child did not supply parseable structured fields. Messages inject at tool-round /
+idle turn boundaries (never mid-tool-call). Defaults **allow** team messaging;
+out-of-team targets fail closed; config/agent deny rules still hard-block.
 
 #### Example: parallel explore + implement with peer handoff
 
@@ -234,20 +258,91 @@ Look at the uncommitted changes and commit them: $ARGUMENTS
 
 ## Workflows
 
-**Workflows** are ordered phase sequences loaded from
-`~/.strike/workflows/*.json` and `./.strike/workflows/*.json` (project
-overrides global by name). Strike ships built-in workflows that may be
-overridden by the same name.
+**Workflows** are ordered (linear) phase sequences. Schema version
+`schemaVersion: 1` is the current contract. Documents load from:
+
+| Precedence | Source | Path |
+|---|---|---|
+| 1 (lowest) | builtin | shipped (`plan-implement`, `review-fix`) |
+| 2 | global | `~/.strike/workflows/*.json` |
+| 3 (highest) | project | `./.strike/workflows/*.json` |
+
+Project overrides global/builtin by **workflow name**. Same-layer duplicate
+names fail closed. Each loaded definition keeps runtime diagnostics: `Source`,
+absolute `Path` (disk-backed), and a canonical SHA-256 `Fingerprint` of the
+formatted document (for resume/diagnostics — not written to disk).
+
+Decoding is **strict**: unknown JSON fields are rejected. Validation checks
+identifiers, phase uniqueness, permission rules, exit gates, and (when agents
+are loaded) agent references — reporting every actionable error in one pass.
+
+Scaffolding / formatting / validating never activates a workflow. Activation
+is a separate catalog or tool step (`enter_plan_mode`, future `/workflow`).
+
+### CLI
+
+```text
+strike workflow scaffold --global|--project <name> [--force]
+strike workflow format [--write] <path>...
+strike workflow validate <path|dir>...
+strike workflow validate --global|--project|--all
+strike workflow generate [--name hint] [--provider p] [--model m] <intent...>
+strike workflow generate --save --yes --global|--project [--force] <intent...>
+strike workflow save-draft --yes --global|--project [--force] [path|-]
+```
+
+- **scaffold** requires explicit `--global` or `--project`. Refuses overwrite
+  unless `--force`. Writes `<scope>/workflows/<name>.json` only.
+- **format** emits deterministic pretty JSON (always includes
+  `schemaVersion`). `--write` rewrites in place.
+- **validate** strict-decodes, runs structural checks, resolves agent pins
+  against loaded agents, and prints short fingerprints on success.
+- **generate** asks the model for a workflow JSON draft from natural-language
+  intent, then prints a structured review (phases, context, **executable check
+  gates**, **effective permission widening**). It never saves or activates
+  unless `--save --yes` plus `--global`/`--project` is passed after review.
+  Invalid model output stays an editable draft with diagnostics (use
+  **save-draft** after correction). Overwrite requires `--force`; failed saves
+  leave the prior file intact.
+- **save-draft** validates JSON from a path or stdin and writes only with
+  `--yes`. Same no-activation and overwrite rules as generate `--save`.
+
+### Phase fields
 
 Each phase may pin an agent, extra prompt context, a permission ruleset, and
-an exit gate. Phase agent pins change persona/permissions only — the session
-provider/model stays put (see Agents above).
+an exit gate (authored default / check command). Phase agent pins change
+persona/permissions only — the session provider/model stays put (see Agents
+above).
 
-| Gate `type` | Clears when |
+**Runtime exit policy** is the session `/autonomy` dial (authoritative for
+`phase_done` and `exit_plan_mode`), not the phase's authored `exit.type`:
+
+| Autonomy | Clears when |
 |---|---|
-| `agent` (default) | the model calls `phase_done` |
-| `user` | the user approves (e.g. leave plan mode) |
-| `check` | `command` exits 0 |
+| `supervised` (default) | the user approves |
+| `agent` | the model calls `phase_done` / `exit_plan_mode` |
+| `checks` | phase `exit.command` exits 0 (permission `phase_check`) |
+| `skip-all` | immediately (workflow/plan approval only; tool perms unchanged) |
+
+**Permission widening review:** phase profiles are evaluated last, so a phase
+`allow` can open an earlier config or agent `deny`. Before activation and every
+phase transition, strike computes the effective grant delta and requires
+explicit approval (question prompt). Rejection leaves the current phase,
+permissions, and context unchanged. `--auto` / `--dangerously-skip-permissions`
+auto-accepts widening without a prompt but does not bypass hard sandbox or path
+protections. Approved decisions are session-persisted (`phase.grant_approved`)
+and restored on resume when the workflow fingerprint and grants are unchanged;
+edited workflow content invalidates prior approval. Child engines inherit the
+parent’s approved phase ceiling and cannot introduce additional widening.
+
+Authored gate types remain useful documentation and supply `command` for
+checks mode:
+
+| Gate `type` (authored) | Meaning |
+|---|---|
+| `agent` (default) | intended model self-affirmation |
+| `user` | intended human approval |
+| `check` | intended command gate (`command` required) |
 
 Built-in `plan-implement`:
 
@@ -259,15 +354,73 @@ Built-in `review-fix`:
 1. **review** — `reviewer` agent, hard-deny `write`/`edit`, user exit gate
 2. **fix** — `build` agent, check gate (`make test`)
 
+### Lifecycle, identity, and resume
+
+Any **validated loaded** workflow can be started (`workflow.start` op / engine
+`startWorkflow`). Exactly **one** workflow is active per root session; starting
+another replaces the prior after the target is validated. Transitions validate
+the target phase **before** mutating context, permissions, agent, or protocol
+state. Completion and explicit stop (`workflow.stop`) clear phase context and
+phase permissions.
+
+`PhaseChanged` events carry workflow **source**, canonical **fingerprint**,
+phase name/index, and the effective **gate** (from `/autonomy`). On session
+resume the engine rebinds by name + fingerprint:
+
+| Outcome | Behavior |
+|---|---|
+| Fingerprint matches (or legacy empty fingerprint) | Restore phase permissions and agent pin |
+| Definition missing | Fail-closed `status: missing` — no phase perms until stop/restart |
+| Fingerprint or phase identity changed | Fail-closed `status: mismatch` — same |
+
+Plan convenience adapters (`enter_plan_mode` / `exit_plan_mode`, plan-agent
+tab sync) still drive the default plan workflow; core lifecycle APIs are
+workflow-name generic.
+
 Tools `enter_plan_mode` / `exit_plan_mode` start and advance the default plan
-workflow. After plan completes, `exit_plan_mode` switches to **build** (simple)
-or **orchestrator** (complex): pass `agent`, or omit and supply `steps` /
-`areas` / `multi_agent` (heuristic: steps ≥ 4, areas ≥ 3, or multi_agent →
-orchestrator). The active phase shows as a badge in the TUI header. Example custom
-file:
+workflow. Leaving plan mode uses a **unified approval + handoff**: pass
+`plan_id` + `expected_version` from `plan_write`/`plan_read` (required for new
+sessions unless autonomy is `skip-all`, or a bounded `legacy_text` for
+pre-feature recovery). The gate runs once under `/autonomy`, the plan is marked
+approved, and a `plan.handoff` event records identity + approval source
+(`user`|`agent`|`checks`|`skip-all`). `phase_done` and manual agent/permission
+dials cannot bypass this path. After handoff, `exit_plan_mode` switches to
+**build** (simple) or **orchestrator** (complex): pass `agent`, or omit and
+supply `steps` / `areas` / `multi_agent` (heuristic: steps ≥ 4, areas ≥ 3, or
+multi_agent → orchestrator). The implementer sees the approved plan on the next
+request. The active phase shows as a badge in the TUI header (workflow name,
+phase, effective gate, and recovery status when resume fails closed).
+
+Use `/workflow list`, `/workflow inspect <name>`, `/workflow start <name>`, and
+`/workflow stop` (also in the command palette) to discover and activate any
+loaded definition. Sources are labeled `builtin`, `global`, `project`, or
+`plugin`. Start always shows phase-0 permission grants before the engine
+mutates state; invalid definitions are listed but cannot be activated. Stop
+clears phase context and phase permissions without interrupting unrelated
+session history.
+
+### Visual builder (TUI)
+
+`/workflow new [name]` and `/workflow edit <name>` open a keyboard-driven
+linear editor (command palette: **workflow new** / **workflow edit …**):
+
+- Create, reorder, and remove phases; edit agent pins, context, exit gates,
+  check commands, and permission rules through typed controls.
+- Live preview of canonical JSON, validation errors, and phase permission
+  grants (same review surface as start-preview / CLI inspect).
+- Save requires an explicit **global** or **project** scope (`g` cycles).
+  Invalid documents cannot be saved. Unsaved edits prompt on cancel
+  (discard / save / stay). Overwrite of an existing file requires confirm.
+- **Saving never starts the workflow** — activation remains `/workflow start`.
+
+Built-in definitions can be edited as drafts and saved as a project/global
+override by name (same precedence as disk loaders).
+
+Example custom file:
 
 ```json
 {
+  "schemaVersion": 1,
   "name": "review-fix",
   "description": "Review then fix",
   "phases": [

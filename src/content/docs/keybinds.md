@@ -21,7 +21,7 @@ Registry: `keybindSlashPrimary` / `keybindNoSlashReason` in
 |---|---|---|
 | `enter` | send prompt | — |
 | `ctrl+j` / `shift+enter` / `alt+enter` | newline (shift+enter CSI rewrites to `alt+enter`; enhanced ctrl+j → `alt+j`; bare LF is also `ctrl+j`; empty-composer `alt+enter` expands a tool cell instead) | — |
-| `esc` | interrupt turn (cancels tools/LLM; shows “interrupted”) / reject permission / close modal | `/interrupt` |
+| `esc` | interrupt turn (cancels tools/LLM; notice “interrupted”, header **canceled**, transcript row) / reject permission / close modal | `/interrupt` |
 | `ctrl+c` | quit | `/exit`, `/quit` |
 | `ctrl+k` | command palette (when kill-to-end does not delete) | `/palette` |
 | `f1` | keybind cheatsheet | `/keys` |
@@ -52,8 +52,10 @@ Right-pane **stack groups** (related panes shown together when space allows):
 |---|---|
 | Session | `context` + `activity` (+ `telemetry` when enabled) |
 | Agents | `agents` + `visualizer` |
-| Project | `memory` + `issues` |
-| Singles | `files`, `markdown`, `editor` (full height each) |
+| Files | `files` + `diagnostics` |
+| Project | `memory` + `issues` + `plans` |
+| Singles | `markdown`, `editor`, `pets` (full height each) |
+| Plugin | installed `pane/1` contributions (shared stack; `/pane <id>`) |
 
 Focus cycle order is deterministic: top→bottom (or left→right in a bottom-bar
 split) inside the group, then the next group. Narrow/compact terminals collapse
@@ -95,6 +97,23 @@ and jumps to the first pane of the next/previous group. See [usage.md](/docs/usa
 | `ctrl+k` | kill to line end (when it deletes; else command palette) |
 | `ctrl+y` | yank |
 | `↑` / `↓` | prompt history (when composer has no multiline cursor motion) |
+
+## Input queue (prompts typed while a turn runs)
+
+| Key / command | Action |
+|---|---|
+| `/queue` | open queue browser (reorder, edit, delete, promote, run next) |
+| empty composer + `bksp` | pop last queued prompt into the composer |
+| idle `esc` | clear the whole queue (when no turn is running) |
+| queue modal `↑`/`↓` / `j`/`k` | move selection |
+| queue modal `shift+↑`/`shift+↓` or `K`/`J` | reorder selected item |
+| queue modal `enter` | edit selected prompt text in place |
+| queue modal `e` | load selected into composer and close |
+| queue modal `p` | promote selected to next (FIFO head) |
+| queue modal `d` / `delete` / `bksp` | remove selected |
+| queue modal `c` | clear all |
+| queue modal `x` | interrupt running turn (if any) and run the FIFO head next |
+| queue modal `esc` / `q` | close |
 
 ## Agents pane (concurrent roots)
 

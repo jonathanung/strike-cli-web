@@ -6,15 +6,27 @@ import usageMd from '../content/docs/usage.md?raw'
 import keybindsMd from '../content/docs/keybinds.md?raw'
 import editorsMd from '../content/docs/editors.md?raw'
 import sandboxMd from '../content/docs/sandbox.md?raw'
+import isolationMd from '../content/docs/isolation.md?raw'
 import schedulerMd from '../content/docs/scheduler.md?raw'
+import containersMd from '../content/docs/containers.md?raw'
+import pluginPanesMd from '../content/docs/plugin-panes.md?raw'
+import checkpointsMd from '../content/docs/checkpoints.md?raw'
 import multiAgentMd from '../content/docs/multi-agent.md?raw'
 import goalMd from '../content/docs/goal.md?raw'
 import loopMd from '../content/docs/loop.md?raw'
+import harnessesMd from '../content/docs/harnesses.md?raw'
 import configMd from '../content/docs/config.md?raw'
 import mcpMd from '../content/docs/mcp.md?raw'
+import pluginsMd from '../content/docs/plugins.md?raw'
 import themeMd from '../content/docs/theme.md?raw'
+import secretsMd from '../content/docs/secrets.md?raw'
+import admissionMd from '../content/docs/admission.md?raw'
+import auditMd from '../content/docs/audit.md?raw'
+import safefileMd from '../content/docs/safefile.md?raw'
+import telemetryMd from '../content/docs/telemetry.md?raw'
 import webMd from '../content/docs/web.md?raw'
 import peerEcosystemMd from '../content/docs/peer-ecosystem.md?raw'
+import evalMd from '../content/docs/eval.md?raw'
 
 export type DocCategoryId = 'start' | 'use' | 'agents' | 'configure' | 'advanced'
 
@@ -96,8 +108,16 @@ export const DOC_PAGES: DocPage[] = [
   {
     slug: 'sandbox',
     title: 'Sandbox',
-    summary: 'OS isolation dial for bash — bwrap/seatbelt, permission profiles, honesty notes.',
+    summary: 'OS isolation dial for bash — bwrap/seatbelt, network.allow, honesty notes.',
     markdown: sandboxMd,
+    category: 'use',
+  },
+  {
+    slug: 'isolation',
+    title: 'Isolation',
+    summary:
+      'Layer map — sandbox, worktrees, scheduler pools, process caps, and containers.',
+    markdown: isolationMd,
     category: 'use',
   },
   {
@@ -105,6 +125,28 @@ export const DOC_PAGES: DocPage[] = [
     title: 'Scheduler',
     summary: 'In-process named pools, build-system presets, and queue UI when blocked.',
     markdown: schedulerMd,
+    category: 'use',
+  },
+  {
+    slug: 'containers',
+    title: 'Containers',
+    summary:
+      'Docker/Podman runtime — launch-inside, eject, attach, isolation badge, and config.',
+    markdown: containersMd,
+    category: 'use',
+  },
+  {
+    slug: 'plugin-panes',
+    title: 'Plugin panes',
+    summary: 'Right-pane contributions via the pane/1 ABI (static and process modes).',
+    markdown: pluginPanesMd,
+    category: 'use',
+  },
+  {
+    slug: 'checkpoints',
+    title: 'Checkpoints',
+    summary: '/undo file restore — bash shadow-git coverage and durable stack across --continue.',
+    markdown: checkpointsMd,
     category: 'use',
   },
   {
@@ -129,6 +171,14 @@ export const DOC_PAGES: DocPage[] = [
     category: 'agents',
   },
   {
+    slug: 'harnesses',
+    title: 'Harnesses',
+    summary:
+      'External task functions — tool.execute, provider.call, oneshot and persistent workers.',
+    markdown: harnessesMd,
+    category: 'agents',
+  },
+  {
     slug: 'config',
     title: 'Config',
     summary: 'Providers, models, permissions, keybinds, and configuration files.',
@@ -143,10 +193,53 @@ export const DOC_PAGES: DocPage[] = [
     category: 'configure',
   },
   {
+    slug: 'plugins',
+    title: 'Plugins',
+    summary:
+      'Install, trust, catalog, lifecycle, and theme contributions for versioned packs.',
+    markdown: pluginsMd,
+    category: 'configure',
+  },
+  {
     slug: 'theme',
     title: 'Theme',
     summary: 'TUI color themes, solid chrome, and surface tokens.',
     markdown: themeMd,
+    category: 'configure',
+  },
+  {
+    slug: 'secrets',
+    title: 'Secrets',
+    summary: 'Credential redaction, export scrubbing, and secret-ref env indirection.',
+    markdown: secretsMd,
+    category: 'configure',
+  },
+  {
+    slug: 'admission',
+    title: 'Admission',
+    summary: 'Register/load-time scans for MCP, skills, and plugins before bind.',
+    markdown: admissionMd,
+    category: 'configure',
+  },
+  {
+    slug: 'audit',
+    title: 'Audit',
+    summary: 'Durable trust-boundary decision log with retention and prune.',
+    markdown: auditMd,
+    category: 'configure',
+  },
+  {
+    slug: 'safefile',
+    title: 'Safefile',
+    summary: 'Hardened path I/O for structured file tools (symlink / TOCTOU guards).',
+    markdown: safefileMd,
+    category: 'configure',
+  },
+  {
+    slug: 'telemetry',
+    title: 'Telemetry',
+    summary: 'Versioned security and harness export families with redaction.',
+    markdown: telemetryMd,
     category: 'configure',
   },
   {
@@ -163,6 +256,13 @@ export const DOC_PAGES: DocPage[] = [
     title: 'Peer ecosystem',
     summary: 'What Strike imports from peer CLIs — skills, workflows, hooks mapping.',
     markdown: peerEcosystemMd,
+    category: 'advanced',
+  },
+  {
+    slug: 'eval',
+    title: 'Eval',
+    summary: 'Internal regression runners and container-backed eval pools.',
+    markdown: evalMd,
     category: 'advanced',
   },
 ]

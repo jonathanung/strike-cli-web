@@ -1,7 +1,9 @@
 # Sandbox
 
 OS-level isolation for agent bash (and composer `!` shell), separate from the
-permission-mode dial that decides *when* you are asked.
+permission-mode dial that decides *when* you are asked. Full isolation matrix
+(action facts, egress allowlist, tool-chain correlation, worktrees, containers):
+[Isolation](/docs/isolation).
 
 ## Two dials
 
@@ -60,17 +62,59 @@ inside the bash sandbox:
 - A deny on `write`/`edit` `*` (including plan mode) suppresses the writable
   workspace bind
 
-**Network** inside the sandbox stays off unless `webfetch` or `mcp` is
-effectively **allow** on `*` (patterned allows do not open full bash network).
-Ask/yolo posture does not widen the OS profile. Composer `!` uses the
-config-layer compile; agent bash uses live layers (agent / phase / session).
+**Network** inside the OS sandbox stays **on** by default (so bash can run
+`gh`, `git`, package managers). It turns **off** only when `webfetch`,
+`websearch`, and `mcp` are all hard-**deny** on `*` (patterned allows do not
+open or close full bash network). Ask/yolo posture does not widen the OS
+profile. Composer `!` uses the config-layer compile; agent bash uses live
+layers (agent / phase / session).
 
 Inspect the effective policy:
 
 ```
 /sandbox           # mode, backend, summary
-/sandbox explain   # generated profile (bwrap flags or seatbelt SBPL)
+/sandbox explain   # generated profile (bwrap flags or seatbelt SBPL),
+                   # network.allow, egress enforcement level
 ```
+
+OS capability blocks surface on bash as `errorCode=sandbox_denied` with a
+human reason (timeline + model tool result).
+
+## Network egress allowlist (`network.allow`)
+
+Optional host/CIDR/`*.suffix` whitelist for **application-layer** egress
+([#892](https://github.com/jonathanung/strike/issues/892)). Same policy shape
+for webfetch, websearch, and bash preflight:
+
+| Surface | Enforcement |
+|---|---|
+| `webfetch` / `websearch` | Dial/redirect checks + SSRF private blocks |
+| bash preflight (v1) | Known clients (`curl`, `wget`, `ssh`, `scp`, `sftp`, `nc`/…) including common wrappers. Outside list → `network_denied`. Unparseable destinations fail closed when the list is non-empty |
+| OS sandbox profile | **Not** per-host — all-or-nothing host net (see above) |
+
+Empty/`[]` = unrestricted **public** hosts (SSRF private blocks unchanged).
+`/sandbox explain` prints the allowlist and `egress enforcement: preflight`
+vs `OS host filter: none`. Prefer `webfetch` for ordinary fetches; bash
+preflight is best-effort argv parse, not a transparent proxy.
+
+```jsonc
+{
+  "network": {
+    "allow": ["api.github.com", "*.npmjs.org", "10.0.0.0/8"]
+  }
+}
+```
+
+Details: [Isolation](/docs/isolation) and [Config](/docs/config).
+
+## Shared writable roots
+
+Under any non-`off` mode the sandbox keeps common scratch dirs writable
+(`/tmp`, `/var/tmp`, `$TMPDIR`, and on Linux `/dev/shm`). In
+**`workspace-write`** it also binds user/tool caches when present
+(`$XDG_CACHE_HOME` or `~/.cache`, `$GOCACHE` / `$GOMODCACHE`, `~/.npm`,
+`~/.cargo`, …) so builds and package managers work without disabling
+isolation. The rest of the host stays read-only aside from the session workdir.
 
 ## What is *not* a security boundary
 
@@ -89,14 +133,24 @@ Linux glob denials expand existing paths at compile time — new files matching 
 deny glob are covered on the next compile (seatbelt regex covers them on
 macOS).
 
-## Path mutation tools (TOCTOU)
+## Path mutation tools (TOCTOU + safefile)
 
 `write`, `edit`, `apply_patch`, and `notebook_edit` re-validate workspace paths
-at exec time and open leaf files with `O_NOFOLLOW` so a symlink planted after
-resolve cannot redirect writes outside the workspace. Dangling final-component
-symlinks that escape are rejected. This is complementary to the bash OS
-sandbox: structured file tools do not go through bwrap/seatbelt the same way
-shell does.
+at exec time and open leaf files with hardened I/O (`internal/safefile`): refuse
+symlink-leaf mutations, reject FIFO/device/socket, timed reads, atomic replace.
+See [Safefile](/docs/safefile). This is complementary to the bash OS sandbox:
+structured file tools do not go through bwrap/seatbelt the same way shell does.
+
+## Related security layers
+
+| Layer | Doc |
+|---|---|
+| Action facts + tool-chain correlation | [Isolation](/docs/isolation) |
+| Permission explain / diff / presets | [Config](/docs/config), [Usage](/docs/usage) |
+| Write-time content guards | [Secrets](/docs/secrets#write-time-content-guards-890) |
+| Admission (MCP / skills / plugins) | [Admission](/docs/admission) |
+| Durable audit sink | [Audit](/docs/audit) |
+| Scheduler pools | [Scheduler](/docs/scheduler) (concurrency, not isolation) |
 
 ## Practical defaults
 
@@ -107,10 +161,12 @@ shell does.
   pass `--i-know`
 - Deny sensitive globs in [permissions](/docs/config) so they compile into the
   OS profile
+- Set `network.allow` when you want application-layer egress limits
 
 ## Related
 
-- [Config](/docs/config) — `sandbox` field and example JSON
+- [Isolation](/docs/isolation) — full matrix
+- [Config](/docs/config) — `sandbox`, `network.allow`, permissions
 - [Usage](/docs/usage) — permission mode dial, `/sandbox`, composer `!`
 - [Scheduler](/docs/scheduler) — concurrency limits (not isolation)
 - [First-time setup](/docs/ftue) — optional onboarding path
