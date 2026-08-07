@@ -34,9 +34,10 @@ Applies to the **bash** tool and composer `!` shell via:
 - **macOS:** seatbelt profiles through `sandbox-exec`
 
 When the backend is missing or blocked (for example locked-down user
-namespaces), bash **degrades** to unsandboxed execution with a one-shot startup
-warning (unless `sandbox` is already `off`). Strike does not pretend isolation
-is active when it is not.
+namespaces), bash is **fail-closed** by default: the tool returns
+`sandbox_denied` rather than running unsandboxed. Opt into the old degrade
+path with `sandboxAllowDegrade: true` (or when `sandbox` is already `off`).
+Strike does not pretend isolation is active when it is not.
 
 ### CLI
 
@@ -140,6 +141,24 @@ at exec time and open leaf files with hardened I/O (`internal/safefile`): refuse
 symlink-leaf mutations, reject FIFO/device/socket, timed reads, atomic replace.
 See [Safefile](/docs/safefile). This is complementary to the bash OS sandbox:
 structured file tools do not go through bwrap/seatbelt the same way shell does.
+
+
+
+## Bash egress preflight
+
+When `network.allow` is non-empty and the OS sandbox still has host network,
+bash **preflight** denies destinations outside the shared host/CIDR/`*.suffix`
+list before the process starts:
+
+- Known clients: `curl`, `wget`, `ssh`, `scp`, `sftp`, `nc`, …
+- Interpreters, `/dev/tcp`, package network subcommands, and **unknown binaries**
+  also fail closed (skipped when OS `NoNetwork` is already on)
+
+Structured tool error: `network_denied`. This is **not** a full shell/network
+proxy — OS backends still have no per-host filter. Inspect with
+`/sandbox explain` (`egress enforcement: preflight`).
+
+Composer `!` shell uses the same allowlist preflight.
 
 ## Related security layers
 

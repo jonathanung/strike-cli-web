@@ -108,7 +108,7 @@ export const DOC_PAGES: DocPage[] = [
   {
     slug: 'sandbox',
     title: 'Sandbox',
-    summary: 'OS isolation dial for bash — bwrap/seatbelt, network.allow, honesty notes.',
+    summary: 'OS isolation dial for bash — fail-closed degrade, network.allow egress preflight.',
     markdown: sandboxMd,
     category: 'use',
   },
@@ -178,7 +178,7 @@ export const DOC_PAGES: DocPage[] = [
   {
     slug: 'mcp',
     title: 'MCP',
-    summary: 'Connect Model Context Protocol servers over stdio or streamable HTTP.',
+    summary: 'MCP servers over stdio or HTTP — tools, prompts, resources, OAuth, catalog refresh.',
     markdown: mcpMd,
     category: 'configure',
   },
@@ -213,7 +213,7 @@ export const DOC_PAGES: DocPage[] = [
   {
     slug: 'audit',
     title: 'Audit',
-    summary: 'Trust-boundary decision log under ~/.strike/audit/.',
+    summary: 'Durable audit log — permission, egress, hooks, admission, content guards.',
     markdown: auditMd,
     category: 'configure',
   },

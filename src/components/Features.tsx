@@ -173,9 +173,16 @@ const groups: FeatureGroup[] = [
       {
         title: 'Cost & agent budgets',
         description:
-          'Per-child and session cost envelopes, soft finalization on budget stop, and /cost so spend stays visible and bounded.',
+          'Session --max-cost / maxSessionCostUSD envelopes, turn deadlines, per-child budgets with soft finalization, and TUI budget warnings.',
         icon: Wallet,
         docsTo: '/docs/config',
+      },
+      {
+        title: 'Active-turn steer',
+        description:
+          'Redirect a running root turn at the next safe boundary — distinct from queued prompts and hard interrupt — with durable turn.steered events.',
+        icon: GitBranch,
+        docsTo: '/docs/usage',
       },
     ],
   },
@@ -195,7 +202,7 @@ const groups: FeatureGroup[] = [
       {
         title: 'OS sandbox dial',
         description:
-          'Linux bwrap / macOS seatbelt for bash (workspace-write by default). Independent of permission mode; yolo + sandbox off needs --i-know.',
+          'Linux bwrap / macOS seatbelt for bash (workspace-write by default). Fail-closed when the backend is missing; network.allow egress preflight; yolo + sandbox off needs --i-know.',
         icon: ShieldCheck,
         docsTo: '/docs/sandbox',
       },
@@ -251,7 +258,7 @@ const groups: FeatureGroup[] = [
       {
         title: 'MCP (stdio + HTTP)',
         description:
-          'Connect Model Context Protocol servers over stdio or streamable HTTP and expose their tools inside Strike.',
+          'Stdio or streamable HTTP servers with tools, prompts, resources, OAuth, and live catalog refresh — capability-negotiated and permissioned.',
         icon: Plug,
         docsTo: '/docs/mcp',
       },
@@ -301,7 +308,7 @@ const groups: FeatureGroup[] = [
       {
         title: 'Checkpoints & undo',
         description:
-          'Per-turn file snapshots power /undo so you can drop the last model turn and restore workspace files — without git reset --hard.',
+          'Per-turn file snapshots plus bash shadow-git coverage power /undo — restore formatter and shell side effects without git reset --hard.',
         icon: Undo2,
         docsTo: '/docs/checkpoints',
       },

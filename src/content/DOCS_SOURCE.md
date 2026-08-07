@@ -26,9 +26,9 @@ Markdown under this directory is vendored for the on-domain `/docs` hub.
 | `plugins` | configure | **Web-only** — install/trust/catalog user guide |
 | `secrets` | configure | `docs/secrets.md` (+ hub write-time guards section) |
 | `admission` | configure | **Web-only** — MCP/skills/plugin bind-time scans |
-| `audit` | configure | **Web-only** — durable trust-boundary decision log |
+| `audit` | configure | `docs/audit.md` |
 | `safefile` | configure | **Web-only** — hardened path I/O |
-| `telemetry` | configure | **Web-only** — versioned export families (not cloud analytics) |
+| `telemetry` | configure | `docs/telemetry.md` (OTLP + export families) |
 | `web` | advanced | `docs/web.md` (experimental) |
 | `peer-ecosystem` | advanced | `docs/peer-ecosystem.md` |
 | `plugin-panes` | use | **Web-only** — pane/1 user overview |
