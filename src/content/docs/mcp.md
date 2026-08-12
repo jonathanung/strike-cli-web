@@ -3,7 +3,9 @@
 Connect external [Model Context Protocol](https://modelcontextprotocol.io)
 servers so their tools appear in the model registry as `mcp_<server>_<tool>`.
 Supported transports: **stdio** (local subprocess) and **streamable HTTP**
-(remote endpoint; JSON or SSE responses).
+(remote endpoint; JSON or SSE responses). MCP tool results are untrusted
+model-facing text — see [threat-model.md](/docs/threat-model#mcp-servers).
+Admission at bind time: [admission.md](/docs/admission).
 
 Prefer **`mcp.jsonc`** (or `mcp.json`) for server definitions. The legacy
 `mcp` object in config still works. Layers merge last-wins by file:

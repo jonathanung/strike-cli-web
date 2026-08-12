@@ -19,7 +19,7 @@ const upcoming: Upcoming[] = [
   {
     title: 'Hardened remote access',
     description:
-      'TLS, stronger auth, and safer remote patterns beyond today’s experimental localhost/LAN serve — TUI stays primary.',
+      'TLS, stronger auth, and safer remote patterns beyond today’s experimental loopback serve — TUI stays primary.',
     icon: Globe,
   },
   {

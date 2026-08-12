@@ -1,7 +1,20 @@
 # Web workspace
 
-`strike serve` hosts a React workspace that can drive a **live** engine session
-and read-only attach to durable session JSONL logs.
+`strike serve` hosts a cohesive React **cockpit** for solo and multi-agent work
+on desktop, tablet, and phone. It can drive a **live** engine session (mutations
+via REST/WebSocket ops) and **attach-only** read historical session JSONL logs.
+
+This is **not** a read-only status page: live mode exposes Chat, Code, Team,
+Project, and Ops surfaces (plugins, panes, MCP, auth, reviewed file apply, team
+controls) behind capability gates and attach-only / `--read-only` blocks.
+
+**Progressive workspace contract (epic [#1069](https://github.com/jonathanung/strike/issues/1069)):**
+modes (`Chat` default, `Code`, `Team`, `Project`, `Ops`), surface registry,
+additive deep links, attach-only matrix, TUI→web parity inventory, and
+conformance closeout live in
+**[docs/web-cockpit-contract.md](https://github.com/jonathanung/strike/blob/main/docs/web-cockpit-contract.md)** (WEBUI.1 / #1070 +
+WEBUI.21 / #1090). This page is the operator reference for start flags,
+endpoints, multi-session UX (#467), smokes, and security.
 
 ## Start
 
@@ -20,15 +33,14 @@ strike mints a token when `--auth` is used without `--token`.
 
 | Flag | Meaning |
 |---|---|
-| `--addr` | Bind address (default `127.0.0.1:8787`) |
+| `--addr` | Loopback bind address (default `127.0.0.1:8787`; non-loopback rejected) |
 | `--auth` | Require bearer authentication; auto-mint a token when omitted |
-| `--expose` | Bind `0.0.0.0` (LAN). Requires `--auth`; loud WARNING; prints LAN URLs |
-| `--allow-cidr` | With `--expose`, only accept client IPs in these CIDRs (repeatable) |
 | `--token` | Bearer token for `/v1/*`; requires `--auth` |
 | `--provider` | Live engine provider (default `echo`) |
 | `--model` | Optional model id |
 | `--session-dir` | Sessions directory for `--attach-only`; rejected in live mode |
 | `--attach-only` | No live engine — JSONL SSE attach only |
+| `--read-only` | Reject mutating protocol ops (`POST /v1/ops` + WS op frames); status/SSE still work |
 | `--auto`, `--dangerously-skip-permissions` | Auto-allow permission asks in the live engine (equivalent) |
 
 Open the cockpit:
@@ -37,46 +49,52 @@ Open the cockpit:
 http://127.0.0.1:8787/attach
 ```
 
-## LAN expose (`--expose`)
+### Real-browser smokes (`make web-e2e`)
+
+Offline Playwright harness (WEBUI.5 / #1071) against temporary `strike serve`
+fixtures (echo provider + attach-only). Does **not** replace unit tests:
 
 ```sh
-./strike serve --auth --expose --token "$STRIKE_SERVE_TOKEN" --provider echo
-# optional client allowlist:
-./strike serve --auth --expose --allow-cidr 192.168.0.0/16 --token "$STRIKE_SERVE_TOKEN"
+make web-check   # fast default: typecheck, vite build, vitest/jsdom
+make web-e2e     # boots servers, installs Chromium once, runs web/e2e
 ```
 
-Behavior:
+Coverage includes bootstrap, one streamed echo turn, permission dialog,
+multi-root switching, additive `?mode=`/`?surface=` deep-link safety,
+attach-only mutation lockout, keyboard focus for settings/send, and
+desktop/tablet/720/320 viewport overflow checks. Failure traces and
+screenshots land in `web/e2e-artifacts/` (CI uploads the same path).
+Honors `prefers-reduced-motion` via Playwright `reducedMotion: "reduce"`.
+No real provider keys or network model calls.
 
-- Default without `--expose` stays **localhost-only**. A non-loopback `--addr`
-  (e.g. `0.0.0.0:8787`) is **rejected** unless `--expose` is set.
-- `--expose` rewrites a loopback `--addr` host to `0.0.0.0` (same port). An
-  explicit non-loopback host is kept (bind one interface).
-- Auth is required for network exposure. The full cockpit URL
-  including `?token=` is printed **once** on stdout together with detected LAN
-  IPs.
-- A loud WARNING is printed on stderr (no TLS; token is bearer secret).
-- Optional `--allow-cidr` denies clients outside the list (including `/health`).
+## Remote access (SSH local forward)
+
+`strike serve` binds **loopback only**. There is no cleartext LAN expose and no
+built-in TLS. Non-loopback `--addr` values are rejected. Legacy `--expose` /
+`--allow-cidr` flags error with a migration hint.
+
+For phone/laptop access to a remote host, forward the loopback port over SSH:
+
+```sh
+# on the machine running strike:
+./strike serve --auth --token "$STRIKE_SERVE_TOKEN" --provider echo
+# on the client:
+ssh -L 8787:127.0.0.1:8787 user@strike-host
+# open http://127.0.0.1:8787/attach?token=...
+```
 
 ### Threat model
 
 | Risk | Notes |
 |---|---|
-| Session transcripts on LAN | Anyone with the token can SSE/WS read JSONL and live events |
+| Session transcripts | Token holders can SSE/WS read JSONL and live events on the bound interface |
 | Live control plane | Token holders can submit ops (prompts, permission replies, tools) |
-| No TLS | Tokens and payloads are cleartext on the wire — untrusted Wi‑Fi is unsafe |
-| Token in URL | Query `?token=` may land in browser history / proxies; prefer Bearer when scripting |
-| CSRF / CORS | Localhost origins always allowed; with `--expose`, private-network browser origins are also allowed for Vite-style dev. Public internet origins are never reflected |
-| Shared networks | Prefer `--allow-cidr` to your LAN, or do not use `--expose` |
-
-**Safer alternative:** keep loopback bind and forward with SSH:
-
-```sh
-# on the machine running strike:
-./strike serve --auth --token "$STRIKE_SERVE_TOKEN"
-# on the laptop/phone-side jump host:
-ssh -L 8787:127.0.0.1:8787 user@strike-host
-# open http://127.0.0.1:8787/attach?token=...
-```
+| Cleartext LAN | Not supported — use SSH (encrypted tunnel) instead of binding off localhost |
+| Token in URL | Cockpit open uses a one-time `?token=` handoff that sets a cookie and redirects; `/v1/*` rejects query tokens (use Bearer or cookie) |
+| CSRF / CORS | Only loopback browser origins are reflected (`localhost` / `127.0.0.1` / `::1`). Public and private LAN origins are never reflected |
+| Ops flood | Per-IP token bucket on `POST /v1/ops` and WS op frames (default 10/s, burst 20) → HTTP 429 / WS error |
+| Ops audit | Every admitted/denied op is logged to `~/.strike/audit` as family `serve_op` (type + source IP + channel + outcome; no bodies) |
+| Read-only | `--read-only` rejects mutating ops with HTTP 403 / WS error while keeping attach/SSE |
 
 ## Endpoints
 
@@ -92,6 +110,7 @@ ssh -L 8787:127.0.0.1:8787 user@strike-host
 | `GET` | `/v1/sandbox` | **yes** | Active OS sandbox dial, backend, network.allow summary, explain profile |
 | `PATCH` | `/v1/sandbox` | **yes** | Persist sandbox default (`mode`, optional `iKnow`); new sessions only |
 | `GET` | `/v1/agents` | **yes** | Selectable agent names |
+| `GET` | `/v1/models` | mode | `{ "models": [...] }` (`?provider=` optional). Echo (offline default) is **200** with a synthetic `echo` model, not 502. Catalog fetch / empty models.dev lists for API providers are **502**. |
 | `GET` | `/v1/sessions` | **yes** | Durable session list (roots only) + `liveId` |
 | `GET`/`POST` | `/v1/diag` | **yes** | Redacted prompt/config diagnostic bundle (JSON download; live only; `?root=` when multi-root). Bootstrap capability `diag`. **503** when unsupported (attach-only / no live). |
 | `GET` | `/v1/sessions` | **yes** | Session list + `liveId` |
@@ -145,19 +164,31 @@ ssh -L 8787:127.0.0.1:8787 user@strike-host
 | `POST` | `/v1/workflow-drafts/review` | **yes** | Structured draft review (checks + widening) |
 | `POST` | `/v1/workflow-drafts/save` | **yes** | Save draft JSON with explicit `confirm` |
 
-\*Still subject to `--allow-cidr` when set.
-
-With `--auth`, authenticate `/v1/*` using any of:
+With `--auth`, authenticate `/v1/*` using either of:
 
 - `Authorization: Bearer <token>`
 - HttpOnly `strike_serve_token` cookie (set automatically when you open
   `/attach?token=…` or `/?token=…` — the server redirects to a token-free URL)
-- `?token=<token>` (EventSource / WebSocket query fallback)
 
-Opening the cockpit URL printed by `strike serve` (includes `?token=`) performs
-a one-time handoff: valid tokens become a `SameSite=Strict` HttpOnly cookie so
-subsequent same-origin `fetch` / EventSource / WebSocket calls succeed without
-leaving the secret in the address bar.
+Query-string `?token=` is **not** accepted on `/v1/*` (it leaks into shell
+history, proxy logs, and `Referer`). Opening the cockpit URL printed by
+`strike serve` (includes `?token=` on `/attach` only) performs a one-time
+handoff: valid tokens become a `SameSite=Strict` HttpOnly cookie so subsequent
+same-origin `fetch` / EventSource / WebSocket calls succeed without leaving the
+secret in the address bar.
+
+### Ops rate limit, audit, and read-only
+
+- **Rate limit:** each client IP has a token bucket (default **10 ops/s**, burst
+  **20**) shared by `POST /v1/ops` and WebSocket op frames. Exceeding the limit
+  returns **HTTP 429** or a WS `error` frame (`ops rate limited`).
+- **Audit:** every op attempt is appended to the security audit sink
+  (`~/.strike/audit`, family `serve_op`) with `opType`, `sourceIp`, `channel`
+  (`http`|`ws`), and `outcome` (`ok`|`rate_limited`|`read_only`|`error`). Op
+  bodies are never stored. See [audit.md](/docs/audit).
+- **`--read-only`:** rejects mutating protocol ops (same paths) with **HTTP 403**
+  / WS error while leaving bootstrap, status, and SSE attach available.
+  `status.get` on the WebSocket is still allowed.
 
 ### Op envelopes (client → engine)
 
@@ -173,6 +204,22 @@ JSON objects with a `type` and optional `data`:
 | `select.model` | `{ "provider", "model?" }` |
 | `set.permission_mode` | `{ "mode": "default\|plan\|accept-edits\|yolo" }` |
 | `set.autonomy` | `{ "mode": "supervised\|agent\|checks\|skip-all" }` |
+| `team.spawn` | `{ "idempotencyKey", "objective", "agent?", "name?", "isolation?", "budget?", "rootSessionId?" }` |
+| `team.message` | `{ "idempotencyKey", "to", "body", "kind?", "urgency?", "taskId?" }` |
+| `team.broadcast` | `{ "idempotencyKey", "body", "urgency?", "taskId?" }` |
+| `team.child_interrupt` | `{ "idempotencyKey", "childSessionId", "reason?" }` |
+| `team.task_transition` | `{ "idempotencyKey", "delegationId", "expectedVersion", "toState", "reason?" }` |
+| `team.board_create` | `{ "idempotencyKey", "title", "body?", "assignee?" }` |
+| `team.board_claim` | `{ "idempotencyKey", "taskId", "expectedVersion" }` |
+| `team.board_complete` | `{ "idempotencyKey", "taskId", "expectedVersion", "summary?" }` |
+
+Human team-control Ops (WEBUI.18) are advertised on bootstrap when live:
+`capabilities.teamControl: true` and the `team.*` names above appear in
+`protocolOps`. HTTP waits for the engine outcome and returns structured
+`{ ok, childSessionId?, taskId?, … }` or stable errors (`attach_only`,
+`cross_root_denied`, `conflict` + `currentVersion`, `idempotency_conflict`,
+`permission_denied`, `team_unavailable`). Full contract:
+[human-orchestration-ops.md](https://github.com/jonathanung/strike/blob/main/docs/human-orchestration-ops.md).
 
 ### OS sandbox (web parity)
 
@@ -302,6 +349,12 @@ Normative product contract for the web cockpit multi-session experience
 (epic [#467](https://github.com/jonathanung/strike/issues/467)). Implementers of
 WEBSESS.2–.6 (#917–#921) must follow this section; do not re-decide product
 here without updating this doc.
+
+For progressive **modes**, **surface registry**, **parity inventory**, and
+extended deep-link grammar (`mode` / `surface` / …), see
+[web-cockpit-contract.md](https://github.com/jonathanung/strike/blob/main/docs/web-cockpit-contract.md). When the two docs disagree
+on root/session transport, **this section wins**; on modes/surfaces/parity, the
+cockpit contract wins.
 
 **Status:** contract freeze for wave 1. UI and server behavior changes land in
 child issues; this section is the source of truth for information architecture,
@@ -506,6 +559,27 @@ other query params):
 Shareable example (after auth handoff): `/attach?session=<durableId>` or
 `/attach?root=<liveId>`.
 
+Additive workspace navigation (WEBUI.3 / #1073; normative detail in
+`docs/web-cockpit-contract.md` §5):
+
+| Query | Meaning |
+|---|---|
+| `?mode=` | `chat` \| `code` \| `team` \| `project` \| `ops` (default `chat`) |
+| `?surface=` | Registry surface id (`plans`, `files`, `roster`, …) |
+| `?entity=` | Opaque entity id for the surface |
+| `?path=` | Workspace-relative file path (implies Code) |
+| `?agent=` | Child agent id (implies Team) |
+| `?pane=` | Plugin pane id (implies Ops panes) |
+
+Example: `/attach?root=<liveId>&mode=project&surface=plans&entity=<planId>`.
+Invalid or unsupported mode/surface falls back safely; `root`/`session` resolution is unchanged.
+
+
+Additive mode/surface/entity deep links (`mode`, `surface`, `path`, `agent`,
+`pane`, `entity`) are specified in
+[web-cockpit-contract.md §5](https://github.com/jonathanung/strike/blob/main/docs/web-cockpit-contract.md#5-deep-link-grammar-additive)
+and must not break the `root` / `session` semantics above.
+
 **Keyboard (rail focused):** `j` / `ArrowDown` next workspace, `k` / `ArrowUp`
 previous. Ignored while focus is in an input/textarea (composer safe).
 
@@ -541,8 +615,8 @@ buses) unless a child issue records a hard gap and updates this section.
 | Broad v0.2.x feature parity (plans, goals, MCP, …) | #516 |
 | Cockpit auth/TLS/rate-limit hardening | #541 |
 | Harness trust UX / timeline export entry points | #809 (TUI-first; web residual under #516) |
-| Subagent tree visualizer | #523 (TUI-first; web non-goal) |
-| Full TUI multi-agent parity | non-goal for #467 |
+| Subagent tree **graph** visualizer | #523 (TUI-first). Epic #1069 extends the former web non-goal to observe-first list/board/review only — graph clone remains out of scope ([web-cockpit-contract.md](https://github.com/jonathanung/strike/blob/main/docs/web-cockpit-contract.md)) |
+| Full TUI multi-agent parity | non-goal for #467; Team observe/control track is #1081–#1089 |
 | Implementing UI/server in this contract issue | #917–#921 |
 | Persisting drafts across full page reload | non-goal for #918 |
 | Sound / desktop notifications | optional later |
@@ -594,6 +668,171 @@ When `capabilities.plugins` / `capabilities.panes` are true, the inspector expos
 
 Mutations that change trust or install state require a live host (not attach-only).
 
+## Long-session performance (WEBUI.20 / #1087)
+
+Long historical transcripts and large team rosters stay responsive by bounding
+**paint work**, not by deleting durable events:
+
+| Mechanism | Behavior |
+|---|---|
+| Stream batching | WS/SSE envelopes coalesce to **≤1 React commit per animation frame** (`web/src/streamBatch.ts` → `client.events`) |
+| Transcript virtualization | Windowed DOM via `VirtualList` — full `items[]` stays in memory; mounted rows capped (~80) |
+| Content bounds | Markdown, fenced code, diffs, and tool output are chunked/truncated for display; session memory retains full text |
+| Lazy surfaces | Team / Code / Project / Ops panels load with `React.lazy` so Chat startup does not pull those bundles |
+| Team isolation | `TranscriptList` is memoized; roster/task/attention updates do not rerender the transcript when `items` is unchanged |
+| Scroll anchors | Prepend/backfill preserves scroll position; jump-to-latest + unread count track while scrolled up |
+| Live region | Status announcements stay batched (not per-token) to avoid screen-reader floods |
+
+### Fixture and thresholds
+
+Deterministic fixture: `web/src/perf/fixture.ts` (≥10 000 protocol events, mixed
+stream/tool/diff cells, 50-agent roster with task/attention updates).
+
+Committed CI gates: `web/src/perf/thresholds.ts` + `web/src/perf/perf.test.ts`
+(reduce wall time, mounted-cell bound, stream batching, roster size).
+
+Local reference profile (desktop + throttled-mobile budgets for TTI, longest
+main-thread task, DOM nodes, heap trend, input/scroll latency):
+
+```sh
+cd web && npm run profile:perf
+```
+
+Browser measurement: DevTools Performance on a hydrated long session; for
+mobile guidance use CPU 4× throttling. Advisory budgets live in
+`PERF_THRESHOLDS_LOCAL` — CI runs the stable subset only.
+
+### Accessibility
+
+Virtualization keeps semantic message labels, keyboard focus order inside the
+mounted window, and search/export over the full in-memory transcript. The
+transcript `role="log"` does not announce token-by-token deltas.
+
+
+## Progressive modes and surface registry
+
+| Mode | Primary | Typical secondary surfaces |
+|---|---|---|
+| **Chat** (default) | transcript + composer | context, runtime, queue, asks |
+| **Code** | file tree / read / markdown / diff | changed files, diagnostics, reviewed apply |
+| **Team** | roster / agent detail | board, attention, messages, artifacts, ledger, controls |
+| **Project** | plans / goals / issues / memory | workflows, project exports |
+| **Ops** | providers / settings | MCP, plugins, panes, timeline, diagnostics, sandbox |
+
+Surfaces register in `web/src/surfaces.ts` (built-ins + dynamic `pane/1`).
+Capability-missing surfaces hide; deep links that name an unavailable surface
+show an empty-state without attempting mutations.
+
+### Deep links
+
+Compatible with existing `?root=` / `?session=` / attach handoff. Additive:
+
+| Param | Meaning |
+|---|---|
+| `mode` | `chat` \| `code` \| `team` \| `project` \| `ops` |
+| `surface` | registry id (`roster`, `files`, `mcp`, …) |
+| `entity` | path, artifact id, agent id, … |
+| `agent` | child/agent session focus |
+| `pane` | plugin pane id (Ops) |
+
+Root isolation: every live query, event, and mutation is scoped to one root.
+Switching roots never merges transcript caches (`ClientState.byID`).
+
+### Attach-only and `--read-only`
+
+| Mode | Transcript | Mutations (ops, file apply, team control, settings PATCH) |
+|---|---|---|
+| Live | WS stream | Allowed when capability + auth admit |
+| Attach-only | SSE history | **Blocked** (HTTP 403 / UI disabled) |
+| `--read-only` serve | Live or attach | **Blocked** at server admit layer |
+
+Team human controls and reviewed file apply require public Ops, actor,
+permission, audit, CAS, and idempotency (see
+[human-orchestration-ops.md](https://github.com/jonathanung/strike/blob/main/docs/human-orchestration-ops.md)).
+
+### Security boundaries (summary)
+
+- Loopback bind only; remote access via SSH local forward (see above).
+- Auth: one-time `/attach?token=` cookie handoff or `Authorization: Bearer` — not
+  long-lived `?token=` on `/v1/*`.
+- Credentials redacted in exports, diag, timeline, and transcript scrapes.
+- Path confinement on file read/apply; wrong-root denial on multi-root ops.
+- Stale CAS / idempotency keys fail closed on team and file mutations.
+- Unsupported capability → hide or 501; never a silent no-op success.
+
+Sibling epic boundaries (not absorbed by #1069): **#541** / **#1032** (serve
+hardening & security audit depth), **#1056** (human collaboration), **#1058**
+(adaptive orchestration policy), **#1060** (cross-device continuity, push,
+remote approval).
+
+## Operator smoke checklist
+
+Run against `make serve` (echo provider) unless noted.
+
+### Chat
+1. Send a turn; confirm user + assistant cells stream.
+2. Queue a second prompt while busy; reorder/edit/clear queue.
+3. Trigger a permission ask (`run echo hi`); Allow once; dialog dismisses.
+4. `/export` or header ↓ downloads markdown of the loaded transcript.
+
+### Code
+1. Mode **Code** → files surface; tree/search/read a workspace file.
+2. Open a changed-file diff; with live + `fileApply`, review and apply a confined edit (or confirm attach-only blocks apply).
+
+### Team
+1. With multi-agent activity (or deep link `?mode=team&surface=roster`), open roster/board/attention.
+2. Open artifacts/ledger/review when capabilities allow.
+3. Live only: team control actions show CAS/idempotency errors clearly when stale; attach-only shows controls disabled.
+
+### Project
+1. Plans / goals / issues / memory list; create/edit where not attach-only.
+2. Workflows catalog; start blocked in attach-only.
+3. Export memory/issues from project export surface.
+
+### Ops
+1. Settings: appearance, theme catalog preview/apply, provider auth row.
+2. MCP status; plugins list; panes list/mount when caps true.
+3. Timeline + diagnostics export; sandbox explain.
+
+### Trust-boundary smoke
+1. Attach-only: composer disabled; POST `/v1/ops` → 403.
+2. Wrong `?root=` / activate another root: events do not leak across caches.
+3. File apply outside workspace → denied; audit/permission correlation preserved.
+4. Team op with stale CAS or replayed idempotency key → conflict/reject, no double apply.
+5. Missing capability surface deep link → unavailable empty-state, no mutation.
+
+### Automated browser smoke
+
+```sh
+make web-e2e
+```
+
+Covers desktop, tablet, **320 CSS px** mobile, keyboard/focus, reduced-motion
+friendly paths, multi-root switch, reconnect/deep links, and attach-only
+(`web/e2e/cockpit.spec.ts`, `attach-only.spec.ts`). Artifacts under
+`web/e2e-artifacts/`.
+
+### Performance
+
+See [Long-session performance](#long-session-performance-webui20-1087). CI
+enforces the stable fixture subset; full browser profile is local via
+`cd web && npm run profile:perf`.
+
+## Conformance closeout (WEBUI.21 / #1090)
+
+Epic [#1069](https://github.com/jonathanung/strike/issues/1069) is complete when:
+
+1. Parity matrix in [web-cockpit-contract.md](https://github.com/jonathanung/strike/blob/main/docs/web-cockpit-contract.md) §8 has no
+   unknown/partial row without owner — **done** (shipped / non-goal / deferred `/init`).
+2. This operator doc covers modes, registry, deep links, capabilities, endpoints,
+   root isolation, attach-only, Team observe/control, and security — **done**.
+3. Stale “read-only server” / “no web plugins” descriptions corrected — **done**.
+4. Operator + automated smokes above are the release gate — run before tagging.
+5. Long-session thresholds from #1087 met or tracked — **committed in**
+   `web/src/perf/thresholds.ts`.
+6. Sibling boundaries #541, #1032, #1056, #1058, #1060 unchanged — **done**.
+7. Changelog summarizes the cohesive workspace without claiming native/offline/push/collaboration features not shipped — see `CHANGELOG.md` `[Unreleased]`.
+
 ## Vite dev / production web toolchain
 
 Production cockpit HTML is **embedded** in the Go binary
@@ -630,26 +869,39 @@ Cockpit colors track the stock TUI palette in `internal/tui/theme.Default()`
 in `web/src/styles.css`; keep them aligned when changing `theme.go` (see
 `web/src/theme.test.ts` and [theme.md](/docs/theme)).
 
+**Catalog (WEBUI.11):** `GET /v1/themes` lists bundled/user/project/plugin themes
+with portable semantic color roles and provenance. `GET /v1/themes/{id}` returns
+one entry. Selecting a theme in Settings **previews** immediately (CSS variable
+overrides); **Apply** persists via `PATCH /v1/settings` `{ "theme": "<id>" }`.
+Cancel/Revert restores the prior applied theme. Appearance (`auto`/`light`/`dark`)
+stays a separate browser control (`data-appearance`). TUI-only glyph/chrome fields
+are omitted from the wire payload.
+
 Lifecycle: run Vite as a **sibling** process of `strike serve` (two terminals or
 a process supervisor). Strike does not spawn Vite as a child.
 
 ## Security (summary)
 
-- Default bind is **loopback** (`127.0.0.1:8787`).
-- Non-loopback binds require **`--auth`** and **`--expose`**.
-- CORS allows localhost always; with `--expose`, also private-network origins.
+- Bind is **loopback only** (`127.0.0.1:8787` default). Non-loopback `--addr` is rejected.
+- Remote access: `ssh -L 8787:127.0.0.1:8787 user@host` (no cleartext LAN expose / no TLS terminator in-process).
+- CORS reflects loopback browser origins only.
 - Treat the token like a password; do not commit it.
-- See **Threat model** under LAN expose above.
+- See **Threat model** under Remote access above.
 
 ## Layout
 
-| Path | Role |
-|---|---|
-| `cmd/strike/serve.go` | `strike serve` CLI + live engine wiring + `--expose` |
-| `internal/server` | HTTP/SSE/WS handlers, live hub, bind/CIDR helpers |
-| `internal/server/static` | embedded cockpit page |
-| `web/` | optional Vite dev proxy + `npm run build` |
-| `pkg/protocol` | Event + Op JSON envelopes (public; `internal/protocol` re-exports) |
+> **Web cockpit:** The TUI `/loop` shortcut is superseded by durable **Goals** and **Workflows** controls under Project mode (WEBUI.12). The browser does not add a session-only loop engine.
+
+
+Responsive shell profiles (WEBUI.4 / #1074; contract §4):
+
+| Profile | Width | Chrome |
+|---|---|---|
+| Desktop | ≥ 1024 CSS px | Rail + canvas + optional inspector drawer |
+| Tablet | 600–1023 | Canvas; rail and inspector as overlay drawers + backdrop |
+| Phone | ≤ 599 (down to 320) | Single canvas; bottom mode bar; rail/inspector as bottom sheets |
+
+Fixed chrome uses `safe-area-inset-*`. Phone composer uses a sticky row and 44px primary controls; `prefers-reduced-motion` disables nonessential transitions. Escape closes overlay panels (not blocking ask dialogs).
 
 ## Manual checklist
 
@@ -660,9 +912,27 @@ a process supervisor). Strike does not spawn Vite as a child.
 5. RO attach: pick another session id → SSE transcript only.
 6. Multi-session: see **Manual smoke (multi-session)** under the multi-session UX contract
    (requires WEBSESS.2+ UI; contract-only changes need no runtime check).
-7. `./strike serve --auth --expose --token test` → WARNING on stderr; phone on LAN loads
-   printed cockpit URL; `/health` and live stream work with token.
-8. `./strike serve --addr 0.0.0.0:8787` without `--expose` → error.
+7. `./strike serve --auth --token test` → open printed cockpit URL; cookie handoff + live stream.
+8. `./strike serve --addr 0.0.0.0:8787` → error (loopback only).
+9. `./strike serve --expose` → error with SSH migration hint.
+
+### Provider auth & policy (WEBUI.10)
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/v1/providers` | Provider rows with authed state + methods (`apiKey`/`device`/`oauth`); no secrets |
+| `GET` | `/v1/models` | Catalog models (`?provider=`). Echo returns **200** `{ "models": [{ "id": "echo", "provider": "echo", … }] }`; genuine catalog failures stay **502** |
+| `POST` | `/v1/auth/key` | Set API key (live only; attach-only 403) |
+| `DELETE` | `/v1/auth/{provider}` | Logout |
+| `POST` | `/v1/auth/device` | Start device login → code + verification URL |
+| `GET`/`DELETE` | `/v1/auth/device/{id}` | Poll status / cancel |
+| `POST` | `/v1/auth/oauth` | Start paste-assisted OAuth (no invented browser callback) |
+| `POST` | `/v1/auth/oauth/{id}/complete` | Paste redirect URL or code |
+| `GET`/`POST`/`DELETE` | `/v1/custom-providers` | Custom provider CRUD (capability `providers`) |
+| `GET`/`POST` | `/v1/scheduler/presets` | Scheduler preset catalog + apply |
+| `GET` | `/v1/config-sources` | Typed config source inspection (no raw file editor) |
+
+Attach-only permits status/catalog reads; credential and settings mutations return **403**.
 
 ### Settings dials (`GET`/`PATCH /v1/settings`)
 
@@ -682,17 +952,13 @@ The cockpit Settings dialog loads `GET`, edits sections, and saves via `PATCH`.
 Browser color scheme (auto/dark/light) is local-only (`data-appearance` +
 `localStorage`), not a host config key.
 
-With `--auth`, authenticate `/v1/*` using any of:
+With `--auth`, authenticate `/v1/*` using either of:
 
 - `Authorization: Bearer <token>`
 - HttpOnly `strike_serve_token` cookie (set automatically when you open
   `/attach?token=…` or `/?token=…` — the server redirects to a token-free URL)
-- `?token=<token>` (EventSource / WebSocket query fallback)
 
-Opening the cockpit URL printed by `strike serve` (includes `?token=`) performs
-a one-time handoff: valid tokens become a `SameSite=Strict` HttpOnly cookie so
-subsequent same-origin `fetch` / EventSource / WebSocket calls succeed without
-leaving the secret in the address bar.
+Query-string `?token=` is **not** accepted on `/v1/*`.
 
 
 | `GET` | `/v1/goals` | **yes** | List loop-harness goals (host-safe DTOs) |
@@ -746,3 +1012,30 @@ Permission asks appear as `permission.asked` events; resolve with
 | `POST` | `/v1/issues/{id}/close` | **yes** | Close issue; blocked in attach-only |
 | `GET` | `/v1/issues/export` | mode | Download portable `strike-issues.json` (TUI format) |
 | `POST` | `/v1/issues/import` | **yes** | Import (`{path}` or `{data}`, `replace?`); blocked in attach-only |
+
+### Artifacts & decision ledger (read-only, WEBUI.15 / #1082)
+
+Bootstrap advertises `capabilities.artifacts` / `capabilities.ledger` only when
+the host wires those stores. There are **no** browser write routes — artifact
+create/update and ledger append/invalidate/supersede stay agent/tool-owned.
+Attach-only may read authorized rows; missing capability returns **501**.
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/v1/artifacts` | mode | Bounded list (`type`, `scope`, `sessionId`, `includeExpired`, `limit`≤200, `offset`). Visibility uses `actorSession` + `actorRoot` (default: live/`?root=` session). Owner-access rows require matching owner session; team-access requires matching owner root. |
+| `GET` | `/v1/artifacts/{id}` | mode | Full artifact (`?version=` optional). **404** when missing or not visible. Content/title are credential-scrubbed. |
+| `GET` | `/v1/ledger` | mode | History list (`status`, `kind`, `path`, `taskId`, `authorSession`, `limit`, `offset`) or active slice (`active=1` + optional `path`/`taskId`). Includes invalidated/superseded provenance fields. |
+| `GET` | `/v1/ledger/{id}` | mode | One ledger entry (any status). **404** when missing. Statements/evidence scrubbed. |
+
+Limits default to 100 (max 200). DTOs expose version/CAS and lifecycle fields
+only — never store filesystem paths or internal Go types. Concurrent agent
+writes remain coherent via the underlying stores; browser reads are race-safe.
+
+### Command discovery (WEBUI.6 / #1078)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/v1/files/search` | mode | Workspace file search (`q`, `limit`≤50) for `@file` completion; root-scoped via `host.Files.SearchFiles` |
+| `POST` | `/v1/history` | **yes** | Enqueue one prompt (`{prompt}`) into project history; blocked in attach-only. Web client calls once per accepted `user.input` (not on replay). |
+
+Composer: Ctrl/Cmd+K opens the command palette (modes, surfaces, slash, skills). Arrow Up/Down on an empty eligible composer walks prompt history. `@` triggers file search (not email-like tokens). Quiet first-run tip teaches palette / slash / `@file`.

@@ -8,7 +8,7 @@ session worktrees.
 
 | Layer | What it isolates | Config / dial | Backend | Failure signal |
 |---|---|---|---|---|
-| **Permission ruleset** | *When* a tool may run (allow / ask / deny) | `permissionMode`, rules, presets | `internal/permission` + `internal/actionfacts` | `permission_denied` on tool result + timeline |
+| **Permission ruleset** | *When* a tool may run (allow / ask / deny). Does **not** inspect tool output or block prompt injection | `permissionMode`, rules, presets | `internal/permission` + `internal/actionfacts` | `permission_denied` on tool result + timeline |
 | **OS process sandbox** | *What* bash can touch (FS + optional net) | `sandbox`: `off` \| `read-only` \| `workspace-write` | Linux `bwrap`, macOS `sandbox-exec` | `sandbox_denied` + human reason when applied; degrade warning if backend missing |
 | **Session worktree** | Tool CWD / git branch per root session | `session.worktree`: `off` \| `auto` \| `always` | `git worktree` under `.strike/worktrees/` | Soft-fail to launch cwd when not a git repo |
 | **Scheduler pools** | Concurrent bash/model/build/test inside one process | `scheduler.limits` / presets | `internal/scheduler` | Wait / `scheduler.canceled`; not a security boundary |
@@ -49,7 +49,9 @@ public telemetry without redaction; OS egress filtering (see #892).
 
 `yolo` does not disable the OS sandbox. `sandbox: off` does not skip asks.
 `yolo` + `sandbox: off` requires `--i-know`. See [config.md](/docs/config) and
-[usage.md](/docs/usage#os-sandbox-dial).
+[usage.md](/docs/usage#os-sandbox-dial). Permission rules do not protect against
+prompt injection in file, MCP, or web-fetch **content** —
+[threat-model.md](/docs/threat-model).
 
 ## OS sandbox (in-place, #537)
 
@@ -113,7 +115,7 @@ Full container / devcontainer isolation is epic
 [#547](https://github.com/jonathanung/strike/issues/547) (absorb Zone into
 strike). **E12.0 decision ([#582](https://github.com/jonathanung/strike/issues/582)):**
 shell out to `docker`/`podman` via injectable `ExecFunc` — do **not** vendor the
-Moby SDK. See [container.md](https://github.com/jonathanung/strike/blob/main/docs/container.md).
+Moby SDK. See [container.md](/docs/containers).
 
 Shipped today:
 
@@ -217,12 +219,9 @@ external audit DB.
 
 ## Related docs
 
-- [Sandbox](/docs/sandbox) — OS dial, honesty notes, egress allowlist UX
-- [Containers](/docs/containers) — Docker/Podman runtime isolation
-- [Config](/docs/config) — sandbox dial, scheduler, worktrees, network.allow
-- [Usage](/docs/usage) — `/sandbox`, `/permission`, worktree UX
-- [Admission](/docs/admission) — MCP/skills/plugin bind-time scans
-- [Audit](/docs/audit) — durable trust-boundary decision log
+- [config.md](/docs/config) — sandbox dial, scheduler, worktrees, network.allow
+- [usage.md](/docs/usage) — `/sandbox`, `/permission`, worktree UX
 - [ARCHITECTURE.md](https://github.com/jonathanung/strike/blob/main/docs/ARCHITECTURE.md) — cancel/deadline/backpressure, package map
-- [Harnesses](/docs/harnesses) — external harnesses are not OS-sandboxed today
+- [threat-model.md](/docs/threat-model) — prompt injection via files, MCP, webfetch
+- [harnesses.md](/docs/harnesses) — external harnesses are not OS-sandboxed today
 - [protocol.md](https://github.com/jonathanung/strike/blob/main/docs/protocol.md) — `permission.decided` chain fields (wire 1.13+)

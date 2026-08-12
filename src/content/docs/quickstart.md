@@ -18,7 +18,8 @@ Open a new shell (or `export PATH="$HOME/.strike/bin:$PATH"`), then:
 strike version
 ```
 
-macOS and Linux (arm64 / amd64) are supported. Nix: `nix run github:jonathanung/strike`.
+macOS, Linux, and Windows via WSL2 (arm64 / amd64) are supported. Native
+Windows is not. Nix: `nix run github:jonathanung/strike`.
 Details, PATH options, upgrade, and uninstall: [Install](/docs/install).
 
 ## 2. Authenticate a provider
@@ -105,6 +106,7 @@ Experimental browser UI; the TUI remains primary. See [Web](/docs/web).
 - [MCP](/docs/mcp) — stdio + streamable HTTP tools
 - [Theme](/docs/theme) — TUI chrome and color themes
 - [Secrets](/docs/secrets) — redaction and secret refs
+- [Threat model](/docs/threat-model) — prompt injection via files, MCP, and web fetch
 - [Multi-agent](/docs/multi-agent) — agents, skills, discovery roots
 - [Keybinds](/docs/keybinds) — full keyboard map
 

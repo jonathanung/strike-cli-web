@@ -23,6 +23,7 @@ import admissionMd from '../content/docs/admission.md?raw'
 import auditMd from '../content/docs/audit.md?raw'
 import safefileMd from '../content/docs/safefile.md?raw'
 import telemetryMd from '../content/docs/telemetry.md?raw'
+import threatModelMd from '../content/docs/threat-model.md?raw'
 import webMd from '../content/docs/web.md?raw'
 import evalMd from '../content/docs/eval.md?raw'
 import peerEcosystemMd from '../content/docs/peer-ecosystem.md?raw'
@@ -59,7 +60,7 @@ export const DOC_PAGES: DocPage[] = [
   {
     slug: 'install',
     title: 'Install',
-    summary: 'Install Strike on macOS and Linux with the one-line installer.',
+    summary: 'Install Strike on macOS, Linux, and Windows via WSL2. Native Windows is not supported.',
     markdown: installMd,
     category: 'start',
   },
@@ -232,9 +233,18 @@ export const DOC_PAGES: DocPage[] = [
     category: 'configure',
   },
   {
+    slug: 'threat-model',
+    title: 'Threat model',
+    summary:
+      'Prompt injection via files, MCP, and web fetch — what permissions and the OS sandbox do not cover.',
+    markdown: threatModelMd,
+    category: 'configure',
+  },
+  {
     slug: 'web',
     title: 'Web',
-    summary: 'Experimental strike serve cockpit — TUI is primary. Localhost default, LAN --expose threat model, no production multiplayer web IDE.',
+    summary:
+      'Experimental strike serve cockpit — TUI is primary. Loopback-only bind; remote access via SSH. No production multiplayer web IDE.',
     markdown: webMd,
     category: 'advanced',
     experimental: true,
