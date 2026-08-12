@@ -37,6 +37,12 @@ const SLUG = {
   isolation: 'isolation',
   harnesses: 'harnesses',
   secrets: 'secrets',
+  'threat-model': 'threat-model',
+  admission: 'admission',
+  audit: 'audit',
+  safefile: 'safefile',
+  telemetry: 'telemetry',
+  container: 'containers',
 }
 
 /** Pages not on the hub → GitHub blob */
@@ -47,6 +53,8 @@ const GITHUB_ONLY = new Set([
   'chaos',
   'protocol',
   'sdk',
+  'web-cockpit-contract',
+  'human-orchestration-ops',
 ])
 
 /** Slimmed-config anchors that moved to dedicated hub pages + short CLI anchors */
@@ -63,6 +71,8 @@ const ANCHOR_REMAP = {
   // CLI short anchors omit trailing "(normative)" from numbered sections
   '/docs/plugins#9-path-confinement': '/docs/plugins#9-path-confinement-normative',
   '/docs/plugins#10-secret-handling': '/docs/plugins#10-secret-handling-normative',
+  // GitHub slug keeps "--" from " / #"; hub slugifier collapses punctuation
+  '#long-session-performance-webui20--1087': '#long-session-performance-webui20-1087',
 }
 
 function readCli(name) {
@@ -344,7 +354,8 @@ Open a new shell (or \`export PATH="$HOME/.strike/bin:$PATH"\`), then:
 strike version
 \`\`\`
 
-macOS and Linux (arm64 / amd64) are supported. Nix: \`nix run github:jonathanung/strike\`.
+macOS, Linux, and Windows via WSL2 (arm64 / amd64) are supported. Native
+Windows is not. Nix: \`nix run github:jonathanung/strike\`.
 Details, PATH options, upgrade, and uninstall: [Install](/docs/install).
 
 ## 2. Authenticate a provider
@@ -431,6 +442,7 @@ Experimental browser UI; the TUI remains primary. See [Web](/docs/web).
 - [MCP](/docs/mcp) — stdio + streamable HTTP tools
 - [Theme](/docs/theme) — TUI chrome and color themes
 - [Secrets](/docs/secrets) — redaction and secret refs
+- [Threat model](/docs/threat-model) — prompt injection via files, MCP, and web fetch
 - [Multi-agent](/docs/multi-agent) — agents, skills, discovery roots
 - [Keybinds](/docs/keybinds) — full keyboard map
 
@@ -580,6 +592,7 @@ const pages = {
   isolation: polishIsolation(readCli('isolation.md')),
   harnesses: rewriteLinks(readCli('harnesses.md')),
   secrets: polishSecrets(readCli('secrets.md')),
+  'threat-model': rewriteLinks(readCli('threat-model.md')),
 }
 
 // Web-only hub pages are authored under src/content/docs/ and are NOT
@@ -622,13 +635,15 @@ Markdown under this directory is vendored for the on-domain \`/docs\` hub.
 | \`audit\` | configure | **Web-only** — durable trust-boundary decision log |
 | \`safefile\` | configure | **Web-only** — hardened path I/O |
 | \`telemetry\` | configure | **Web-only** — versioned export families (not cloud analytics) |
+| \`threat-model\` | configure | \`docs/threat-model.md\` — prompt injection via files, MCP, webfetch |
 | \`web\` | advanced | \`docs/web.md\` (experimental) |
 | \`peer-ecosystem\` | advanced | \`docs/peer-ecosystem.md\` |
 | \`plugin-panes\` | use | **Web-only** — pane/1 user overview |
 | \`eval\` | advanced | **Web-only** — internal SWE-bench / tbench runners |
 
 Relative links rewrite to \`/docs/<slug>\`. Architecture, contributing, nix,
-chaos, protocol, sdk, and investigations link to GitHub:
+chaos, protocol, sdk, web-cockpit-contract, human-orchestration-ops, and
+investigations link to GitHub:
 \`https://github.com/jonathanung/strike/blob/main/docs/…\`
 
 Repo-relative paths (\`../examples\`, \`../pkg\`, …) rewrite to the GitHub blob root.

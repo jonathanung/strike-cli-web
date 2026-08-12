@@ -257,7 +257,7 @@ Inspect with `/permission presets`.
 **Admission (`admission`):** register/load-time scans for MCP servers, skills,
 and plugins **before** tools bind / skills enter the catalog. Distinct from
 `permissionPreset` (per-call rules) and `sandbox` (OS isolation). Full matrix,
-scanners, and fail-open/closed behavior: [admission.md](https://github.com/jonathanung/strike/blob/main/docs/admission.md).
+scanners, and fail-open/closed behavior: [admission.md](/docs/admission).
 
 ```jsonc
 {
@@ -432,7 +432,9 @@ idempotency** (see `internal/tool/retry.go`):
 
 Mutative tools (`edit` / `write` / `apply_patch` / `bash` / …) never
 auto-retry on generic or transient failure — that prevents double-apply.
-Provider stream retries remain separate (`MaxStreamAttempts` in the engine).
+Provider **stream** retries are a separate policy (`MaxStreamAttempts` in the
+engine; default **3**, including the first attempt). See
+[Provider stream retry](#provider-stream-retry) below.
 
 | Key | Meaning | Default |
 |---|---|---|
@@ -444,6 +446,44 @@ Provider stream retries remain separate (`MaxStreamAttempts` in the engine).
 When the loop detector trips the engine emits `tool.loop_detected`, settles the
 tool as blocked, and ends the turn (`stopReason: loop_detected`). Auto-retries
 emit `tool.retrying` (timeline) before each backoff sleep.
+
+### Provider stream retry
+
+Transient **model HTTP / transport** failures retry with a fresh attempt
+identity **before any tools from that stream run**, so a retry cannot
+double-apply tool side effects (`internal/provider/retry.go`,
+`internal/engine/turn.go` `streamModel`). Default `MaxStreamAttempts` is **3**.
+Set the engine option to `1` to disable (not a config JSON key today).
+
+**Retried** (when `IsRetryable`):
+
+| Class | Details |
+|---|---|
+| HTTP status | **408**, **429**, and **≥500** (`base.StatusError.Retryable`) |
+| Incomplete stream | provider channel closed without `EventDone` / `EventError` |
+| Transport | `net.Error` timeouts, `io.EOF` / `io.ErrUnexpectedEOF` |
+| Conservative substrings | rate-limit / overloaded / timeout / connection reset / 502–504 wording when adapters still return plain errors |
+
+`Retry-After` on the error is honored up to **60s**; otherwise backoff is
+200ms × 2^(attempt−2) capped at 2s with full jitter. The engine emits
+`provider.retrying` and a `provider_retry` hook before sleeping.
+
+**Not retried:**
+
+| Class | What happens instead |
+|---|---|
+| `context.Canceled` / interrupt | turn ends; no further Stream |
+| Permanent **4xx** other than 408/429 (auth, validation, 404, …) | fail the stream |
+| **Context-window overflow** | **not** an `IsRetryable` retry — see below |
+
+**Overflow vs compaction:** `IsContextOverflow` matches conservative
+context-length wording (`context_length_exceeded`, `prompt too long`, …).
+That path is **not** a stream retry. The engine runs **at most one**
+history compaction (`reason: overflow`) and a **single model-only** Stream
+afterward — no tool replay. If compaction cannot shrink history, or the
+retry still overflows, the turn fails. Threshold/manual `/compact` is
+separate (occupancy dials below); overflow recovery still compact-and-retry
+even when threshold compaction is disabled (`compactionThreshold >= 1`).
 
 
 ## Desktop notifications (`notify`)
@@ -517,7 +557,7 @@ global config; project file after project config).
 Scaffold with `/devcontainer` or `strike container detect` (E12.5).
 
 Runtime mapping: `Config.Container.ToRuntime(version)` → `container.Config` for
-`Manager`. See [container.md](https://github.com/jonathanung/strike/blob/main/docs/container.md) and [isolation.md](/docs/isolation).
+`Manager`. See [container.md](/docs/containers) and [isolation.md](/docs/isolation).
 
 ## Scheduler
 
@@ -662,6 +702,40 @@ Sidecar retention uses the same count/age/size axes as session retention:
 
 Build the sidecar policy with `session.TraceRetentionFromConfig` from
 `traceRetentionMax*`. Not automatic on launch.
+
+### Checkpoints (`/undo` file restore)
+
+Per-turn snapshots power `/undo files` (chat undo without disk is `/undo chat`).
+Implementation: `internal/tool/checkpoint.go` + shadow-git
+(`internal/tool/shadowgit.go`). Architecture table:
+[ARCHITECTURE.md](https://github.com/jonathanung/strike/blob/main/docs/ARCHITECTURE.md#filesystem-transaction-safety-tools).
+UX: [usage.md](/docs/usage) `/undo`.
+
+**Covered**
+
+- First-touch originals for mutating harness tools (`edit` / `write` /
+  `apply_patch` / `notebook_edit`, and other snapshot callers).
+- **Bash** mutations when shadow-git can capture a worktree baseline at first
+  uncovered bash and reconcile at `CommitTurn` (formatters, `sed -i`,
+  `go generate`, …). Success clears the pending `"bash"` uncovered reason.
+- Durable stack under `~/.strike/checkpoints/<session-id>/` so `--continue`
+  can still restore (trimmed to the last **50** turns; removed with session
+  destroy/retention).
+
+**Limits (not a full VCS undo)**
+
+| Limit | Behavior |
+|---|---|
+| Per-file only | Restore writes original bytes or deletes a created path. **Never** `git reset --hard`. |
+| 2 MiB per file | `DefaultCheckpointMaxBytes`; larger files are skipped and counted. |
+| Non-regular paths | Symlinks, directories, and specials are skipped (not snapshotted). Directory deletes are not fully covered. |
+| Unreadable originals | Skipped; `/undo` shows a skipped-file count. |
+| Shadow-git unavailable | `git` missing or init failure: bash stays **uncovered**; the UI warns that shell changes may remain. |
+| Stack depth | Last **50** committed turns (`DefaultCheckpointMaxTurns`); older frames drop. |
+| `/rewind` | Forks a **new** session; does not revert workspace files (use `/undo files` on the live session). |
+
+Checkpoints answer “what bytes do we restore on undo?” They are not a
+security boundary and do not replace the OS sandbox.
 
 Lead and children can query the map with `agent_ownership` (`list`), and claim
 path prefixes with `lease` / `release` (exclusive or shared). Finished children
@@ -1390,6 +1464,53 @@ provider errors regardless of threshold.
 
 On summarize failure the engine falls back to trim and emits a notice. The
 summary path never re-runs tools.
+
+## Prompt caching
+
+Strike sets **request-side** cache controls so stable prefixes can hit
+provider prompt caches. There is no user config key; the engine always stamps
+what the adapter supports. Investigation notes:
+[investigations/491-cross-provider-prompt-cache.md](https://github.com/jonathanung/strike/blob/main/docs/491-cross-provider-prompt-cache.md).
+
+### Anthropic — three breakpoints
+
+`internal/provider/anthropic` `applyPromptCache` places
+`cache_control: { "type": "ephemeral" }` on up to **3** of Anthropic’s 4
+allowed breakpoints (OpenCode / Claude Code pattern):
+
+1. **Last system text block** — agent/system prompt (stable across turns).
+2. **Last tool definition** — tool schema prefix (stable while the registry is).
+3. **Last eligible message content block** — conversation prefix through the
+   prior tail; walks backward each request so growing history stays cacheable.
+
+Eligible message blocks: `text`, `tool_use`, `tool_result`, `image`.
+**`thinking` / `redacted_thinking` are skipped** — the API rejects
+`cache_control` on them.
+
+**Agent-switch invalidation:** switching agent rewrites system and/or tools,
+so the cached prefix misses. That is intentional (correctness over thrash),
+not a bug. The same miss happens when `toolsearch` / `deferTools` promotes
+schemas or compaction/prune rewrites earlier history.
+
+### OpenAI-compatible, xAI, ChatGPT
+
+The engine sets `provider.Request.CacheKey` to the **session id**
+(`internal/engine/turn.go`). Adapters emit `prompt_cache_key` on
+chat-completions and Responses bodies (`openaicompat`, `chatgpt`). Empty key
+omits the field. ChatGPT never sends `prompt_cache_retention` (backend 400s).
+
+OpenAI automatic caching is prefix-based (eligible models, typically long
+prompts). A new session id means no cross-session sticky routing.
+
+### Google
+
+The Gemini adapter does **not** set per-request cache breakpoints. Google’s
+explicit context-cache API (`cachedContents`) is a different product and is
+not wired.
+
+Usage events expose `cacheRead` / `cacheCreation` when the vendor reports
+them. Compaction and prune that rewrite history shorten or change the shared
+prefix until it is rewritten.
 
 ## Reasoning effort
 

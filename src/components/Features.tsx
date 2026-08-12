@@ -293,7 +293,7 @@ const groups: FeatureGroup[] = [
       {
         title: 'strike serve',
         description:
-          'Experimental browser cockpit for a live local session. Defaults to localhost; --expose is LAN-only with no TLS. TUI is primary.',
+          'Experimental browser cockpit for a live local session. Loopback-only; remote access is SSH local forward. TUI is primary.',
         icon: Globe,
         docsTo: '/docs/web',
         experimental: true,
@@ -336,7 +336,7 @@ const groups: FeatureGroup[] = [
       {
         title: 'Install & upgrade',
         description:
-          'One-line install on macOS and Linux, then strike --upgrade when a newer build is ready.',
+          'One-line install on macOS, Linux, and Windows via WSL2, then strike --upgrade when a newer build is ready.',
         icon: Download,
         docsTo: '/docs/install',
       },

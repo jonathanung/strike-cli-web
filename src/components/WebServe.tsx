@@ -33,24 +33,26 @@ export function WebServe() {
             </h2>
             <p className="mt-3 max-w-xl text-base leading-relaxed text-text-muted">
               Experimental <code className="font-mono text-sm text-terminal-fg">strike serve</code>{' '}
-              hosts a local browser attach for a live engine session. It is not a production
-              multiplayer web IDE. Day-to-day work stays in the terminal.
+              hosts a local browser cockpit (Chat, Code, Team, Project, Ops) for a live engine
+              session. It is not a production multiplayer web IDE. Day-to-day work stays in the
+              terminal.
             </p>
 
             <ul className="mt-6 flex flex-col gap-3 text-sm leading-relaxed text-text-muted">
               <li className="flex gap-2.5">
                 <Terminal className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
                 <span>
-                  Default bind is <strong className="font-medium text-text">localhost only</strong>
+                  Bind is <strong className="font-medium text-text">loopback only</strong>
                   {' '}(<code className="font-mono text-terminal-fg">127.0.0.1:8787</code>).
+                  Non-loopback addresses are rejected.
                 </span>
               </li>
               <li className="flex gap-2.5">
                 <ShieldAlert className="mt-0.5 size-4 shrink-0 text-bolt" aria-hidden />
                 <span>
-                  <code className="font-mono text-terminal-fg">--expose</code> opens LAN bind —
-                  token required, <strong className="font-medium text-text">no TLS</strong>, cleartext
-                  on the wire. Prefer SSH tunnel over public Wi‑Fi.
+                  Remote access is <strong className="font-medium text-text">SSH local forward</strong>
+                  {' '}(<code className="font-mono text-terminal-fg">ssh -L 8787:127.0.0.1:8787</code>
+                  ). Legacy <code className="font-mono text-terminal-fg">--expose</code> is gone.
                 </span>
               </li>
             </ul>
@@ -67,19 +69,25 @@ export function WebServe() {
                 to="/docs/web#threat-model"
                 className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border-muted bg-bg-elevated px-4 py-2 text-sm font-medium text-text transition-colors hover:border-border hover:bg-surface-focus hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
               >
-                LAN threat model
+                Serve threat model
               </Link>
             </div>
           </div>
 
           <div className="min-w-0">
-            <CodeBlock label="loopback (default)">
+            <CodeBlock label="loopback">
               {`strike serve --addr 127.0.0.1:8787 --token <secret>
 # open http://127.0.0.1:8787/attach?token=<secret>`}
             </CodeBlock>
             <p className="mt-3 text-xs leading-relaxed text-text-muted">
-              Full flags, auth, CORS, and{' '}
-              <code className="font-mono text-terminal-fg">--allow-cidr</code> notes live in{' '}
+              Flags, auth, SSH remote access, and the{' '}
+              <Link
+                to="/docs/threat-model"
+                className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
+              >
+                prompt-injection threat model
+              </Link>{' '}
+              live in{' '}
               <Link
                 to="/docs/web"
                 className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"

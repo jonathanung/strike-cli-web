@@ -53,7 +53,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: 'data',
     question: 'Where is my data?',
     answer:
-      'Local-first. Session transcripts live as JSONL on your machine; credentials are stored under ~/.strike (e.g. auth.json with restrictive permissions). Environment variables always win over stored keys. When you call a model provider, prompts and tool context go to that provider under their terms — Strike does not require a Strike-hosted cloud backend for normal TUI use. Experimental strike serve stays loopback by default; LAN expose is opt-in and token-gated.',
+      'Local-first. Session transcripts live as JSONL on your machine; credentials are stored under ~/.strike (e.g. auth.json with restrictive permissions). Environment variables always win over stored keys. When you call a model provider, prompts and tool context go to that provider under their terms — Strike does not require a Strike-hosted cloud backend for normal TUI use. Experimental strike serve binds loopback only; remote access is an SSH tunnel, not LAN expose.',
     links: [
       { label: 'Auth & providers', to: '/docs/auth' },
       { label: 'Web / serve', to: '/docs/web' },
@@ -73,7 +73,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: 'web-ui',
     question: 'What is the status of the web UI?',
     answer:
-      'The TUI is primary. strike serve hosts an experimental browser cockpit that can drive a live engine session or read-only attach to JSONL logs — useful for attach and LAN experiments, not a replacement for the terminal UI. A fuller remote/hosted browser experience remains on the roadmap.',
+      'The TUI is primary. strike serve hosts an experimental browser cockpit that can drive a live engine session or read-only attach to JSONL logs — loopback-only; use SSH local forward for remote access. It is not a replacement for the terminal UI. A fuller remote/hosted browser experience remains on the roadmap.',
     links: [
       { label: 'Web serve', to: '/#web-serve' },
       { label: 'Web docs', to: '/docs/web' },

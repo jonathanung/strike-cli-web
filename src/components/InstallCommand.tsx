@@ -18,6 +18,7 @@ const PLATFORMS = [
   'macOS amd64',
   'Linux arm64',
   'Linux amd64',
+  'Windows (WSL2)',
 ] as const
 
 type LatestRelease = {
@@ -199,7 +200,7 @@ export function InstallCommand() {
             strike --upgrade
           </code>
         </p>
-        <p>Windows is not supported yet.</p>
+        <p>Windows: WSL2 only — native Windows is not supported.</p>
       </div>
 
       <div className="mt-3 flex min-w-0 items-center justify-start gap-2 px-1">

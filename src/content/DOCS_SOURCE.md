@@ -26,16 +26,18 @@ Markdown under this directory is vendored for the on-domain `/docs` hub.
 | `plugins` | configure | **Web-only** — install/trust/catalog user guide |
 | `secrets` | configure | `docs/secrets.md` (+ hub write-time guards section) |
 | `admission` | configure | **Web-only** — MCP/skills/plugin bind-time scans |
-| `audit` | configure | `docs/audit.md` |
+| `audit` | configure | **Web-only** — durable trust-boundary decision log |
 | `safefile` | configure | **Web-only** — hardened path I/O |
-| `telemetry` | configure | `docs/telemetry.md` (OTLP + export families) |
+| `telemetry` | configure | **Web-only** — versioned export families (not cloud analytics) |
+| `threat-model` | configure | `docs/threat-model.md` — prompt injection via files, MCP, webfetch |
 | `web` | advanced | `docs/web.md` (experimental) |
 | `peer-ecosystem` | advanced | `docs/peer-ecosystem.md` |
 | `plugin-panes` | use | **Web-only** — pane/1 user overview |
 | `eval` | advanced | **Web-only** — internal SWE-bench / tbench runners |
 
 Relative links rewrite to `/docs/<slug>`. Architecture, contributing, nix,
-chaos, protocol, sdk, and investigations link to GitHub:
+chaos, protocol, sdk, web-cockpit-contract, human-orchestration-ops, and
+investigations link to GitHub:
 `https://github.com/jonathanung/strike/blob/main/docs/…`
 
 Repo-relative paths (`../examples`, `../pkg`, …) rewrite to the GitHub blob root.

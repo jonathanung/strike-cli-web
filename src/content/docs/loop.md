@@ -1,5 +1,7 @@
 # Recurring jobs (`/loop`)
 
+> **Web cockpit:** The TUI `/loop` shortcut is superseded by durable **Goals** and **Workflows** controls under Project mode (WEBUI.12). The browser does not add a session-only loop engine.
+
 Session-scoped timer that submits a prompt to the model on a fixed interval.
 Distinct from [`/goal`](/docs/goal) (criteria harness with budgets and guards)
 and from the in-process [Scheduler](/docs/scheduler) (named pools that cap

@@ -44,6 +44,7 @@ const REQUIRED_SLUGS = [
   'audit',
   'safefile',
   'telemetry',
+  'threat-model',
   'web',
   'eval',
   'peer-ecosystem',
