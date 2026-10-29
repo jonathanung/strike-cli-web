@@ -4,6 +4,13 @@ export const GITHUB_REPO = 'strike'
 export const GITHUB_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`
 export const GITHUB_RELEASES_URL = `${GITHUB_URL}/releases`
 export const GITHUB_RELEASES_LATEST_URL = `${GITHUB_URL}/releases/latest`
+/**
+ * Newest release on the 0.10.x line. The whole 0.10.x line is published as
+ * GitHub pre-releases, so /releases/latest still resolves to the stable line;
+ * link the pre-release by tag instead.
+ */
+export const PRE_RELEASE_TAG = 'v0.10.0'
+export const GITHUB_PRE_RELEASE_URL = `${GITHUB_URL}/releases/tag/${PRE_RELEASE_TAG}`
 export const GITHUB_API_BASE = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`
 export const GITHUB_RELEASES_API = `${GITHUB_API_BASE}/releases/latest`
 export const GITHUB_RELEASES_LIST_API = `${GITHUB_API_BASE}/releases`

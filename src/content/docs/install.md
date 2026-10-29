@@ -28,6 +28,16 @@ latest [GitHub Release](https://github.com/jonathanung/strike/releases),
 downloads the matching `strike_<tag>_<os>_<arch>.tar.gz`, verifies
 `checksums.txt` (sha256), and installs to `~/.strike/bin/strike` (no root).
 
+## Pre-release (v0.10.0)
+
+The 0.10.x line is published as GitHub **pre-releases** only, so the default
+one-liner above still installs the latest **stable** release (v0.5.2). To try
+the newest pre-release, pin its tag:
+
+```sh
+curl -fsSL https://strike.jonathanung.ca/install | bash -s -- --version=v0.10.0
+```
+
 Optional:
 
 ```sh
@@ -35,8 +45,8 @@ Optional:
 curl -fsSL https://strike.jonathanung.ca/install | bash -s -- --no-modify-path
 
 # pin a tag
-curl -fsSL https://strike.jonathanung.ca/install | bash -s -- --version=v0.1.0
-# or: STRIKE_VERSION=v0.1.0 bash scripts/install.sh
+curl -fsSL https://strike.jonathanung.ca/install | bash -s -- --version=v0.10.0
+# or: STRIKE_VERSION=v0.10.0 bash scripts/install.sh
 ```
 
 After install, open a new shell (or `export PATH="$HOME/.strike/bin:$PATH"`)
