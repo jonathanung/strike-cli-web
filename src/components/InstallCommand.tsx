@@ -2,14 +2,21 @@ import { useCallback, useEffect, useState } from 'react'
 import { Check, Copy, Github } from 'lucide-react'
 import { copyToClipboard } from '../lib/copy'
 import {
+  GITHUB_PRE_RELEASE_URL,
   GITHUB_RELEASES_API,
   GITHUB_RELEASES_LATEST_URL,
   GITHUB_URL,
+  PRE_RELEASE_TAG,
 } from '../lib/github'
 import { CodeBlock } from './ui/CodeBlock'
 
 export const INSTALL_COMMAND =
   'curl -fsSL https://strike.jonathanung.ca/install | bash'
+
+/** The 0.10.x line ships as GitHub pre-releases only, so pin the tag explicitly. */
+export const PRERELEASE_INSTALL_COMMAND = `curl -fsSL https://strike.jonathanung.ca/install | bash -s -- --version=${PRE_RELEASE_TAG}`
+
+type InstallChannel = 'stable' | 'prerelease'
 
 export { GITHUB_URL }
 
@@ -72,7 +79,10 @@ function useLatestRelease() {
 export function InstallCommand() {
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [channel, setChannel] = useState<InstallChannel>('stable')
   const { release, status } = useLatestRelease()
+
+  const command = channel === 'stable' ? INSTALL_COMMAND : PRERELEASE_INSTALL_COMMAND
 
   useEffect(() => {
     if (!copied) return
@@ -82,13 +92,13 @@ export function InstallCommand() {
 
   const handleCopy = useCallback(async () => {
     setError(null)
-    const result = await copyToClipboard(INSTALL_COMMAND)
+    const result = await copyToClipboard(command)
     if (result.ok) {
       setCopied(true)
     } else {
       setError(result.error)
     }
-  }, [])
+  }, [command])
 
   const copyAction = (
     <button
@@ -117,11 +127,56 @@ export function InstallCommand() {
 
   return (
     <div className="w-full min-w-0 max-w-full">
+      <div
+        className="mb-3 inline-flex items-center gap-1 rounded-md border border-border-muted bg-bg-elevated p-1"
+        role="group"
+        aria-label="Release channel"
+      >
+        {(
+          [
+            { id: 'stable', label: 'Stable' },
+            { id: 'prerelease', label: `Pre-release ${PRE_RELEASE_TAG}` },
+          ] as const
+        ).map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            aria-pressed={channel === option.id}
+            onClick={() => {
+              setChannel(option.id)
+              setCopied(false)
+              setError(null)
+            }}
+            className={`min-h-9 rounded px-3 py-1.5 font-mono text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+              channel === option.id
+                ? 'bg-surface text-accent'
+                : 'text-text-muted hover:text-text'
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+
       <div className="mb-3 flex min-w-0 flex-wrap items-center gap-2">
-        {status === 'loading' ? (
+        {channel === 'stable' && status === 'loading' ? (
           <span className="font-mono text-xs text-text-muted">Checking latest release…</span>
         ) : null}
-        {status === 'ok' && release ? (
+        {channel === 'prerelease' ? (
+          <a
+            href={GITHUB_PRE_RELEASE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-9 items-center gap-2 rounded-md border border-border-muted bg-surface px-3 py-1 font-mono text-xs font-medium text-accent transition-colors hover:border-border hover:bg-surface-focus focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          >
+            <span>{PRE_RELEASE_TAG}</span>
+            <span className="text-text-muted" aria-hidden>
+              ·
+            </span>
+            <span className="text-text-muted">pre-release</span>
+          </a>
+        ) : null}
+        {channel === 'stable' && status === 'ok' && release ? (
           <a
             href={GITHUB_RELEASES_LATEST_URL}
             target="_blank"
@@ -135,7 +190,7 @@ export function InstallCommand() {
             <span className="text-text-muted">{formatReleaseDate(release.publishedAt)}</span>
           </a>
         ) : null}
-        {status === 'error' ? (
+        {channel === 'stable' && status === 'error' ? (
           <a
             href={GITHUB_RELEASES_LATEST_URL}
             target="_blank"
@@ -171,7 +226,7 @@ export function InstallCommand() {
             $
           </span>
           <span className="min-w-0 font-mono text-sm leading-relaxed whitespace-nowrap text-terminal-fg sm:text-base">
-            {INSTALL_COMMAND}
+            {command}
           </span>
         </span>
       </CodeBlock>
@@ -187,6 +242,12 @@ export function InstallCommand() {
       </div>
 
       <div className="mt-2 space-y-1.5 px-1 text-left text-xs text-text-muted sm:text-sm">
+        {channel === 'prerelease' ? (
+          <p>
+            Pre-release build of {PRE_RELEASE_TAG} — newest features, ahead of the stable
+            line. Switch back to Stable for the latest stable release.
+          </p>
+        ) : null}
         <p>
           <span className="text-text-muted/90">Verify: </span>
           <code className="rounded-md border border-border-muted bg-terminal-bg px-1.5 py-0.5 font-mono text-[0.8em] text-terminal-fg">
